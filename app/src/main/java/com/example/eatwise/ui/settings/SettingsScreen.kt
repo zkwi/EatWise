@@ -1,5 +1,6 @@
 package com.example.eatwise.ui.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -58,6 +58,7 @@ import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenPale
 import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.GreenSoft
+import com.example.eatwise.ui.theme.LineSoft
 import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
 
@@ -68,9 +69,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     var showKey by remember { mutableStateOf(false) }
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = GreenPrimary,
-        unfocusedBorderColor = Color(0xFFE1E5EA),
-        focusedContainerColor = Color(0xFFFCFDFC),
-        unfocusedContainerColor = Color(0xFFFCFDFC),
+        unfocusedBorderColor = LineSoft,
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
         cursorColor = GreenPrimary,
     )
 
@@ -96,11 +97,17 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 36.dp, bottom = 2.dp),
+                        .padding(top = 34.dp, bottom = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("模型与目标", fontSize = 36.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.weight(1f))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("设置", style = MaterialTheme.typography.displaySmall)
+                        Text(
+                            "连接模型，选择你的饮食目标。",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
@@ -121,7 +128,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 ) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         SectionTitle(Icons.Rounded.Key, "模型连接")
@@ -164,6 +172,12 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
+                        SettingsActionButtons(
+                            isSaving = state.isSaving,
+                            isTesting = state.isTesting,
+                            onSave = viewModel::save,
+                            onTestConnection = viewModel::testConnection,
+                        )
                     }
                 }
             }
@@ -173,7 +187,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 ) {
                     Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         SectionTitle(Icons.Rounded.SettingsSuggest, "饮食目标")
@@ -196,49 +211,58 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        Text("热量估算默认以 kcal 展示。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("分析结果以定性建议为主，不展示卡路里或重量估算。", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
 
-            item { Spacer(Modifier.height(112.dp)) }
+            item { Spacer(Modifier.height(32.dp)) }
         }
 
-        Card(
+        SnackbarHost(
+            hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .imePadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        ) {
-            Row(
-                Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Button(
-                    onClick = viewModel::save,
-                    enabled = !state.isSaving && !state.isTesting,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                ) {
-                    Text(if (state.isSaving) "保存中..." else "保存设置", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                }
-                OutlinedButton(
-                    onClick = viewModel::testConnection,
-                    enabled = !state.isSaving && !state.isTesting,
-                    modifier = Modifier.weight(1f).height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
-                ) {
-                    Text(if (state.isTesting) "测试中..." else "测试连接", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-        }
+                .padding(bottom = 12.dp),
+        )
+    }
+}
 
-        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 104.dp))
+@Composable
+private fun SettingsActionButtons(
+    isSaving: Boolean,
+    isTesting: Boolean,
+    onSave: () -> Unit,
+    onTestConnection: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Button(
+            onClick = onSave,
+            enabled = !isSaving && !isTesting,
+            modifier = Modifier.weight(1f).height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+        ) {
+            Text(if (isSaving) "保存中..." else "保存配置", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+        }
+        OutlinedButton(
+            onClick = onTestConnection,
+            enabled = !isSaving && !isTesting,
+            modifier = Modifier.weight(1f).height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.5.dp, GreenPrimary),
+        ) {
+            Text(
+                if (isTesting) "测试中..." else "测试连接",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = GreenPrimary,
+            )
+        }
     }
 }
 
@@ -249,9 +273,9 @@ private val goalPresets = listOf(
         prompt = AppSettings.DEFAULT_USER_GOAL,
     ),
     GoalPreset(
-        title = "减脂控卡",
-        detail = "控热量",
-        prompt = "我正在减脂，希望控制总热量，优先选择高蛋白、少油、少糖、饱腹感强的食物，但不极端节食。",
+        title = "减脂管理",
+        detail = "少油少糖",
+        prompt = "我正在减脂，希望优先选择高蛋白、少油、少糖、饱腹感强的食物，但不极端节食。",
     ),
     GoalPreset(
         title = "控糖稳糖",
@@ -271,7 +295,7 @@ private val goalPresets = listOf(
     GoalPreset(
         title = "增肌高蛋白",
         detail = "补蛋白",
-        prompt = "我想增肌或保持肌肉量，希望每餐有足够蛋白质，同时控制过多油脂和空热量。",
+        prompt = "我想增肌或保持肌肉量，希望每餐有足够蛋白质，同时控制过多油脂和高负担食物。",
     ),
 )
 
@@ -287,7 +311,8 @@ private fun GoalPresetChip(preset: GoalPreset, selected: Boolean, onClick: () ->
         onClick = onClick,
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF5F6F7)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, if (selected) GreenPrimary.copy(alpha = 0.24f) else Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 1.dp else 0.dp),
     ) {
         Column(Modifier.padding(horizontal = 13.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
@@ -311,24 +336,25 @@ private fun GoalPresetChip(preset: GoalPreset, selected: Boolean, onClick: () ->
 private fun AiConfigHero(isConfigured: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = GreenPale),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFDDEBD8)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
     ) {
         Row(
             modifier = Modifier
-                .background(Brush.linearGradient(listOf(GreenPale, Color(0xFFFFF8C8), GreenSoft)))
+                .background(Brush.linearGradient(listOf(Color(0xFFF9FDF7), Color(0xFFEEF9E7))))
                 .padding(22.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("连接 AI 模型", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
+                Text("AI 服务配置", style = MaterialTheme.typography.headlineSmall, color = GreenDeep)
                 Text("填好 Key 和模型名称后，就可以拍照分析。", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
-                    if (isConfigured) "已就绪，可以分析" else "还缺 Key 或模型名称",
+                    if (isConfigured) "已配置，可开始识别" else "还缺 Key 或模型名称",
                     color = if (isConfigured) GreenDeep else RedPrimary,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
@@ -340,7 +366,7 @@ private fun AiConfigHero(isConfigured: Boolean) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(104.dp)
-                    .background(Color.White.copy(alpha = 0.45f), CircleShape),
+                    .background(Color.White.copy(alpha = 0.68f), CircleShape),
             ) {
                 Icon(Icons.Rounded.Cloud, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(58.dp))
             }

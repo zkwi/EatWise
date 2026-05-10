@@ -5,11 +5,11 @@
 ## 功能
 
 - 配置 OpenAI-compatible API：Base URL、模型名称、API Key、个人饮食目标
-- 设置页内置常见健康目标预设，如均衡饮食、减脂控卡、控糖、控脂、控盐和增肌
+- 设置页内置常见健康目标预设，如均衡饮食、减脂、控糖、控脂、控盐和增肌
 - 导入相册餐食图片或使用 CameraX 拍照
-- 首页内置多张示例图片，可直接点击体验分析链路
+- 首次使用且暂无历史记录时提供示例图片，可直接点击体验分析链路
 - 压缩图片后以 base64 data URL 发送给用户配置的模型
-- 展示餐食名称、热量、三大营养素、目标匹配、调整建议、食材拆分和短标签
+- 展示餐食名称、食用建议、健康判断、调整建议、食材拆分和短标签
 - 支持多个菜品或复合食材的分析结果展示，食材可按菜品归属分组
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
 - API Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
@@ -60,6 +60,8 @@ https://openrouter.ai/api/v1
 - 支持图片输入的模型名称
 - 用户饮食目标
 
+设置页的“测试连接”会发送一张内置测试图片，用于确认当前模型确实支持视觉输入。
+
 App 会请求：
 
 ```text
@@ -76,18 +78,19 @@ POST {baseUrl}/chat/completions
 
 ## 工程治理
 
-- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 3`。
-- 结果 JSON 保持向后兼容，新增字段优先设默认值。
+- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 5`。
+- 结果 JSON 以当前 schema 为准，避免为废弃字段保留兼容分支。
 - 提交代码前运行 `.\gradlew.bat test assembleDebug`。
+- 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
 - 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 - 协作行为准则见 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
 - 安全边界和报告方式见 [SECURITY.md](SECURITY.md)。
 - 变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 - 编译、Debug、日志采集和 AI 接手维护流程见 [docs/MAINTENANCE.md](docs/MAINTENANCE.md)。
 
-## 开源状态
+## 开源许可证
 
-当前仓库尚未声明开源许可证。发布到公共平台前，需要由项目所有者补充 `LICENSE` 并明确授权范围。
+本项目使用 [MIT License](LICENSE)。
 
 ## 常见错误
 

@@ -10,9 +10,15 @@ import androidx.compose.ui.unit.dp
 
 private val LightColors = lightColorScheme(
     primary = GreenPrimary,
+    primaryContainer = GreenSoft,
     secondary = OrangePrimary,
+    secondaryContainer = OrangeSoft,
     background = SurfaceWarm,
     surface = Color.White,
+    surfaceVariant = SurfaceMuted,
+    outline = LineSoft,
+    error = RedPrimary,
+    errorContainer = RedSoft,
     onPrimary = Color.White,
     onSurface = TextPrimary,
     onSurfaceVariant = TextSecondary,
@@ -21,7 +27,7 @@ private val LightColors = lightColorScheme(
 private val AppShapes = Shapes(
     small = RoundedCornerShape(10.dp),
     medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(26.dp),
+    large = RoundedCornerShape(28.dp),
 )
 
 @Composable

@@ -3,6 +3,7 @@ package com.example.eatwise.ui.home
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,9 +61,12 @@ import com.example.eatwise.R
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.MealRecord
 import com.example.eatwise.ui.components.GoalBadge
+import com.example.eatwise.ui.components.TagChip
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenPale
+import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.GreenSoft
+import com.example.eatwise.ui.theme.LineSoft
 import java.io.File
 
 @Composable
@@ -91,24 +95,31 @@ fun HomeScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 30.dp),
+                        .padding(top = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("今天这餐怎么样？", fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
-                        Text("拍照或导入图片，先记录，再看怎么调整。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            "今天这餐怎么样？",
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 28.sp, lineHeight = 34.sp),
+                        )
+                        Text(
+                            "记录每一餐，了解你的饮食习惯。",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
                     }
                     IconButton(
                         onClick = onOpenSettings,
                         modifier = Modifier
-                            .size(58.dp)
+                            .size(48.dp)
                             .background(Color.White, CircleShape),
                     ) {
                         Icon(Icons.Rounded.Settings, contentDescription = "设置", tint = MaterialTheme.colorScheme.primary)
@@ -123,21 +134,23 @@ fun HomeScreen(
                 )
             }
 
-            item {
-                SampleMealsSection(
-                    samples = sampleMeals,
-                    onSampleClick = { sample ->
-                        viewModel.importSampleImage(sample.imageRes, sample.key, onAnalyze)
-                    },
-                )
+            if (state.recentRecords.isEmpty()) {
+                item {
+                    SampleMealsSection(
+                        samples = sampleMeals,
+                        onSampleClick = { sample ->
+                            viewModel.importSampleImage(sample.imageRes, sample.key, onAnalyze)
+                        },
+                    )
+                }
             }
 
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("最近分析", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("最近分析", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = onOpenHistory) {
-                        Text("查看全部", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                        Text("查看全部", color = GreenDeep, fontWeight = FontWeight.Bold)
                         Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -181,7 +194,7 @@ private data class SampleMeal(
 @Composable
 private fun SampleMealsSection(samples: List<SampleMeal>, onSampleClick: (SampleMeal) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("没有照片时先试试", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("没有照片时先试试", style = MaterialTheme.typography.titleLarge)
         Text("用内置图片体验完整分析流程。", color = MaterialTheme.colorScheme.onSurfaceVariant)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(samples) { sample ->
@@ -195,10 +208,11 @@ private fun SampleMealsSection(samples: List<SampleMeal>, onSampleClick: (Sample
 private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.width(156.dp),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.width(164.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.58f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
     ) {
         Column {
             AsyncImage(
@@ -207,19 +221,11 @@ private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(104.dp),
+                    .height(112.dp),
             )
-            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(sample.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
-                    sample.label,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                        .background(GreenSoft, RoundedCornerShape(50))
-                        .padding(horizontal = 9.dp, vertical = 4.dp),
-                )
+            Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text(sample.title, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                TagChip(sample.label)
             }
         }
     }
@@ -229,52 +235,54 @@ private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
 private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = GreenPale),
+        border = BorderStroke(1.dp, Color(0xFFDDEBD8)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Box(
             modifier = Modifier
-                .background(Brush.linearGradient(listOf(Color(0xFFE2F8C9), Color(0xFFFFF7C8), GreenSoft)))
-                .padding(22.dp),
+                .background(Brush.linearGradient(listOf(Color(0xFFF9FDF7), Color(0xFFEEF9E7))))
+                .padding(16.dp),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .size(106.dp)
-                    .background(Color.White.copy(alpha = 0.42f), CircleShape),
+                    .size(78.dp)
+                    .background(Color.White.copy(alpha = 0.68f), CircleShape),
             ) {
                 Icon(
                     Icons.Rounded.RestaurantMenu,
                     contentDescription = null,
-                    tint = GreenDeep.copy(alpha = 0.34f),
-                    modifier = Modifier.size(54.dp),
+                    tint = GreenPrimary.copy(alpha = 0.34f),
+                    modifier = Modifier.size(40.dp),
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                Text("记录一餐", fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
-                Text("尽量拍清主食、配菜和饮料，结果会更稳定。", color = GreenDeep.copy(alpha = 0.72f))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                Text("记录一餐", style = MaterialTheme.typography.headlineSmall, color = GreenDeep)
+                Text("尽量拍清主食、配菜和饮料，结果会更稳定。", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(
                     onClick = onOpenCamera,
-                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
                     shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
                 ) {
                     Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                     Spacer(Modifier.size(10.dp))
-                    Text("拍今天这一餐", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("拍今天这一餐", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
                 }
                 OutlinedButton(
                     onClick = onPickImage,
-                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
                     shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.5.dp, GreenPrimary),
                     colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
                 ) {
-                    Icon(Icons.Rounded.Image, contentDescription = null)
+                    Icon(Icons.Rounded.Image, contentDescription = null, tint = GreenPrimary)
                     Spacer(Modifier.size(10.dp))
-                    Text("导入已有照片", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("导入已有照片", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = GreenPrimary)
                 }
             }
         }
@@ -286,24 +294,25 @@ private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
     ) {
-        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
                 model = File(record.thumbnailPath ?: record.imagePath),
                 contentDescription = record.mealName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(width = 104.dp, height = 76.dp)
+                    .size(width = 112.dp, height = 86.dp)
                     .aspectRatio(1.35f)
-                    .clip(RoundedCornerShape(16.dp)),
+                    .clip(RoundedCornerShape(18.dp)),
             )
-            Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(record.mealName, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text(record.mealName, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TagChip(record.eatingAdvice)
                     GoalBadge(record.goalMatchLevel)
                 }
             }
@@ -316,8 +325,9 @@ private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
 private fun EmptyCard(text: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
     ) {
         Row(Modifier.padding(22.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             IconBubble(Icons.Rounded.RestaurantMenu, GreenSoft, MaterialTheme.colorScheme.primary)

@@ -1,12 +1,11 @@
 package com.example.eatwise.ui.history
 
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -52,6 +51,7 @@ import com.example.eatwise.ui.components.GoalBadge
 import com.example.eatwise.ui.components.TagChip
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenSoft
+import com.example.eatwise.ui.theme.LineSoft
 import com.example.eatwise.ui.theme.RedPrimary
 import java.io.File
 
@@ -65,36 +65,47 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
-            Row(
+            Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 36.dp, bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(top = 12.dp, bottom = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
-                Text("饮食记录", fontSize = 36.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                Card(
-                    onClick = { manageMode = !manageMode },
-                    shape = RoundedCornerShape(50),
-                    colors = CardDefaults.cardColors(containerColor = if (manageMode) GreenSoft else Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        if (manageMode) "完成" else "管理",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        "饮食记录",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 25.sp, lineHeight = 29.sp),
                     )
+                    Card(
+                        onClick = { manageMode = !manageMode },
+                        shape = RoundedCornerShape(50),
+                        colors = CardDefaults.cardColors(containerColor = if (manageMode) GreenSoft else Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    ) {
+                        Text(
+                            if (manageMode) "完成" else "管理",
+                            color = GreenDeep,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
+                        )
+                    }
                 }
+                Text(
+                    "回看每一餐，找到更适合自己的调整方向。",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                )
             }
         }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterPill("全部", !state.favoriteFirst, onClick = {
                     if (state.favoriteFirst) viewModel.toggleFavoriteFirst()
                 })
@@ -109,6 +120,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                 ) {
                     Text(
                         "暂无历史记录。完成一次分析后，这里会自动保存结果。",
@@ -169,14 +181,16 @@ private fun FilterPill(text: String, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(50),
-        colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF1F2F4)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = if (selected) Color.White else Color(0xFFF0F2F0)),
+        border = BorderStroke(1.dp, if (selected) GreenSoft else Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 2.dp else 0.dp),
     ) {
         Text(
             text = text,
             color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 28.dp, vertical = 14.dp),
+            fontSize = 13.sp,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
         )
     }
 }
@@ -192,63 +206,84 @@ private fun HistoryRecordCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(9.dp), verticalAlignment = Alignment.Top) {
             AsyncImage(
                 model = File(record.thumbnailPath ?: record.imagePath),
                 contentDescription = record.mealName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(width = 108.dp, height = 108.dp)
-                    .clip(RoundedCornerShape(18.dp)),
+                    .size(width = 90.dp, height = 90.dp)
+                    .clip(RoundedCornerShape(14.dp)),
             )
             Column(
                 Modifier
                     .weight(1f)
-                    .padding(start = 14.dp, end = 2.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(start = 11.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
-                Text(
-                    record.mealName,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        record.mealName,
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 15.sp,
+                        lineHeight = 19.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    IconButton(
+                        onClick = if (manageMode) onDelete else onFavorite,
+                        modifier = Modifier.size(30.dp),
+                    ) {
+                        Icon(
+                            imageVector = if (manageMode) {
+                                Icons.Rounded.Delete
+                            } else if (record.isFavorite) {
+                                Icons.Rounded.Favorite
+                            } else {
+                                Icons.Rounded.FavoriteBorder
+                            },
+                            contentDescription = if (manageMode) {
+                                "删除"
+                            } else if (record.isFavorite) {
+                                "取消收藏"
+                            } else {
+                                "收藏"
+                            },
+                            tint = when {
+                                manageMode -> MaterialTheme.colorScheme.error
+                                record.isFavorite -> RedPrimary
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            modifier = Modifier.size(19.dp),
+                        )
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 17.sp)
+                    TagChip(record.eatingAdvice)
                     GoalBadge(record.goalMatchLevel)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(Icons.Rounded.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                    Text(DateTimeUtils.formatShort(record.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(
+                        Icons.Rounded.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        DateTimeUtils.formatShort(record.createdAt),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                    )
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     record.tags.take(2).forEach { TagChip(it) }
-                }
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                IconButton(onClick = onFavorite) {
-                    Icon(
-                        if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                        contentDescription = if (record.isFavorite) "取消收藏" else "收藏",
-                        tint = if (record.isFavorite) RedPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(30.dp),
-                    )
-                }
-                if (manageMode) {
-                    IconButton(onClick = onDelete) {
-                        Icon(Icons.Rounded.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.error)
-                    }
-                } else {
-                    Icon(
-                        Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.example.eatwise.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -19,42 +20,60 @@ import com.example.eatwise.ui.theme.OrangePrimary
 import com.example.eatwise.ui.theme.OrangeSoft
 import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
+import com.example.eatwise.ui.theme.YellowPrimary
+import com.example.eatwise.ui.theme.YellowSoft
 
 @Composable
 fun TagChip(text: String, modifier: Modifier = Modifier) {
     val label = compactLabel(text)
-    val warning = text.contains("高") || text.contains("偏高") || text.contains("油") || text.contains("热量") ||
-        text.contains("糖") || text.contains("钠") || text.contains("少")
-    val poor = text.contains("不适合") || text.contains("高脂") || text.contains("油炸")
-    val container = when {
-        poor -> RedSoft
-        warning -> OrangeSoft
-        else -> GreenSoft
-    }
-    val content = when {
-        poor -> RedPrimary
-        warning -> OrangePrimary
-        else -> GreenDeep
-    }
+    val style = tagStyle(text)
     Text(
         text = label,
-        color = content,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.SemiBold,
+        color = style.content,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
-            .widthIn(max = 94.dp)
+            .heightIn(min = 26.dp)
+            .widthIn(max = 82.dp)
             .clip(RoundedCornerShape(50))
-            .background(container)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .background(style.container)
+            .padding(horizontal = 9.dp, vertical = 4.dp),
     )
+}
+
+private data class TagStyle(val container: Color, val content: Color)
+
+private fun tagStyle(text: String): TagStyle {
+    val clean = text.trim()
+    return when {
+        clean.hasAny("不适合", "不太适合", "油炸", "油脂高", "糖偏高", "钠偏高", "重口味", "高脂", "重油") ->
+            TagStyle(RedSoft, RedPrimary)
+        clean.hasAny("轻负担", "蛋白足", "有蔬菜", "少糖", "清淡", "推荐", "适合", "友好") ->
+            TagStyle(GreenSoft, GreenDeep)
+        clean.hasAny("负担高", "碳水多", "蔬菜少", "蛋白少", "控脂", "减脂", "谨慎", "关注", "甜品", "快餐") ->
+            TagStyle(YellowSoft, YellowPrimary)
+        else ->
+            TagStyle(Color(0xFFF0F2F5), Color(0xFF6D7484))
+    }
 }
 
 private fun compactLabel(text: String): String {
     val clean = text.trim().replace(Regex("\\s+"), "")
+    val semanticShortLabel = when (clean) {
+        "需要严格控量" -> "严控量"
+        "只能尝一小口", "只能尝一两口解馋" -> "浅尝"
+        "可以适量多吃" -> "可多吃"
+        "可以常吃" -> "推荐"
+        else -> null
+    }
+    if (semanticShortLabel != null) return semanticShortLabel
     return if (clean.length <= 6) clean else clean.take(6)
 }
+
+private fun String.hasAny(vararg keywords: String): Boolean =
+    keywords.any { contains(it, ignoreCase = true) }
 
 @Composable
 fun GoalBadge(level: String?, modifier: Modifier = Modifier) {
@@ -82,13 +101,14 @@ fun GoalBadge(level: String?, modifier: Modifier = Modifier) {
     Text(
         text = label,
         color = content,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
+            .heightIn(min = 26.dp)
             .clip(RoundedCornerShape(50))
             .background(container)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 9.dp, vertical = 4.dp),
     )
 }

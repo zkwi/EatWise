@@ -1,5 +1,6 @@
 package com.example.eatwise.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,18 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,43 +37,65 @@ import androidx.compose.ui.unit.sp
 import com.example.eatwise.domain.model.Ingredient
 import com.example.eatwise.domain.model.MealAnalysisResult
 import com.example.eatwise.ui.theme.GreenDeep
-import com.example.eatwise.ui.theme.GreenPale
+import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.GreenSoft
+import com.example.eatwise.ui.theme.LineSoft
 import com.example.eatwise.ui.theme.OrangePrimary
 import com.example.eatwise.ui.theme.OrangeSoft
 import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
+import com.example.eatwise.ui.theme.YellowPrimary
+import com.example.eatwise.ui.theme.YellowSoft
 
 @Composable
 fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    val displayMealName = compactMealName(result.mealName)
+    val adviceStyle = adviceStyle(result.eatingAdvice, result.goalMatch.level)
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = GreenPale),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = adviceStyle.container),
+            border = BorderStroke(1.dp, adviceStyle.content.copy(alpha = 0.18f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Brush.linearGradient(listOf(GreenPale, Color(0xFFFFFEF0))))
-                    .padding(18.dp),
+                    .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.76f), adviceStyle.container)))
+                    .padding(12.dp),
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = result.totalKcal?.let { "%.0f".format(it) } ?: "--",
-                            fontSize = 46.sp,
-                            lineHeight = 48.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = GreenDeep,
-                        )
-                        Text(" kcal", modifier = Modifier.padding(start = 6.dp, bottom = 7.dp), color = GreenDeep)
-                    }
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(58.dp)
+                        .background(Color.White.copy(alpha = 0.64f), CircleShape),
+                ) {
+                    Icon(
+                        Icons.Rounded.Restaurant,
+                        contentDescription = null,
+                        tint = adviceStyle.content.copy(alpha = 0.26f),
+                        modifier = Modifier.size(30.dp),
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    EatingAdviceChip(adviceStyle)
                     Text(
-                        result.mealName,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
+                        result.eatingAdvice,
+                        fontSize = 24.sp,
+                        lineHeight = 28.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = adviceStyle.content,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        displayMealName,
+                        fontSize = 18.sp,
+                        lineHeight = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -85,34 +105,16 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        MacroChip("蛋白质", result.macros.proteinG, Modifier.weight(1f))
-                        MacroChip("碳水", result.macros.carbsG, Modifier.weight(1f))
-                        MacroChip("脂肪", result.macros.fatG, Modifier.weight(1f))
-                    }
                 }
             }
         }
 
         SoftCard {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("和目标的匹配", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("健康判断", fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
                 Spacer(Modifier.weight(1f))
                 GoalBadge(result.goalMatch.level)
-                Text(
-                    result.goalMatch.score?.let { "  $it/10" } ?: "  --/10",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                )
             }
-            LinearProgressIndicator(
-                progress = { ((result.goalMatch.score ?: 0).coerceIn(0, 10)) / 10f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(9.dp),
-                color = if (result.goalMatch.level == "good") GreenDeep else OrangePrimary,
-                trackColor = Color(0xFFEDEDED),
-            )
             Text(
                 result.goalMatch.reason.ifBlank { "AI 未给出明确判断。" },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -123,14 +125,20 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
 
         if (result.suggestions.isNotEmpty()) {
             SoftCard {
-                Text("怎么调整", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("建议", fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
                 result.suggestions.take(3).forEach {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Rounded.CheckCircle,
+                            contentDescription = null,
+                            tint = GreenPrimary,
+                            modifier = Modifier.size(22.dp),
+                        )
                         SuggestionActionChip(suggestionAction(it, result.goalMatch.level))
                         Text(
                             compactSuggestion(it),
                             modifier = Modifier.weight(1f),
-                            maxLines = 2,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -142,12 +150,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             SoftCard {
                 val groups = ingredientGroups(result.ingredients)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("食材拆分", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        result.totalKcal?.let { "总计 %.0f kcal".format(it) } ?: "总计 -- kcal",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Text("食材拆分", fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
                 }
                 groups.forEachIndexed { groupIndex, group ->
                     if (group.title.isNotBlank()) {
@@ -155,17 +158,22 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .size(28.dp)
+                                    .size(24.dp)
                                     .background(GreenSoft, CircleShape),
                             ) {
                                 Icon(
                                     Icons.Rounded.Restaurant,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp),
+                                    modifier = Modifier.size(14.dp),
                                 )
                             }
-                            Text(group.title, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                group.title,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp,
+                                lineHeight = 20.sp,
+                            )
                         }
                     }
                     group.items.take(8).forEachIndexed { index, ingredient ->
@@ -174,17 +182,14 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                             HorizontalDivider(color = Color(0xFFF0F1F2))
                         }
                     }
-                    if (groupIndex != groups.lastIndex) {
-                        Spacer(Modifier.height(2.dp))
-                    }
                 }
             }
         }
 
         if (result.tags.isNotEmpty()) {
             SoftCard {
+                Text("重点提示", fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("快速标签", fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 4.dp, top = 6.dp))
                     result.tags.take(5).forEach { TagChip(it) }
                 }
             }
@@ -200,10 +205,15 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
 
 @Composable
 private fun IngredientRow(ingredient: Ingredient) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(6.dp)
                 .background(GreenSoft, CircleShape),
         )
         Column(
@@ -214,55 +224,56 @@ private fun IngredientRow(ingredient: Ingredient) {
         ) {
             Text(
                 ingredient.name.ifBlank { "食材" },
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                lineHeight = 18.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                ingredientHints(ingredient).forEach { hint ->
-                    IngredientHintChip(hint)
+            val hints = ingredientHints(ingredient)
+            if (hints.isNotEmpty()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    hints.forEach { hint ->
+                        IngredientHintChip(hint)
+                    }
                 }
             }
         }
-        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(
-                ingredient.amount.ifBlank { "估算" },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 76.dp),
-            )
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    ingredient.kcal?.let { "%.0f".format(it) } ?: "--",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                )
-                Text(" kcal", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-            }
-        }
-        Spacer(Modifier.width(2.dp))
-        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 private data class IngredientGroup(val title: String, val items: List<Ingredient>)
 private data class IngredientHint(val label: String, val container: Color, val content: Color)
 private data class SuggestionAction(val label: String, val container: Color, val content: Color)
+private data class AdviceStyle(val container: Color, val content: Color, val label: String)
+
+@Composable
+private fun EatingAdviceChip(style: AdviceStyle) {
+    Text(
+        text = style.label,
+        color = style.content,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(Color.White.copy(alpha = 0.78f))
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+    )
+}
 
 @Composable
 private fun SuggestionActionChip(action: SuggestionAction) {
     Text(
         text = action.label,
         color = action.content,
-        fontSize = 13.sp,
+        fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(action.container)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 9.dp, vertical = 5.dp),
     )
 }
 
@@ -271,7 +282,7 @@ private fun IngredientHintChip(hint: IngredientHint) {
     Text(
         text = hint.label,
         color = hint.content,
-        fontSize = 12.sp,
+        fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -283,32 +294,40 @@ private fun IngredientHintChip(hint: IngredientHint) {
 }
 
 private fun ingredientHints(ingredient: Ingredient): List<IngredientHint> {
-    val kcal = ingredient.kcal
-    val heat = when {
-        kcal == null -> IngredientHint("粗估", Color(0xFFF0F2F5), Color(0xFF6D7484))
-        kcal >= 450 -> IngredientHint("能量主力", RedSoft, RedPrimary)
-        kcal >= 250 -> IngredientHint("热量较高", OrangeSoft, OrangePrimary)
-        kcal <= 120 -> IngredientHint("轻负担", GreenSoft, GreenDeep)
-        else -> IngredientHint("常规份量", Color(0xFFF0F2F5), Color(0xFF6D7484))
+    val text = "${ingredient.dish}${ingredient.name}"
+    val riskHints = buildList {
+        if (text.hasAny("油炸", "炸物", "煎炸", "炸")) {
+            add(IngredientHint("油炸", RedSoft, RedPrimary))
+        }
+        if (text.hasAny("红油", "重油", "肥肉", "五花", "黄油", "奶油", "芝麻酱", "沙拉酱") ||
+            text.hasAny("油", "酱") && !text.hasAny("油麦菜")
+        ) {
+            add(IngredientHint("油脂高", YellowSoft, YellowPrimary))
+        }
+        if (text.hasAny("重口味", "麻辣", "重辣", "红油", "花椒", "辣椒", "腌", "卤", "咸")) {
+            add(IngredientHint("重口味", RedSoft, RedPrimary))
+        }
+        if (text.hasAny("糖", "甜", "蜜", "奶茶", "饮料")) {
+            add(IngredientHint("糖偏高", RedSoft, RedPrimary))
+        }
     }
-    return listOf(heat, ingredientRoleHint(ingredient))
+    val roleHint = ingredientRoleHint(ingredient)
+    return (riskHints.ifEmpty { listOfNotNull(roleHint) })
+        .distinctBy { it.label }
+        .take(2)
 }
 
-private fun ingredientRoleHint(ingredient: Ingredient): IngredientHint {
-    val text = "${ingredient.dish}${ingredient.name}${ingredient.amount}"
+private fun ingredientRoleHint(ingredient: Ingredient): IngredientHint? {
+    val text = "${ingredient.dish}${ingredient.name}"
     return when {
-        text.hasAny("油", "黄油", "奶油", "花生", "坚果", "芝麻", "酱", "糖") ->
-            IngredientHint("油脂调味", OrangeSoft, OrangePrimary)
         text.hasAny("米", "饭", "面", "粉", "饼", "馒头", "面包", "薯", "土豆") ->
-            IngredientHint("主食碳水", OrangeSoft, OrangePrimary)
+            IngredientHint("主食碳水", YellowSoft, YellowPrimary)
         text.hasAny("鸡", "牛", "猪", "鱼", "虾", "蛋", "豆腐", "豆", "肉", "奶") ->
-            IngredientHint("蛋白来源", GreenSoft, GreenDeep)
+            IngredientHint("蛋白食材", GreenSoft, GreenDeep)
         text.hasAny("菜", "青", "叶", "瓜", "番茄", "西红柿", "菌", "菇", "萝卜", "椒") ->
             IngredientHint("蔬菜纤维", GreenSoft, GreenDeep)
-        text.hasAny("汤", "粥", "羹") ->
-            IngredientHint("汤水类", Color(0xFFF0F2F5), Color(0xFF6D7484))
         else ->
-            IngredientHint("常规食材", Color(0xFFF0F2F5), Color(0xFF6D7484))
+            null
     }
 }
 
@@ -317,12 +336,18 @@ private fun String.hasAny(vararg keywords: String): Boolean = keywords.any { con
 private fun suggestionAction(text: String, goalLevel: String): SuggestionAction {
     val clean = text.trim()
     return when {
+        clean.hasAny("尝一小口", "浅尝") ->
+            SuggestionAction("浅尝", RedSoft, RedPrimary)
+        clean.hasAny("严格控量", "控量") ->
+            SuggestionAction("控量", RedSoft, RedPrimary)
         clean.hasAny("避免", "避开", "不要", "别吃", "不建议", "少食用") ->
             SuggestionAction("避开", RedSoft, RedPrimary)
-        clean.hasAny("减少", "少", "控制", "一半", "半份", "减半", "七分", "几口", "油", "盐", "糖", "炸", "热量") ->
+        clean.hasAny("减少", "少", "控制", "一半", "半份", "减半", "七分", "几口", "油", "盐", "糖", "炸") ->
             SuggestionAction("少吃点", OrangeSoft, OrangePrimary)
         clean.hasAny("增加", "补充", "加", "蔬菜", "纤维", "蛋白", "喝水") ->
             SuggestionAction("补一点", GreenSoft, GreenDeep)
+        clean.hasAny("适量多吃", "可以多") ->
+            SuggestionAction("可多吃", GreenSoft, GreenDeep)
         clean.hasAny("搭配", "替换", "改成", "选择", "下餐") ->
             SuggestionAction("换搭配", GreenSoft, GreenDeep)
         goalLevel == "good" ->
@@ -352,6 +377,23 @@ private fun compactSuggestion(text: String): String {
     return if (clean.length <= 16) clean else clean.take(16)
 }
 
+private fun adviceStyle(advice: String, level: String?): AdviceStyle = when {
+    advice.hasAny("尝", "严格") || level == "poor" -> AdviceStyle(RedSoft, RedPrimary, "食用建议")
+    advice.hasAny("适量多吃") || level == "good" -> AdviceStyle(GreenSoft, GreenDeep, "食用建议")
+    else -> AdviceStyle(YellowSoft, YellowPrimary, "食用建议")
+}
+
+private fun compactMealName(name: String): String {
+    val clean = name.trim()
+    val withoutDetail = clean
+        .substringBefore("（")
+        .substringBefore("(")
+        .trim()
+    return withoutDetail.ifBlank { clean }.let {
+        if (it.length <= 10) it else it.take(10)
+    }
+}
+
 private fun ingredientGroups(ingredients: List<Ingredient>): List<IngredientGroup> {
     val grouped = ingredients.groupBy { it.dish.trim() }
     if (grouped.size <= 1 && grouped.keys.firstOrNull().isNullOrBlank()) {
@@ -366,11 +408,12 @@ private fun ingredientGroups(ingredients: List<Ingredient>): List<IngredientGrou
 private fun SoftCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp), content = content)
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
     }
 }
 

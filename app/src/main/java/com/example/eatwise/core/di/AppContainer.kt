@@ -30,7 +30,7 @@ class AppContainer(context: Context) {
         appContext,
         AppDatabase::class.java,
         "eatwise.db",
-    ).build()
+    ).fallbackToDestructiveMigration(true).build()
 
     val mealRepository = MealRepository(database.mealRecordDao())
     val imageStorage = ImageStorage(appContext)

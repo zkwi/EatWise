@@ -79,7 +79,7 @@ class SettingsViewModel(
                     ),
                 )
             }.onSuccess {
-                _uiState.update { it.copy(isTesting = false, modelName = modelName, message = "连接正常，可以开始分析。") }
+                _uiState.update { it.copy(isTesting = false, modelName = modelName, message = "连接正常，模型支持图片输入。") }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(

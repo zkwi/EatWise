@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Camera
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,11 +44,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.eatwise.core.storage.ImageStorage
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.eatwise.ui.theme.GreenPrimary
 
 @Composable
 fun CameraScreen(
@@ -65,7 +68,7 @@ fun CameraScreen(
     var isCapturing by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasPermission = granted
-                if (!granted) errorMessage = "需要相机权限才能拍照分析。"
+        if (!granted) errorMessage = "需要相机权限才能拍照分析。"
     }
 
     LaunchedEffect(Unit) {
@@ -123,7 +126,7 @@ fun CameraScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(vertical = 56.dp)
-                    .border(2.dp, Color.White.copy(alpha = 0.85f), RoundedCornerShape(28.dp)),
+                    .border(2.dp, GreenPrimary.copy(alpha = 0.92f), RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -137,8 +140,11 @@ fun CameraScreen(
                     Text(it, color = Color.White, modifier = Modifier.padding(bottom = 12.dp))
                 }
                 if (!hasPermission) {
-                    Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                        Text("开启相机权限")
+                    Button(
+                        onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                    ) {
+                        Text("开启相机权限", fontWeight = FontWeight.Bold)
                     }
                 } else {
                     Button(
@@ -165,6 +171,7 @@ fun CameraScreen(
                         },
                         enabled = imageCapture != null && !isCapturing,
                         modifier = Modifier.size(84.dp).clip(CircleShape),
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                     ) {
                         if (isCapturing) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(30.dp))

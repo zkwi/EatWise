@@ -31,11 +31,15 @@
 ## Prompt 维护
 
 - 系统提示词集中在 `OpenAiCompatibleClient`。
-- 当前 `promptVersion = 3`。
-- `promptVersion = 3` 要求模型识别多个菜品和复合食材，并在食材条目中尽量填写可选 `dish` 字段。
-- 标签必须短、生活化，适合移动端胶囊展示；建议必须明确、可执行，优先给普通用户能做到的小调整。
+- 当前 `promptVersion = 5`。
+- `promptVersion = 5` 要求模型识别多个菜品和复合食材，并在食材条目中尽量填写可选 `dish` 字段。
+- 不要求模型返回食材重量、卡路里或宏量营养素数值；`Ingredient` 不保留分量和热量字段。
+- `eating_advice` 是核心建议字段，只允许“只能尝一小口、需要严格控量、可以适量吃、可以适量多吃”四类。
+- 标签必须短、生活化、有明确决策价值；不要输出“常规食材、常规分量、普通、粗估”等低信息量标签。
+- 标签颜色语义为：绿色代表推荐或正向，黄色代表需要注意，红色代表明显风险或不推荐。
+- 建议必须明确、可执行，优先给普通用户能做到的小调整。
 - 解析后的 `MealAnalysisPolisher` 会对标签和建议做轻量清洗，但不要依赖它修复完全不合理的 prompt 输出。
-- 修改 prompt 后，历史记录仍保留 `userGoalSnapshot` 和 `aiResultJson`。
+- 修改 prompt 后，同步更新模型、测试和文档，避免保留废弃字段。
 
 ## 健康目标预设维护
 
@@ -47,17 +51,17 @@
 
 ## JSON 结构维护
 
-- 当前结果结构以 `promptVersion = 3` 管理，Room 数据库仍是 version 1。
-- `Ingredient.dish` 是可选字段，旧历史记录没有该字段也必须正常展示。
-- 新增 JSON 字段时尽量提供默认值，避免旧记录解析失败。
-- 不要删除历史记录依赖字段。
-- `aiResultJson` 永远保存原始 JSON。
+- 当前结果结构以 `promptVersion = 5` 管理，Room 数据库是 version 2。
+- `Ingredient.dish` 用于多菜品分组，`Ingredient` 不保留重量、分量或热量字段。
+- 新增 JSON 字段前先确认 UI 或业务确实需要，不为“可能用到”提前扩展 schema。
+- 删除字段时同步更新 prompt、模型、测试和手工验收清单。
+- `aiResultJson` 保存当前原始 JSON，方便复查模型输出。
 
 ## 工程治理原则
 
 - 这是个人项目，优先保持主链路清晰，不为少量兼容问题引入大型框架。
 - UI、ViewModel、Repository、UseCase、core 工具的简单分层已经足够，新增抽象前必须能减少真实重复或复杂度。
-- 修改 AI 输出结构时，优先保持向后兼容；只有数据库 Entity 字段变化才升级 Room version 并添加 Migration。
+- 修改 AI 输出结构时直接维护当前 schema；数据库 Entity 字段变化时升级 Room version。当前个人项目允许破坏式重建本地记录库，避免为废弃字段保留兼容分支。
 - 不提交本地调试产物、日志、截图、真实 Key 或用户图片。
 - 每次代码提交前至少运行 `.\gradlew.bat test assembleDebug`；只改文档时可说明未运行构建。
 - 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
@@ -67,9 +71,9 @@
 
 ## 数据库维护
 
-- 当前 Room version = 1。
-- 后续修改 Entity 时必须添加 Migration。
-- 个人项目 debug 阶段可以考虑 destructive migration，正式使用不建议。
+- 当前 Room version = 2。
+- 个人项目当前阶段允许 destructive migration，避免为旧分析字段保留兼容分支。
+- 后续如果开始长期保留真实历史记录，再按实际需要补充 Migration。
 
 ## 图片维护
 
@@ -200,7 +204,7 @@ AnalyzeMeal status=400 modelConfigured=true imageBytes=245120 message="模型可
 不允许的日志格式：
 
 ```text
-Authorization: Bearer sk-...
+Authorization: Bearer <redacted>
 data:image/jpeg;base64,/9j/4AAQ...
 完整 AI 请求体或完整响应体
 ```
@@ -237,6 +241,7 @@ AI 修改代码时必须遵守：
 - 不给药物建议。
 - 不替代医生或营养师。
 - UI 中保留免责声明。
+- 不根据图片估算重量、卡路里或宏量营养素，避免给用户过度精确的错觉。
 - `android:allowBackup` 必须保持为 `false`，备份规则文件也应显式排除所有本地数据，避免 API Key、图片和分析记录被系统备份。
 
 ## 后续可扩展方向
@@ -246,5 +251,5 @@ AI 修改代码时必须遵守：
 - 重新根据新目标评价历史记录
 - 导出 JSON/CSV
 - 搜索历史
-- 热量排序
+- 按标签或健康判断筛选历史
 - 更多模型 Provider 预设

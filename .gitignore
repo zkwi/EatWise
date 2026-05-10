@@ -1,5 +1,6 @@
 *.iml
 .gradle
+/.kotlin
 /local.properties
 /.idea/caches
 /.idea/libraries
@@ -37,4 +38,5 @@ release-signing.properties
 /run-home-*.png
 /run-home-*.xml
 /.idea/deploymentTargetSelector.xml
+/.idea/deviceManager.xml
 /.idea/vcs.xml

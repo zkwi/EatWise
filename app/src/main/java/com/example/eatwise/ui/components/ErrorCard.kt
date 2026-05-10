@@ -1,5 +1,6 @@
 package com.example.eatwise.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,12 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
 
 @Composable
 fun ErrorCard(message: String, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, RedPrimary.copy(alpha = 0.16f)),
         colors = CardDefaults.cardColors(containerColor = RedSoft),
     ) {
         Row(

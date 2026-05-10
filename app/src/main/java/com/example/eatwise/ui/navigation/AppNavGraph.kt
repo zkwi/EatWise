@@ -42,6 +42,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.eatwise.core.di.AppContainer
 import com.example.eatwise.ui.theme.GreenSoft
+import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.analysis.AnalysisScreen
 import com.example.eatwise.ui.analysis.AnalysisViewModel
 import com.example.eatwise.ui.camera.CameraScreen
@@ -70,13 +71,13 @@ fun AppNavGraph(container: AppContainer) {
                     modifier = Modifier
                         .padding(horizontal = 18.dp, vertical = 12.dp)
                         .fillMaxWidth()
-                        .height(92.dp)
-                        .shadow(8.dp, RoundedCornerShape(34.dp))
-                        .clip(RoundedCornerShape(34.dp))
+                        .height(76.dp)
+                        .shadow(10.dp, RoundedCornerShape(30.dp), ambientColor = Color(0x181A1F2A), spotColor = Color(0x201A1F2A))
+                        .clip(RoundedCornerShape(30.dp))
                         .background(Color.White)
-                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     listOf(
                         BottomItem(Routes.Home, "首页", Icons.Rounded.Home),
@@ -167,34 +168,34 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
-            .clip(RoundedCornerShape(26.dp))
+            .clip(RoundedCornerShape(22.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 2.dp),
+            .padding(vertical = 1.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(70.dp)
-                .height(36.dp)
-                .clip(RoundedCornerShape(22.dp))
+                .width(58.dp)
+                .height(32.dp)
+                .clip(RoundedCornerShape(18.dp))
                 .background(if (selected) GreenSoft else Color.Transparent),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 item.icon,
                 contentDescription = item.label,
-                tint = if (selected) activeColor else inactiveColor,
-                modifier = Modifier.size(28.dp),
+                tint = if (selected) GreenDeep else inactiveColor,
+                modifier = Modifier.size(if (selected) 24.dp else 23.dp),
             )
         }
         Text(
             item.label,
             color = if (selected) activeColor else inactiveColor,
-            fontSize = 14.sp,
-            lineHeight = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 4.dp),
+            fontSize = 12.sp,
+            lineHeight = 14.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 3.dp),
         )
     }
 }
