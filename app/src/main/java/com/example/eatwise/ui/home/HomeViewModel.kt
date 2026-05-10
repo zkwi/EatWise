@@ -43,6 +43,16 @@ class HomeViewModel(
         }
     }
 
+    fun importSampleImage(resourceId: Int, name: String, onReady: (String) -> Unit) {
+        viewModelScope.launch {
+            runCatching { imageStorage.copyResourceToPrivateStorage(resourceId, name) }
+                .onSuccess { onReady(it.absolutePath) }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message ?: "示例图片读取失败，请重试。") }
+                }
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }

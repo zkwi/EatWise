@@ -25,6 +25,15 @@ class ImageStorage(
         return target
     }
 
+    fun copyResourceToPrivateStorage(resourceId: Int, name: String): File {
+        val safeName = name.lowercase().replace(Regex("[^a-z0-9_]+"), "_").trim('_')
+        val target = File(originalDir, "${safeName}_${UUID.randomUUID()}.jpg")
+        context.resources.openRawResource(resourceId).use { input ->
+            target.outputStream().use { output -> input.copyTo(output) }
+        }
+        return target
+    }
+
     fun createCameraImageFile(): File {
         originalDir.mkdirs()
         return File(originalDir, "${UUID.randomUUID()}.jpg")

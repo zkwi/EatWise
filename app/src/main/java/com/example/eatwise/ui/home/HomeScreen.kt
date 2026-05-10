@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -53,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.eatwise.R
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.MealRecord
 import com.example.eatwise.ui.components.GoalBadge
@@ -120,6 +123,15 @@ fun HomeScreen(
         }
 
         item {
+            SampleMealsSection(
+                samples = sampleMeals,
+                onSampleClick = { sample ->
+                    viewModel.importSampleImage(sample.imageRes, sample.key, onAnalyze)
+                },
+            )
+        }
+
+        item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("最近记录", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
@@ -144,6 +156,67 @@ fun HomeScreen(
     }
 
     SnackbarHost(hostState = snackbarHostState)
+}
+
+private val sampleMeals = listOf(
+    SampleMeal("spicy_shrimp", "辣味虾拼饭", "重口味", R.drawable.sample_spicy_shrimp),
+    SampleMeal("corn_dessert", "玉米甜品冰", "甜品", R.drawable.sample_corn_dessert),
+    SampleMeal("dumpling_set", "煎饺滑蛋套餐", "复合餐", R.drawable.sample_dumpling_set),
+    SampleMeal("shared_feast", "多人聚餐", "多菜品", R.drawable.sample_shared_feast),
+    SampleMeal("burger", "双层汉堡", "快餐", R.drawable.sample_burger),
+)
+
+private data class SampleMeal(
+    val key: String,
+    val title: String,
+    val label: String,
+    val imageRes: Int,
+)
+
+@Composable
+private fun SampleMealsSection(samples: List<SampleMeal>, onSampleClick: (SampleMeal) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("示例图片", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(samples) { sample ->
+                SampleMealCard(sample, onClick = { onSampleClick(sample) })
+            }
+        }
+    }
+}
+
+@Composable
+private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(156.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column {
+            AsyncImage(
+                model = sample.imageRes,
+                contentDescription = sample.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(104.dp),
+            )
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(sample.title, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(
+                    sample.label,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .background(GreenSoft, RoundedCornerShape(50))
+                        .padding(horizontal = 9.dp, vertical = 4.dp),
+                )
+            }
+        }
+    }
 }
 
 @Composable
