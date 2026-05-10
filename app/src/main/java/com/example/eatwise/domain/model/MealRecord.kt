@@ -1,0 +1,25 @@
+package com.example.eatwise.domain.model
+
+data class MealRecord(
+    val id: String,
+    val mealName: String,
+    val summary: String,
+    val imagePath: String,
+    val thumbnailPath: String?,
+    val totalKcal: Double?,
+    val proteinG: Double?,
+    val carbsG: Double?,
+    val fatG: Double?,
+    val goalMatchLevel: String?,
+    val goalMatchScore: Int?,
+    val goalMatchReason: String?,
+    val tags: List<String>,
+    val suggestions: List<String>,
+    val ingredients: List<Ingredient>,
+    val aiResultJson: String,
+    val userGoalSnapshot: String,
+    val note: String?,
+    val isFavorite: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+)
