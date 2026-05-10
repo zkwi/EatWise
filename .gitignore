@@ -20,9 +20,13 @@ local.properties
 *.keystore
 *.p12
 *.pem
+*.apk
+*.aab
+*.idsig
 google-services.json
 service-account*.json
 secrets.properties
+release-signing.properties
 /emulator-*.png
 /emulator-*.txt
 /ui-*.xml

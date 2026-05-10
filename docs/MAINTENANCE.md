@@ -7,6 +7,20 @@
 - 不打印 Key、Authorization header 或完整请求体。
 - 如怀疑泄露，立即更换 Key。
 
+## Release 签名与发布
+
+- 正式包使用本机 release keystore 签名，keystore、密码和构建产物都不能提交。
+- 签名配置从 `local.properties`、Gradle 属性或环境变量读取，字段名保持一致：
+  - `EATWISE_RELEASE_STORE_FILE`
+  - `EATWISE_RELEASE_STORE_PASSWORD`
+  - `EATWISE_RELEASE_KEY_ALIAS`
+  - `EATWISE_RELEASE_KEY_PASSWORD`
+- `EATWISE_RELEASE_STORE_FILE` 建议写相对项目根目录的路径，例如 `eatwise-release.keystore`。
+- 发布前运行 `.\gradlew.bat lintDebug test assembleRelease`。
+- 生成 APK 后使用 `apksigner verify --verbose --print-certs` 验证签名，并为上传的 APK 生成 SHA-256 校验文件。
+- 只在 GitHub Release 上传已签名 APK 和校验文件，不上传 keystore、`local.properties` 或任何包含密码的文件。
+- release keystore 丢失后无法再用同一签名升级旧安装包，务必离线备份。
+
 ## 模型维护
 
 - 模型名称由用户在设置页填写。
@@ -46,6 +60,7 @@
 - 修改 AI 输出结构时，优先保持向后兼容；只有数据库 Entity 字段变化才升级 Room version 并添加 Migration。
 - 不提交本地调试产物、日志、截图、真实 Key 或用户图片。
 - 每次代码提交前至少运行 `.\gradlew.bat test assembleDebug`；只改文档时可说明未运行构建。
+- 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
 - 修复 UI 时必须用模拟器或真机截图复核，重点看文字是否截断、标签是否换行、按钮是否被系统导航栏遮挡。
 - 对外协作入口以根目录文档为准：贡献流程见 `CONTRIBUTING.md`，安全策略见 `SECURITY.md`，变更记录见 `CHANGELOG.md`。
 - 当前仓库尚未声明开源许可证，公开发布前必须由项目所有者补充 `LICENSE`。
@@ -89,6 +104,7 @@ $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
 .\gradlew.bat clean
 .\gradlew.bat test
 .\gradlew.bat assembleDebug
+.\gradlew.bat assembleRelease
 .\gradlew.bat installDebug
 ```
 
@@ -109,6 +125,12 @@ Debug APK 输出位置：
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk
+```
+
+Release APK 输出位置：
+
+```text
+app/build/outputs/apk/release/app-release.apk
 ```
 
 ## Debug 调试流程

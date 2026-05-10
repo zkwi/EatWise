@@ -13,6 +13,7 @@ EatWise 只做本地饮食记录和用户自配模型调用，不提供后端服
 - Android 系统备份默认关闭，避免把本地 Key、图片和分析记录同步到云端或新设备。
 - 除用户配置的大模型 API 外，App 不主动上传数据到其他服务。
 - 日志、Issue、PR 和文档中不得包含真实 Key、Authorization header、完整 base64 图片、完整请求体或完整响应体。
+- release keystore、签名密码和 `local.properties` 只允许保存在本机或私密备份中，不得提交、上传到 Issue/PR 或附加到 GitHub Release。
 
 ## 报告问题
 
@@ -29,3 +30,4 @@ EatWise 只做本地饮食记录和用户自配模型调用，不提供后端服
 - 新增日志必须默认脱敏。
 - 新增外部网络调用必须在 README 和维护文档中说明。
 - 不把医疗诊断、药物建议或治疗方案作为 App 输出目标。
+- 发布正式包前必须验证 APK 签名，并确认 release 资产中不包含 keystore、密钥、用户图片、日志或本地配置文件。

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,28 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.isFile) {
+        file.inputStream().use(::load)
+    }
+}
+
+fun signingValue(name: String): String? =
+    (localProperties.getProperty(name) ?: providers.gradleProperty(name).orNull ?: System.getenv(name))
+        ?.takeIf { it.isNotBlank() }
+
+val releaseStoreFile = signingValue("EATWISE_RELEASE_STORE_FILE")
+val releaseStorePassword = signingValue("EATWISE_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = signingValue("EATWISE_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = signingValue("EATWISE_RELEASE_KEY_PASSWORD")
+val hasReleaseSigning = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword
+).all { it != null }
 
 android {
     namespace = "com.example.eatwise"
@@ -24,8 +48,22 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
