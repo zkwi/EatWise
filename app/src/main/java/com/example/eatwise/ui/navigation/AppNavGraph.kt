@@ -1,28 +1,35 @@
 package com.example.eatwise.ui.navigation
 
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,15 +66,17 @@ fun AppNavGraph(container: AppContainer) {
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(
+                Row(
                     modifier = Modifier
                         .padding(horizontal = 18.dp, vertical = 12.dp)
                         .fillMaxWidth()
-                        .height(86.dp)
+                        .height(92.dp)
                         .shadow(8.dp, RoundedCornerShape(34.dp))
-                        .clip(RoundedCornerShape(34.dp)),
-                    containerColor = Color.White,
-                    tonalElevation = 0.dp,
+                        .clip(RoundedCornerShape(34.dp))
+                        .background(Color.White)
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     listOf(
                         BottomItem(Routes.Home, "首页", Icons.Rounded.Home),
@@ -75,7 +84,8 @@ fun AppNavGraph(container: AppContainer) {
                         BottomItem(Routes.Settings, "设置", Icons.Rounded.Settings),
                     ).forEach { item ->
                         val selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == item.route } == true
-                        NavigationBarItem(
+                        BottomNavItem(
+                            item = item,
                             selected = selected,
                             onClick = {
                                 navController.navigate(item.route) {
@@ -84,21 +94,6 @@ fun AppNavGraph(container: AppContainer) {
                                     restoreState = true
                                 }
                             },
-                            icon = {
-                                Icon(
-                                    item.icon,
-                                    contentDescription = item.label,
-                                    modifier = Modifier.size(if (selected) 30.dp else 28.dp),
-                                )
-                            },
-                            label = { Text(item.label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary,
-                                indicatorColor = GreenSoft,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            ),
                         )
                     }
                 }
@@ -160,8 +155,52 @@ fun AppNavGraph(container: AppContainer) {
     }
 }
 
+@Composable
+private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
+    item: BottomItem,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(26.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(70.dp)
+                .height(36.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(if (selected) GreenSoft else Color.Transparent),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                item.icon,
+                contentDescription = item.label,
+                tint = if (selected) activeColor else inactiveColor,
+                modifier = Modifier.size(28.dp),
+            )
+        }
+        Text(
+            item.label,
+            color = if (selected) activeColor else inactiveColor,
+            fontSize = 14.sp,
+            lineHeight = 16.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
 private data class BottomItem(
     val route: String,
     val label: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val icon: ImageVector,
 )
