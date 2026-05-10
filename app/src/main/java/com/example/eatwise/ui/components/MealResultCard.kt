@@ -96,7 +96,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
 
         SoftCard {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("目标匹配", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("和目标的匹配", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.weight(1f))
                 GoalBadge(result.goalMatch.level)
                 Text(
@@ -123,14 +123,14 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
 
         if (result.suggestions.isNotEmpty()) {
             SoftCard {
-                Text("建议", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("怎么调整", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 result.suggestions.take(3).forEach {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         SuggestionActionChip(suggestionAction(it, result.goalMatch.level))
                         Text(
                             compactSuggestion(it),
                             modifier = Modifier.weight(1f),
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -142,7 +142,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             SoftCard {
                 val groups = ingredientGroups(result.ingredients)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("多食材明细", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("食材拆分", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(Modifier.weight(1f))
                     Text(
                         result.totalKcal?.let { "总计 %.0f kcal".format(it) } ?: "总计 -- kcal",
@@ -184,7 +184,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
         if (result.tags.isNotEmpty()) {
             SoftCard {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("标签", fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 4.dp, top = 6.dp))
+                    Text("快速标签", fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 4.dp, top = 6.dp))
                     result.tags.take(5).forEach { TagChip(it) }
                 }
             }
@@ -319,7 +319,7 @@ private fun suggestionAction(text: String, goalLevel: String): SuggestionAction 
     return when {
         clean.hasAny("避免", "避开", "不要", "别吃", "不建议", "少食用") ->
             SuggestionAction("避开", RedSoft, RedPrimary)
-        clean.hasAny("减少", "少", "控制", "一半", "半份", "油", "盐", "糖", "炸", "热量") ->
+        clean.hasAny("减少", "少", "控制", "一半", "半份", "减半", "七分", "几口", "油", "盐", "糖", "炸", "热量") ->
             SuggestionAction("少吃点", OrangeSoft, OrangePrimary)
         clean.hasAny("增加", "补充", "加", "蔬菜", "纤维", "蛋白", "喝水") ->
             SuggestionAction("补一点", GreenSoft, GreenDeep)

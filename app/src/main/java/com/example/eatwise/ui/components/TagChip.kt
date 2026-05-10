@@ -23,8 +23,9 @@ import com.example.eatwise.ui.theme.RedSoft
 @Composable
 fun TagChip(text: String, modifier: Modifier = Modifier) {
     val label = compactLabel(text)
-    val warning = text.contains("高") || text.contains("偏高") || text.contains("油") || text.contains("热量")
-    val poor = text.contains("不适合") || text.contains("高脂")
+    val warning = text.contains("高") || text.contains("偏高") || text.contains("油") || text.contains("热量") ||
+        text.contains("糖") || text.contains("钠") || text.contains("少")
+    val poor = text.contains("不适合") || text.contains("高脂") || text.contains("油炸")
     val container = when {
         poor -> RedSoft
         warning -> OrangeSoft

@@ -6,6 +6,7 @@ import com.example.eatwise.core.network.OpenAiCompatibleClient
 import com.example.eatwise.core.util.AppResult
 import com.example.eatwise.core.util.ImageCompressor
 import com.example.eatwise.core.util.JsonUtils
+import com.example.eatwise.core.util.MealAnalysisPolisher
 import com.example.eatwise.data.repository.SettingsRepository
 import com.example.eatwise.domain.model.MealAnalysisResult
 import java.io.File
@@ -37,7 +38,7 @@ class AnalyzeMealUseCase(
         }
 
         val extractedJson = JsonUtils.extractJson(rawContent)
-        val result = runCatching { JsonUtils.parseMealAnalysis(rawContent) }.getOrElse { error ->
+        val result = runCatching { MealAnalysisPolisher.polish(JsonUtils.parseMealAnalysis(rawContent)) }.getOrElse { error ->
             return AppResult.Failure("AI 返回格式异常，请重新分析。", error)
         }
 

@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Camera
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,9 +62,10 @@ fun CameraScreen(
     }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+    var isCapturing by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasPermission = granted
-        if (!granted) errorMessage = "相机权限未开启，无法拍照。"
+                if (!granted) errorMessage = "需要相机权限才能拍照分析。"
     }
 
     LaunchedEffect(Unit) {
@@ -111,7 +113,7 @@ fun CameraScreen(
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "返回", tint = Color.White)
                 }
                 Spacer(Modifier.weight(1f))
-                Text("拍摄餐食", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                Text("拍一张餐食照", color = Color.White, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.weight(1f))
                 Spacer(Modifier.size(48.dp))
             }
@@ -124,35 +126,52 @@ fun CameraScreen(
                     .border(2.dp, Color.White.copy(alpha = 0.85f), RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("将餐食放入框内", color = Color.White, style = MaterialTheme.typography.headlineSmall)
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("把整餐放进框内", color = Color.White, style = MaterialTheme.typography.headlineSmall)
+                    Text("主食、配菜和饮料都拍到，结果更准确", color = Color.White.copy(alpha = 0.78f))
+                }
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 errorMessage?.let {
                     Text(it, color = Color.White, modifier = Modifier.padding(bottom = 12.dp))
                 }
-                Button(
-                    onClick = {
-                        val file = imageStorage.createCameraImageFile()
-                        val output = ImageCapture.OutputFileOptions.Builder(file).build()
-                        imageCapture?.takePicture(
-                            output,
-                            ContextCompat.getMainExecutor(context),
-                            object : ImageCapture.OnImageSavedCallback {
-                                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                    onImageReady(file.absolutePath)
-                                }
+                if (!hasPermission) {
+                    Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                        Text("开启相机权限")
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            val capture = imageCapture ?: return@Button
+                            isCapturing = true
+                            errorMessage = null
+                            val file = imageStorage.createCameraImageFile()
+                            val output = ImageCapture.OutputFileOptions.Builder(file).build()
+                            capture.takePicture(
+                                output,
+                                ContextCompat.getMainExecutor(context),
+                                object : ImageCapture.OnImageSavedCallback {
+                                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                                        onImageReady(file.absolutePath)
+                                    }
 
-                                override fun onError(exception: ImageCaptureException) {
-                                    errorMessage = "拍照失败，请重试。"
-                                }
-                            },
-                        )
-                    },
-                    enabled = hasPermission && imageCapture != null,
-                    modifier = Modifier.size(84.dp).clip(CircleShape),
-                ) {
-                    Icon(Icons.Rounded.Camera, contentDescription = "拍照", modifier = Modifier.size(34.dp))
+                                    override fun onError(exception: ImageCaptureException) {
+                                        isCapturing = false
+                                        errorMessage = "拍照失败，请再试一次。"
+                                    }
+                                },
+                            )
+                        },
+                        enabled = imageCapture != null && !isCapturing,
+                        modifier = Modifier.size(84.dp).clip(CircleShape),
+                    ) {
+                        if (isCapturing) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(30.dp))
+                        } else {
+                            Icon(Icons.Rounded.Camera, contentDescription = "拍照", modifier = Modifier.size(34.dp))
+                        }
+                    }
                 }
             }
         }

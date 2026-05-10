@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val baseUrl: String = "https://openrouter.ai/api/v1",
+    val baseUrl: String = AppSettings.DEFAULT_BASE_URL,
     val modelName: String = "",
     val apiKey: String = "",
-    val userGoal: String = "我想保持饮食均衡，尽量吃得健康一些。",
+    val userGoal: String = AppSettings.DEFAULT_USER_GOAL,
     val isSaving: Boolean = false,
     val isTesting: Boolean = false,
     val message: String? = null,
@@ -79,12 +79,12 @@ class SettingsViewModel(
                     ),
                 )
             }.onSuccess {
-                _uiState.update { it.copy(isTesting = false, modelName = modelName, message = "模型连接正常。") }
+                _uiState.update { it.copy(isTesting = false, modelName = modelName, message = "连接正常，可以开始分析。") }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(
                         isTesting = false,
-                        message = (error as? ApiException)?.message ?: "测试连接失败，请检查网络或 API 配置。",
+                        message = (error as? ApiException)?.message ?: "连接失败，请检查网络或 API 配置。",
                     )
                 }
             }
@@ -95,16 +95,17 @@ class SettingsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
             runCatching {
+                val state = uiState.value
                 settingsRepository.save(
                     AppSettings(
-                        baseUrl = uiState.value.baseUrl,
-                        modelName = uiState.value.modelName,
-                        apiKey = uiState.value.apiKey,
-                        userGoal = uiState.value.userGoal,
+                        baseUrl = state.baseUrl.trim(),
+                        modelName = normalizeSingleLine(state.modelName),
+                        apiKey = state.apiKey.trim(),
+                        userGoal = state.userGoal.trim().ifBlank { AppSettings.DEFAULT_USER_GOAL },
                     ),
                 )
             }.onSuccess {
-                _uiState.update { it.copy(isSaving = false, message = "配置已保存") }
+                _uiState.update { it.copy(isSaving = false, message = "设置已保存。") }
             }.onFailure {
                 _uiState.update { it.copy(isSaving = false, message = "保存失败，请重试。") }
             }

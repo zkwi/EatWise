@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,17 +48,19 @@ fun AnalysisScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(androidx.compose.material3.MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colorScheme.background),
     ) {
-        AppTopBar("分析结果", onBack)
+        AppTopBar(if (state.isAnalyzing) "正在分析" else "分析结果", onBack)
         LazyColumn(
-            modifier = Modifier.padding(horizontal = 20.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
                 AsyncImage(
                     model = File(state.imagePath),
-                    contentDescription = "餐食图片",
+                    contentDescription = "待分析的餐食图片",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -66,7 +69,7 @@ fun AnalysisScreen(
                 )
             }
             if (state.isAnalyzing) {
-                item { LoadingOverlay("AI 正在分析餐食...") }
+                item { LoadingOverlay("正在分析这餐") }
             }
             state.errorMessage?.let { message ->
                 item {
@@ -74,7 +77,7 @@ fun AnalysisScreen(
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = viewModel::analyze, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Rounded.Refresh, contentDescription = null)
-                        Text("重新分析")
+                        Text("再试一次")
                     }
                 }
             }
@@ -92,18 +95,18 @@ fun AnalysisScreen(
                                 if (saveDone) Icons.Rounded.CheckCircle else Icons.Rounded.Refresh,
                                 contentDescription = null,
                                 tint = if (saveFailed) {
-                                    androidx.compose.material3.MaterialTheme.colorScheme.error
+                                    MaterialTheme.colorScheme.error
                                 } else {
-                                    androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                    MaterialTheme.colorScheme.primary
                                 },
                             )
                             Text(
                                 message,
                                 fontWeight = FontWeight.SemiBold,
                                 color = if (saveFailed) {
-                                    androidx.compose.material3.MaterialTheme.colorScheme.error
+                                    MaterialTheme.colorScheme.error
                                 } else {
-                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                                    MaterialTheme.colorScheme.onSurface
                                 },
                             )
                         }
@@ -118,17 +121,17 @@ fun AnalysisScreen(
                             shape = RoundedCornerShape(18.dp),
                         ) {
                             Icon(Icons.Rounded.History, contentDescription = null)
-                            Text(if (state.isSaving) "保存中" else "查看记录", fontWeight = FontWeight.Bold)
+                            Text(if (state.isSaving) "保存中" else "查看本次记录", fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = viewModel::analyze,
                             enabled = !state.isAnalyzing,
                             modifier = Modifier.weight(1f).height(52.dp),
                             shape = RoundedCornerShape(18.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         ) {
                             Icon(Icons.Rounded.Refresh, contentDescription = null)
-                            Text("重新分析", fontWeight = FontWeight.Bold)
+                            Text("再分析一次", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

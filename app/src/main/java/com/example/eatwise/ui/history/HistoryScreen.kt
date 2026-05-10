@@ -19,12 +19,16 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +40,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +59,7 @@ import java.io.File
 fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var manageMode by remember { mutableStateOf(false) }
+    var pendingDelete by remember { mutableStateOf<MealRecord?>(null) }
 
     LazyColumn(
         modifier = Modifier
@@ -91,7 +98,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                 FilterPill("全部", !state.favoriteFirst, onClick = {
                     if (state.favoriteFirst) viewModel.toggleFavoriteFirst()
                 })
-                FilterPill("收藏", state.favoriteFirst, onClick = {
+                FilterPill("收藏优先", state.favoriteFirst, onClick = {
                     if (!state.favoriteFirst) viewModel.toggleFavoriteFirst()
                 })
             }
@@ -103,7 +110,11 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                 ) {
-                    Text("暂无历史记录。", modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "暂无历史记录。完成一次分析后，这里会自动保存结果。",
+                        modifier = Modifier.padding(24.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         } else {
@@ -112,19 +123,44 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     record = record,
                     onClick = { onOpenDetail(record.id) },
                     onFavorite = { viewModel.toggleFavorite(record) },
-                    onDelete = { viewModel.delete(record) },
+                    onDelete = { pendingDelete = record },
                     manageMode = manageMode,
                 )
             }
             item {
                 Text(
-                    "——  已经到底啦  ——",
+                    "已显示全部记录",
                     modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
                 )
             }
         }
+    }
+
+    pendingDelete?.let { record ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text("删除这条记录？") },
+            text = { Text("这条分析记录会从历史中移除。") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.delete(record)
+                        pendingDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text("取消")
+                }
+            },
+        )
     }
 }
 
@@ -175,7 +211,13 @@ private fun HistoryRecordCard(
                     .padding(start = 14.dp, end = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(record.mealName, fontWeight = FontWeight.Bold, fontSize = 18.sp, maxLines = 1)
+                Text(
+                    record.mealName,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 17.sp)
                     GoalBadge(record.goalMatchLevel)
@@ -192,7 +234,7 @@ private fun HistoryRecordCard(
                 IconButton(onClick = onFavorite) {
                     Icon(
                         if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                        contentDescription = "收藏",
+                        contentDescription = if (record.isFavorite) "取消收藏" else "收藏",
                         tint = if (record.isFavorite) RedPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(30.dp),
                     )

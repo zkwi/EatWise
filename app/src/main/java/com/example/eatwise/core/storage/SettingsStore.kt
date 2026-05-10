@@ -15,10 +15,10 @@ class SettingsStore(
 ) {
     val settings: Flow<AppSettings> = context.settingsDataStore.data.map { preferences ->
         AppSettings(
-            baseUrl = preferences[Keys.baseUrl] ?: "https://openrouter.ai/api/v1",
+            baseUrl = preferences[Keys.baseUrl] ?: AppSettings.DEFAULT_BASE_URL,
             modelName = normalizeSingleLine(preferences[Keys.modelName] ?: ""),
             apiKey = preferences[Keys.apiKey] ?: "",
-            userGoal = preferences[Keys.userGoal] ?: "我想保持饮食均衡，尽量吃得健康一些。",
+            userGoal = preferences[Keys.userGoal] ?: AppSettings.DEFAULT_USER_GOAL,
         )
     }
 

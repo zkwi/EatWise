@@ -1,6 +1,7 @@
 package com.example.eatwise
 
 import com.example.eatwise.core.util.JsonUtils
+import com.example.eatwise.core.util.MealAnalysisPolisher
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -31,6 +32,23 @@ class JsonUtilsTest {
         val legacyJson = sampleJson.replace("\"dish\": \"番茄鸡蛋面\",\n", "")
         val result = JsonUtils.parseMealAnalysis(legacyJson)
         assertEquals("", result.ingredients.first().dish)
+    }
+
+    @Test
+    fun polishTagsAndSuggestionsForMobileCards() {
+        val result = MealAnalysisPolisher.polish(
+            JsonUtils.parseMealAnalysis(sampleJson).copy(
+                suggestions = listOf(
+                    "如果目标是减重，可以减少一半烧烤肉类。",
+                    "建议少喝汤底，减少额外油盐摄入。",
+                    "完全避免任何高脂食物。",
+                ),
+                tags = listOf("蛋白质充足", "热量偏高", "油脂偏高", "高胆固醇风险"),
+            ),
+        )
+
+        assertEquals(listOf("蛋白足", "热量高", "油脂高", "控脂关注", "碳水多"), result.tags)
+        assertEquals(listOf("烧烤少吃半份", "汤汁少喝几口", "少吃高油食物"), result.suggestions)
     }
 
     private val sampleJson = """

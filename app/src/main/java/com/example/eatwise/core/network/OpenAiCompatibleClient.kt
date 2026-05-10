@@ -181,7 +181,11 @@ class OpenAiCompatibleClient(
         - 复合菜品至少拆出主要可见食材，例如“煎饺”可拆为“面皮/肉馅/油”。
         - goal_match.level 只能是 good、partial、poor、unknown。
         - suggestions 返回 1 到 3 条，每条不超过 18 个中文字符，必须具体可执行。
+        - suggestions 必须符合普通用户真实场景，优先给“少吃半份、汤汁少喝、酱料少放、加一份蔬菜、下餐清淡”等可做到的小调整。
+        - 不要给极端方案，例如完全禁食、只吃单一食物、严格称重、复杂食谱或药物建议。
         - tags 返回 2 到 5 个短标签，每个不超过 6 个中文字符。
+        - tags 优先使用生活化标签，例如：热量高、轻负担、蛋白足、蛋白少、碳水多、油脂高、油炸、糖偏高、钠偏高、蔬菜少、减脂关注、控脂关注。
+        - tags 不要返回长句、重复标签、医学诊断词或“健康/不健康”这类空泛判断。
         - summary 和 goal_match.reason 都要简短，避免长段落。
         - 数字字段不确定时可返回 null。
         - 不要 Markdown，不要代码块，不要额外解释。
@@ -206,7 +210,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 2
+        const val promptVersion = 3
 
         private val systemPrompt = """
             你是一个个人饮食记录和营养分析助手。
@@ -216,8 +220,8 @@ class OpenAiCompatibleClient(
             2. 如有多个菜品或复合菜品，拆分主要菜品和可见食材；
             3. 粗略估算总热量和三大营养素；
             4. 根据用户目标判断这餐是否合适；
-            5. 给出简短、具体、可执行的建议；
-            6. 标签和建议必须短，适合手机卡片展示；
+            5. 给出简短、具体、可执行的建议，优先使用普通人当餐或下餐能做到的小调整；
+            6. 标签和建议必须短，适合手机卡片展示，标签要像移动端筛选词而不是完整句子；
             7. 不要做医学诊断；
             8. 不要替代医生、营养师或药物治疗建议；
             9. 如果不确定，请明确说明这是估算；

@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -86,76 +87,80 @@ fun HomeScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-    ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 30.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("今天吃了什么？", fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
-                    Text("拍一张照片，让 AI 帮你记录和分析。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                IconButton(
-                    onClick = onOpenSettings,
-                    modifier = Modifier
-                        .size(58.dp)
-                        .background(Color.White, CircleShape),
-                ) {
-                    Icon(Icons.Rounded.Settings, contentDescription = "设置", tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-        }
-
-        item {
-            StartMealCard(
-                onOpenCamera = onOpenCamera,
-                onPickImage = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-            )
-        }
-
-        item {
-            SampleMealsSection(
-                samples = sampleMeals,
-                onSampleClick = { sample ->
-                    viewModel.importSampleImage(sample.imageRes, sample.key, onAnalyze)
-                },
-            )
-        }
-
-        item {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("最近记录", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                TextButton(onClick = onOpenHistory) {
-                    Text("查看全部", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                    Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-        }
-
-        if (state.recentRecords.isEmpty()) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
             item {
-                EmptyCard("还没有记录，先拍一餐试试。")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 30.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("今天这餐怎么样？", fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
+                        Text("拍照或导入图片，先记录，再看怎么调整。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(
+                        onClick = onOpenSettings,
+                        modifier = Modifier
+                            .size(58.dp)
+                            .background(Color.White, CircleShape),
+                    ) {
+                        Icon(Icons.Rounded.Settings, contentDescription = "设置", tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
             }
-        } else {
-            items(state.recentRecords.take(4)) { record ->
-                RecentRecordCard(record, onClick = { onOpenDetail(record.id) })
+
+            item {
+                StartMealCard(
+                    onOpenCamera = onOpenCamera,
+                    onPickImage = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                )
             }
+
+            item {
+                SampleMealsSection(
+                    samples = sampleMeals,
+                    onSampleClick = { sample ->
+                        viewModel.importSampleImage(sample.imageRes, sample.key, onAnalyze)
+                    },
+                )
+            }
+
+            item {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("最近分析", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onClick = onOpenHistory) {
+                        Text("查看全部", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+
+            if (state.recentRecords.isEmpty()) {
+                item {
+                    EmptyCard("还没有记录。分析成功后会自动保存到这里。")
+                }
+            } else {
+                items(state.recentRecords.take(4)) { record ->
+                    RecentRecordCard(record, onClick = { onOpenDetail(record.id) })
+                }
+            }
+
+            item { Spacer(Modifier.height(12.dp)) }
         }
 
-        item { Spacer(Modifier.height(12.dp)) }
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 20.dp, vertical = 12.dp),
+        )
     }
-
-    SnackbarHost(hostState = snackbarHostState)
 }
 
 private val sampleMeals = listOf(
@@ -175,8 +180,9 @@ private data class SampleMeal(
 
 @Composable
 private fun SampleMealsSection(samples: List<SampleMeal>, onSampleClick: (SampleMeal) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("示例图片", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("没有照片时先试试", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text("用内置图片体验完整分析流程。", color = MaterialTheme.colorScheme.onSurfaceVariant)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(samples) { sample ->
                 SampleMealCard(sample, onClick = { onSampleClick(sample) })
@@ -204,7 +210,7 @@ private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
                     .height(104.dp),
             )
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(sample.title, fontWeight = FontWeight.Bold, maxLines = 1)
+                Text(sample.title, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     sample.label,
                     color = MaterialTheme.colorScheme.primary,
@@ -247,7 +253,8 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                Text("开始记录这一餐", fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
+                Text("记录一餐", fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
+                Text("尽量拍清主食、配菜和饮料，结果会更稳定。", color = GreenDeep.copy(alpha = 0.72f))
                 Button(
                     onClick = onOpenCamera,
                     modifier = Modifier.fillMaxWidth().height(58.dp),
@@ -257,7 +264,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 ) {
                     Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                     Spacer(Modifier.size(10.dp))
-                    Text("拍照分析", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("拍今天这一餐", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
                 OutlinedButton(
                     onClick = onPickImage,
@@ -267,7 +274,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 ) {
                     Icon(Icons.Rounded.Image, contentDescription = null)
                     Spacer(Modifier.size(10.dp))
-                    Text("从相册选择", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("导入已有照片", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -294,7 +301,7 @@ private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp)),
             )
             Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(record.mealName, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1)
+                Text(record.mealName, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     GoalBadge(record.goalMatchLevel)

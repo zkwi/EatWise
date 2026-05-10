@@ -66,13 +66,13 @@ class AnalysisViewModel(
 
     private suspend fun saveCurrentOutput() {
         val currentOutput = output ?: return
-        _uiState.update { it.copy(isSaving = true, saveMessage = "正在自动保存...") }
+        _uiState.update { it.copy(isSaving = true, saveMessage = "正在保存到记录...") }
         runCatching { saveMealRecordUseCase(currentOutput) }
             .onSuccess { id ->
-                _uiState.update { it.copy(isSaving = false, savedRecordId = id, saveMessage = "已自动保存到记录") }
+                _uiState.update { it.copy(isSaving = false, savedRecordId = id, saveMessage = "已保存到饮食记录") }
             }
             .onFailure {
-                _uiState.update { it.copy(isSaving = false, saveMessage = "自动保存失败，请重新分析。") }
+                _uiState.update { it.copy(isSaving = false, saveMessage = "保存失败，可以再分析一次。") }
             }
     }
 }

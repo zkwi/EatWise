@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CameraAlt
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -80,7 +80,7 @@ fun AppNavGraph(container: AppContainer) {
                 ) {
                     listOf(
                         BottomItem(Routes.Home, "首页", Icons.Rounded.Home),
-                        BottomItem(Routes.History, "记录", Icons.Rounded.CameraAlt),
+                        BottomItem(Routes.History, "记录", Icons.Rounded.History),
                         BottomItem(Routes.Settings, "设置", Icons.Rounded.Settings),
                     ).forEach { item ->
                         val selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == item.route } == true
