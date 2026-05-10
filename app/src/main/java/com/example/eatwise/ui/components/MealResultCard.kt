@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -126,13 +125,8 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             SoftCard {
                 Text("建议", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 result.suggestions.take(3).forEach {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-                        Icon(
-                            Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp).padding(top = 2.dp),
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        SuggestionActionChip(suggestionAction(it, result.goalMatch.level))
                         Text(
                             compactSuggestion(it),
                             modifier = Modifier.weight(1f),
@@ -255,6 +249,22 @@ private fun IngredientRow(ingredient: Ingredient) {
 
 private data class IngredientGroup(val title: String, val items: List<Ingredient>)
 private data class IngredientHint(val label: String, val container: Color, val content: Color)
+private data class SuggestionAction(val label: String, val container: Color, val content: Color)
+
+@Composable
+private fun SuggestionActionChip(action: SuggestionAction) {
+    Text(
+        text = action.label,
+        color = action.content,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(action.container)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+    )
+}
 
 @Composable
 private fun IngredientHintChip(hint: IngredientHint) {
@@ -304,10 +314,32 @@ private fun ingredientRoleHint(ingredient: Ingredient): IngredientHint {
 
 private fun String.hasAny(vararg keywords: String): Boolean = keywords.any { contains(it, ignoreCase = true) }
 
+private fun suggestionAction(text: String, goalLevel: String): SuggestionAction {
+    val clean = text.trim()
+    return when {
+        clean.hasAny("避免", "避开", "不要", "别吃", "不建议", "少食用") ->
+            SuggestionAction("避开", RedSoft, RedPrimary)
+        clean.hasAny("减少", "少", "控制", "一半", "半份", "油", "盐", "糖", "炸", "热量") ->
+            SuggestionAction("少吃点", OrangeSoft, OrangePrimary)
+        clean.hasAny("增加", "补充", "加", "蔬菜", "纤维", "蛋白", "喝水") ->
+            SuggestionAction("补一点", GreenSoft, GreenDeep)
+        clean.hasAny("搭配", "替换", "改成", "选择", "下餐") ->
+            SuggestionAction("换搭配", GreenSoft, GreenDeep)
+        goalLevel == "good" ->
+            SuggestionAction("放心吃", GreenSoft, GreenDeep)
+        goalLevel == "poor" ->
+            SuggestionAction("浅尝", RedSoft, RedPrimary)
+        else ->
+            SuggestionAction("适量吃", Color(0xFFF0F2F5), Color(0xFF6D7484))
+    }
+}
+
 private fun compactSuggestion(text: String): String {
     val clean = text.trim()
         .removePrefix("建议")
         .removePrefix("可以")
+        .removePrefix("尽量")
+        .removePrefix("如果")
         .replace("尽量减少", "少")
         .replace("下一餐选择", "下餐选")
         .replace("清淡饮食", "清淡餐")
@@ -317,7 +349,7 @@ private fun compactSuggestion(text: String): String {
         .replace("以补充", "补")
         .replace("以降低", "降")
         .trim('，', '。', '、', ' ')
-    return if (clean.length <= 14) clean else clean.take(14)
+    return if (clean.length <= 16) clean else clean.take(16)
 }
 
 private fun ingredientGroups(ingredients: List<Ingredient>): List<IngredientGroup> {
