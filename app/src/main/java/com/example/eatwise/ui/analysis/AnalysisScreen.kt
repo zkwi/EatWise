@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BookmarkAdd
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,10 +43,6 @@ fun AnalysisScreen(
     onSaved: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(state.savedRecordId) {
-        state.savedRecordId?.let(onSaved)
-    }
 
     Column(
         modifier = Modifier
@@ -84,16 +80,45 @@ fun AnalysisScreen(
             }
             state.result?.let { result ->
                 item { MealResultCard(result) }
+                state.saveMessage?.let { message ->
+                    item {
+                        val saveFailed = message.contains("失败")
+                        val saveDone = state.savedRecordId != null
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(
+                                if (saveDone) Icons.Rounded.CheckCircle else Icons.Rounded.Refresh,
+                                contentDescription = null,
+                                tint = if (saveFailed) {
+                                    androidx.compose.material3.MaterialTheme.colorScheme.error
+                                } else {
+                                    androidx.compose.material3.MaterialTheme.colorScheme.primary
+                                },
+                            )
+                            Text(
+                                message,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (saveFailed) {
+                                    androidx.compose.material3.MaterialTheme.colorScheme.error
+                                } else {
+                                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface
+                                },
+                            )
+                        }
+                    }
+                }
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
-                            onClick = viewModel::save,
-                            enabled = !state.isSaving,
+                            onClick = { state.savedRecordId?.let(onSaved) },
+                            enabled = state.savedRecordId != null && !state.isSaving,
                             modifier = Modifier.weight(1f).height(52.dp),
                             shape = RoundedCornerShape(18.dp),
                         ) {
-                            Icon(Icons.Rounded.BookmarkAdd, contentDescription = null)
-                            Text(if (state.isSaving) "保存中" else "保存记录", fontWeight = FontWeight.Bold)
+                            Icon(Icons.Rounded.History, contentDescription = null)
+                            Text(if (state.isSaving) "保存中" else "查看记录", fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = viewModel::analyze,
