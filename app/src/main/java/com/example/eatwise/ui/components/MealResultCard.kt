@@ -12,12 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -28,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.eatwise.domain.model.Ingredient
 import com.example.eatwise.domain.model.MealAnalysisResult
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenPale
@@ -62,8 +68,19 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                         )
                         Text(" kcal", modifier = Modifier.padding(start = 6.dp, bottom = 7.dp), color = GreenDeep)
                     }
-                    Text(result.mealName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text(result.summary, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        result.mealName,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        result.summary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         MacroChip("蛋白质", result.macros.proteinG, Modifier.weight(1f))
                         MacroChip("碳水", result.macros.carbsG, Modifier.weight(1f))
@@ -92,7 +109,12 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                 color = if (result.goalMatch.level == "good") GreenDeep else OrangePrimary,
                 trackColor = Color(0xFFEDEDED),
             )
-            Text(result.goalMatch.reason.ifBlank { "AI 未给出明确判断。" }, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                result.goalMatch.reason.ifBlank { "AI 未给出明确判断。" },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
 
         if (result.suggestions.isNotEmpty()) {
@@ -106,7 +128,12 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp).padding(top = 2.dp),
                         )
-                        Text(it)
+                        Text(
+                            compactSuggestion(it),
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
             }
@@ -115,27 +142,40 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
         if (result.ingredients.isNotEmpty()) {
             SoftCard {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("食材明细", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("多食材明细", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(Modifier.weight(1f))
                     Text(
                         result.totalKcal?.let { "总计 %.0f kcal".format(it) } ?: "总计 -- kcal",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                result.ingredients.forEach { ingredient ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(GreenSoft, CircleShape),
-                        )
-                        Text(ingredient.name.ifBlank { "食材" }, modifier = Modifier.padding(start = 10.dp))
-                        Spacer(Modifier.weight(1f))
-                        Text(ingredient.amount, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(
-                            "  ${ingredient.kcal?.let { "%.0f kcal".format(it) } ?: "--"}",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                ingredientGroups(result.ingredients).forEachIndexed { groupIndex, group ->
+                    if (group.title.isNotBlank()) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(GreenSoft, CircleShape),
+                            ) {
+                                Icon(
+                                    Icons.Rounded.Restaurant,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                            Text(group.title, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    group.items.take(8).forEachIndexed { index, ingredient ->
+                        IngredientRow(ingredient)
+                        if (index != group.items.lastIndex.coerceAtMost(7)) {
+                            HorizontalDivider(color = Color(0xFFF0F1F2))
+                        }
+                    }
+                    if (groupIndex != ingredientGroups(result.ingredients).lastIndex) {
+                        Spacer(Modifier.height(2.dp))
                     }
                 }
             }
@@ -145,7 +185,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             SoftCard {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("标签", fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 4.dp, top = 6.dp))
-                    result.tags.forEach { TagChip(it) }
+                    result.tags.take(5).forEach { TagChip(it) }
                 }
             }
         }
@@ -155,6 +195,67 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall,
         )
+    }
+}
+
+@Composable
+private fun IngredientRow(ingredient: Ingredient) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .background(GreenSoft, CircleShape),
+        )
+        Text(
+            ingredient.name.ifBlank { "食材" },
+            modifier = Modifier
+                .padding(start = 10.dp)
+                .weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            ingredient.amount,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.widthIn(max = 88.dp),
+        )
+        Text(
+            ingredient.kcal?.let { "  %.0f".format(it) } ?: "  --",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+        Text(" kcal", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+private data class IngredientGroup(val title: String, val items: List<Ingredient>)
+
+private fun compactSuggestion(text: String): String {
+    val clean = text.trim()
+        .removePrefix("建议")
+        .removePrefix("可以")
+        .replace("尽量减少", "少")
+        .replace("下一餐选择", "下餐选")
+        .replace("清淡饮食", "清淡餐")
+        .replace("蒸煮类食物", "蒸煮")
+        .replace("建议下一餐", "下餐")
+        .replace("增加一份", "加")
+        .replace("以补充", "补")
+        .replace("以降低", "降")
+        .trim('，', '。', '、', ' ')
+    return if (clean.length <= 14) clean else clean.take(14)
+}
+
+private fun ingredientGroups(ingredients: List<Ingredient>): List<IngredientGroup> {
+    val grouped = ingredients.groupBy { it.dish.trim() }
+    if (grouped.size <= 1 && grouped.keys.firstOrNull().isNullOrBlank()) {
+        return listOf(IngredientGroup("", ingredients))
+    }
+    return grouped.map { (dish, items) ->
+        IngredientGroup(dish.ifBlank { "其他" }, items)
     }
 }
 

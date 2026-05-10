@@ -2,6 +2,7 @@ package com.example.eatwise.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,6 +22,7 @@ import com.example.eatwise.ui.theme.RedSoft
 
 @Composable
 fun TagChip(text: String, modifier: Modifier = Modifier) {
+    val label = compactLabel(text)
     val warning = text.contains("高") || text.contains("偏高") || text.contains("油") || text.contains("热量")
     val poor = text.contains("不适合") || text.contains("高脂")
     val container = when {
@@ -34,17 +36,23 @@ fun TagChip(text: String, modifier: Modifier = Modifier) {
         else -> GreenDeep
     }
     Text(
-        text = text,
+        text = label,
         color = content,
         fontSize = 14.sp,
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
+            .widthIn(max = 94.dp)
             .clip(RoundedCornerShape(50))
             .background(container)
             .padding(horizontal = 12.dp, vertical = 7.dp),
     )
+}
+
+private fun compactLabel(text: String): String {
+    val clean = text.trim().replace(Regex("\\s+"), "")
+    return if (clean.length <= 6) clean else clean.take(6)
 }
 
 @Composable

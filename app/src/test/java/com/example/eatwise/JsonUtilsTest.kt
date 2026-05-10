@@ -20,6 +20,12 @@ class JsonUtilsTest {
         assertEquals(1596.0, result.totalKcal ?: 0.0, 0.01)
     }
 
+    @Test
+    fun parseIngredientDishForMixedMeals() {
+        val result = JsonUtils.parseMealAnalysis(sampleJson)
+        assertEquals("番茄鸡蛋面", result.ingredients.first().dish)
+    }
+
     private val sampleJson = """
         {
           "meal_name": "番茄鸡蛋面配烧烤",
@@ -38,6 +44,7 @@ class JsonUtilsTest {
           },
           "ingredients": [
             {
+              "dish": "番茄鸡蛋面",
               "name": "面条",
               "amount": "约300克",
               "kcal": 330

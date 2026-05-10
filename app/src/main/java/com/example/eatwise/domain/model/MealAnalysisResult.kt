@@ -33,6 +33,7 @@ data class GoalMatch(
 
 @Serializable
 data class Ingredient(
+    val dish: String = "",
     val name: String = "",
     val amount: String = "",
     val kcal: Double? = null,

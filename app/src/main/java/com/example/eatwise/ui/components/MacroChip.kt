@@ -26,7 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenSoft
 import com.example.eatwise.ui.theme.OrangePrimary
@@ -62,29 +64,41 @@ fun MacroChip(label: String, value: Double?, modifier: Modifier = Modifier) {
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(76.dp)
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 8.dp),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(36.dp)
                     .background(background, CircleShape),
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(23.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
             }
-            Column {
-                Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(Modifier.weight(1f)) {
                 Text(
-                    value?.let { "%.1f g".format(it) } ?: "--",
+                    label,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    value?.let { formatMacroValue(it) } ?: "--",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 17.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
     }
 }
+
+private fun formatMacroValue(value: Double): String =
+    "%.0f g".format(value)

@@ -164,6 +164,7 @@ class OpenAiCompatibleClient(
           },
           "ingredients": [
             {
+              "dish": "所属菜品",
               "name": "食材名",
               "amount": "估算分量",
               "kcal": 0
@@ -175,8 +176,13 @@ class OpenAiCompatibleClient(
         }
 
         约束：
+        - 如果图片里有多个菜品，meal_name 用整体名称，例如“多菜品拼餐”或“米饭配三菜”。
+        - ingredients 必须覆盖主要菜品和复合食材；多个菜品混合时，用 dish 标明所属菜品。
+        - 复合菜品至少拆出主要可见食材，例如“煎饺”可拆为“面皮/肉馅/油”。
         - goal_match.level 只能是 good、partial、poor、unknown。
-        - suggestions 返回 1 到 3 条。
+        - suggestions 返回 1 到 3 条，每条不超过 18 个中文字符，必须具体可执行。
+        - tags 返回 2 到 5 个短标签，每个不超过 6 个中文字符。
+        - summary 和 goal_match.reason 都要简短，避免长段落。
         - 数字字段不确定时可返回 null。
         - 不要 Markdown，不要代码块，不要额外解释。
     """.trimIndent()
@@ -200,20 +206,22 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 1
+        const val promptVersion = 2
 
         private val systemPrompt = """
             你是一个个人饮食记录和营养分析助手。
             用户会上传一张餐食图片，并提供自己的健康管理目标。
             你的任务是：
             1. 识别图片中的主要食物；
-            2. 粗略估算总热量和三大营养素；
-            3. 根据用户目标判断这餐是否合适；
-            4. 给出简洁、具体、可执行的建议；
-            5. 不要做医学诊断；
-            6. 不要替代医生、营养师或药物治疗建议；
-            7. 如果不确定，请明确说明这是估算；
-            8. 必须只返回 JSON，不要 Markdown，不要代码块，不要额外解释。
+            2. 如有多个菜品或复合菜品，拆分主要菜品和可见食材；
+            3. 粗略估算总热量和三大营养素；
+            4. 根据用户目标判断这餐是否合适；
+            5. 给出简短、具体、可执行的建议；
+            6. 标签和建议必须短，适合手机卡片展示；
+            7. 不要做医学诊断；
+            8. 不要替代医生、营养师或药物治疗建议；
+            9. 如果不确定，请明确说明这是估算；
+            10. 必须只返回 JSON，不要 Markdown，不要代码块，不要额外解释。
         """.trimIndent()
     }
 }
