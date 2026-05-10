@@ -71,6 +71,7 @@ POST {baseUrl}/chat/completions
 - API Key 只保存在本机 DataStore 中。
 - App 不打印 API Key、Authorization header 或完整 base64 图片内容。
 - 图片保存到 App 私有目录。
+- Android 系统备份已关闭，避免把本地 Key、图片和分析记录同步到云端或新设备。
 - 除用户配置的大模型 API 外，App 不上传数据到其他服务。
 
 ## 工程治理

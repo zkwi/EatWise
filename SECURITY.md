@@ -10,6 +10,7 @@ EatWise 只做本地饮食记录和用户自配模型调用，不提供后端服
 
 - API Key 仅保存在本机 DataStore。
 - 图片保存到 App 私有目录。
+- Android 系统备份默认关闭，避免把本地 Key、图片和分析记录同步到云端或新设备。
 - 除用户配置的大模型 API 外，App 不主动上传数据到其他服务。
 - 日志、Issue、PR 和文档中不得包含真实 Key、Authorization header、完整 base64 图片、完整请求体或完整响应体。
 

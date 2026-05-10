@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
 import com.example.eatwise.core.storage.ImageStorage
 import java.io.File
@@ -43,7 +44,7 @@ class ImageCompressor(context: Context) {
         val largest = max(width, height)
         if (largest <= maxSide) return this
         val ratio = maxSide.toFloat() / largest
-        return Bitmap.createScaledBitmap(this, (width * ratio).toInt(), (height * ratio).toInt(), true)
+        return scale((width * ratio).toInt(), (height * ratio).toInt())
     }
 
     private fun Bitmap.fixOrientation(file: File): Bitmap {
