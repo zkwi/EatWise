@@ -93,7 +93,7 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 34.dp),
+                    .padding(top = 30.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -158,13 +158,28 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 .background(Brush.linearGradient(listOf(Color(0xFFE2F8C9), Color(0xFFFFF7C8), GreenSoft)))
                 .padding(22.dp),
         ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(106.dp)
+                    .background(Color.White.copy(alpha = 0.42f), CircleShape),
+            ) {
+                Icon(
+                    Icons.Rounded.RestaurantMenu,
+                    contentDescription = null,
+                    tint = GreenDeep.copy(alpha = 0.34f),
+                    modifier = Modifier.size(54.dp),
+                )
+            }
             Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                Text("开始记录这一餐", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
+                Text("开始记录这一餐", fontSize = 28.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
                 Button(
                     onClick = onOpenCamera,
                     modifier = Modifier.fillMaxWidth().height(58.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
                 ) {
                     Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                     Spacer(Modifier.size(10.dp))

@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -230,10 +231,13 @@ private fun AiConfigHero(isConfigured: Boolean) {
                 Text(
                     if (isConfigured) "已配置，可以开始识别" else "未配置，请先完成配置",
                     color = if (isConfigured) GreenDeep else RedPrimary,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .background(if (isConfigured) GreenSoft else RedSoft, RoundedCornerShape(50))
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .padding(horizontal = 13.dp, vertical = 8.dp),
                 )
             }
             Box(
