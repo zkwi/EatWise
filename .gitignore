@@ -17,3 +17,11 @@ local.properties
 /emulator-*.png
 /emulator-*.txt
 /ui-*.xml
+/analysis-*.png
+/analysis-*.xml
+/picker-*.png
+/picker-*.xml
+/run-home-*.png
+/run-home-*.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/vcs.xml

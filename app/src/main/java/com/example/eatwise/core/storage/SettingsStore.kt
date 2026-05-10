@@ -16,7 +16,7 @@ class SettingsStore(
     val settings: Flow<AppSettings> = context.settingsDataStore.data.map { preferences ->
         AppSettings(
             baseUrl = preferences[Keys.baseUrl] ?: "https://openrouter.ai/api/v1",
-            modelName = preferences[Keys.modelName] ?: "",
+            modelName = normalizeSingleLine(preferences[Keys.modelName] ?: ""),
             apiKey = preferences[Keys.apiKey] ?: "",
             userGoal = preferences[Keys.userGoal] ?: "我想保持饮食均衡，尽量吃得健康一些。",
         )
@@ -25,11 +25,18 @@ class SettingsStore(
     suspend fun save(settings: AppSettings) {
         context.settingsDataStore.edit { preferences ->
             preferences[Keys.baseUrl] = settings.baseUrl.trim()
-            preferences[Keys.modelName] = settings.modelName.trim()
+            preferences[Keys.modelName] = normalizeSingleLine(settings.modelName)
             preferences[Keys.apiKey] = settings.apiKey.trim()
             preferences[Keys.userGoal] = settings.userGoal.trim()
         }
     }
+
+    private fun normalizeSingleLine(value: String): String =
+        value
+            .lines()
+            .map { it.trim() }
+            .firstOrNull { it.isNotBlank() }
+            .orEmpty()
 
     private object Keys {
         val baseUrl = stringPreferencesKey("base_url")

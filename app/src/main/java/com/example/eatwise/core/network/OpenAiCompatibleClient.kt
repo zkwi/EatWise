@@ -5,10 +5,7 @@ import com.example.eatwise.core.util.JsonUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonArrayBuilder
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -31,11 +28,10 @@ class OpenAiCompatibleClient(
         config: LlmConfig,
         userGoal: String,
         imageFile: File,
-        useJsonSchema: Boolean,
     ): String = withContext(Dispatchers.IO) {
         val base64 = Base64.encodeToString(imageFile.readBytes(), Base64.NO_WRAP)
-        val body = buildRequestBody(config.modelName, userGoal, base64, useJsonSchema)
-        val url = config.baseUrl.trimEnd('/') + "/chat/completions"
+        val body = buildRequestBody(config.modelName, userGoal, base64)
+        val url = buildEndpoint(config.baseUrl)
         val requestBuilder = Request.Builder()
             .url(url)
             .post(json.encodeToString(JsonObject.serializer(), body).toRequestBody(mediaType))
@@ -51,12 +47,12 @@ class OpenAiCompatibleClient(
         okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
             val responseBody = response.body.string()
             if (!response.isSuccessful) {
-                throw ApiException(response.code, mapStatusMessage(response.code, responseBody), responseBody)
+                throw ApiException(response.code, mapStatusMessage(response.code, responseBody))
             }
 
             val completion = json.decodeFromString(ChatCompletionResponse.serializer(), responseBody)
             completion.choices.firstOrNull()?.message?.content
-                ?: throw ApiException(null, "AI 返回为空，请重试。", responseBody)
+                ?: throw ApiException(null, "AI 返回为空，请重试。")
         }
     }
 
@@ -64,7 +60,6 @@ class OpenAiCompatibleClient(
         modelName: String,
         userGoal: String,
         base64: String,
-        useJsonSchema: Boolean,
     ): JsonObject = buildJsonObject {
         put("model", modelName)
         put("temperature", 0.2)
@@ -89,10 +84,6 @@ class OpenAiCompatibleClient(
                 ),
             )
         }
-        put(
-            "response_format",
-            if (useJsonSchema) jsonSchemaResponseFormat() else buildJsonObject { put("type", "json_object") },
-        )
     }
 
     private fun message(role: String, content: kotlinx.serialization.json.JsonElement) = buildJsonObject {
@@ -100,12 +91,12 @@ class OpenAiCompatibleClient(
         put("content", content)
     }
 
-    private fun jsonSchemaResponseFormat(): JsonObject = buildJsonObject {
-        put("type", "json_schema")
-        putJsonObject("json_schema") {
-            put("name", "meal_analysis")
-            put("strict", true)
-            put("schema", MealAnalysisSchema.schema)
+    private fun buildEndpoint(baseUrl: String): String {
+        val base = baseUrl.trim().trimEnd('/')
+        return if (base.endsWith("/chat/completions", ignoreCase = true)) {
+            base
+        } else {
+            "$base/chat/completions"
         }
     }
 
@@ -113,13 +104,45 @@ class OpenAiCompatibleClient(
         用户目标：
         $userGoal
 
-        请分析这张餐食图片，并返回餐食名称、摘要、总热量、三大营养素、目标匹配、食材明细、1 到 3 条建议、标签和免责声明。
+        请分析这张餐食图片。
+
+        必须只返回一个 JSON 对象，字段名必须使用下面的英文 key，不要使用中文 key：
+        {
+          "meal_name": "餐食名称",
+          "summary": "简短摘要",
+          "total_kcal": 0,
+          "confidence": 0.7,
+          "macros": {
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fat_g": 0
+          },
+          "goal_match": {
+            "level": "good|partial|poor|unknown",
+            "score": 1,
+            "reason": "原因"
+          },
+          "ingredients": [
+            {
+              "name": "食材名",
+              "amount": "估算分量",
+              "kcal": 0
+            }
+          ],
+          "suggestions": ["建议1", "建议2"],
+          "tags": ["标签1"],
+          "disclaimer": "以上是基于图片的粗略估算，仅供饮食记录参考。"
+        }
+
+        约束：
+        - goal_match.level 只能是 good、partial、poor、unknown。
+        - suggestions 返回 1 到 3 条。
+        - 数字字段不确定时可返回 null。
+        - 不要 Markdown，不要代码块，不要额外解释。
     """.trimIndent()
 
     private fun mapStatusMessage(statusCode: Int, responseBody: String): String {
-        val apiMessage = runCatching {
-            json.decodeFromString(ApiErrorEnvelope.serializer(), responseBody).error?.message
-        }.getOrNull().orEmpty()
+        val apiMessage = extractApiErrorMessage(responseBody)
         return when (statusCode) {
             400 -> if (apiMessage.contains("image", true) || apiMessage.contains("vision", true)) {
                 "当前模型可能不支持图片分析，请更换支持视觉输入的模型。"
@@ -130,6 +153,11 @@ class OpenAiCompatibleClient(
             else -> "网络请求失败，请检查网络或 API 配置。"
         }
     }
+
+    private fun extractApiErrorMessage(responseBody: String): String =
+        runCatching {
+            json.decodeFromString(ApiErrorEnvelope.serializer(), responseBody).error?.message
+        }.getOrNull().orEmpty().take(240)
 
     companion object {
         const val promptVersion = 1
@@ -153,98 +181,4 @@ class OpenAiCompatibleClient(
 class ApiException(
     val statusCode: Int?,
     override val message: String,
-    val rawBody: String? = null,
 ) : Exception(message)
-
-private object MealAnalysisSchema {
-    val schema: JsonObject = buildJsonObject {
-        put("type", "object")
-        putJsonObject("properties") {
-            string("meal_name")
-            string("summary")
-            nullableNumber("total_kcal")
-            nullableNumber("confidence")
-            putJsonObject("macros") {
-                put("type", "object")
-                putJsonObject("properties") {
-                    nullableNumber("protein_g")
-                    nullableNumber("carbs_g")
-                    nullableNumber("fat_g")
-                }
-                putJsonArray("required") { addAll("protein_g", "carbs_g", "fat_g") }
-                put("additionalProperties", false)
-            }
-            putJsonObject("goal_match") {
-                put("type", "object")
-                putJsonObject("properties") {
-                    putJsonObject("level") {
-                        putJsonArray("enum") {
-                            add(JsonPrimitive("good"))
-                            add(JsonPrimitive("partial"))
-                            add(JsonPrimitive("poor"))
-                            add(JsonPrimitive("unknown"))
-                        }
-                    }
-                    nullableInteger("score")
-                    string("reason")
-                }
-                putJsonArray("required") { addAll("level", "score", "reason") }
-                put("additionalProperties", false)
-            }
-            putJsonObject("ingredients") {
-                put("type", "array")
-                putJsonObject("items") {
-                    put("type", "object")
-                    putJsonObject("properties") {
-                        string("name")
-                        string("amount")
-                        nullableNumber("kcal")
-                    }
-                    putJsonArray("required") { addAll("name", "amount", "kcal") }
-                    put("additionalProperties", false)
-                }
-            }
-            stringArray("suggestions")
-            stringArray("tags")
-            string("disclaimer")
-        }
-        putJsonArray("required") {
-            addAll(
-                "meal_name",
-                "summary",
-                "total_kcal",
-                "confidence",
-                "macros",
-                "goal_match",
-                "ingredients",
-                "suggestions",
-                "tags",
-                "disclaimer",
-            )
-        }
-        put("additionalProperties", false)
-    }
-
-    private fun JsonObjectBuilder.string(name: String) {
-        putJsonObject(name) { put("type", "string") }
-    }
-
-    private fun JsonObjectBuilder.nullableNumber(name: String) {
-        putJsonObject(name) { put("type", JsonArray(listOf(JsonPrimitive("number"), JsonPrimitive("null")))) }
-    }
-
-    private fun JsonObjectBuilder.nullableInteger(name: String) {
-        putJsonObject(name) { put("type", JsonArray(listOf(JsonPrimitive("integer"), JsonPrimitive("null")))) }
-    }
-
-    private fun JsonObjectBuilder.stringArray(name: String) {
-        putJsonObject(name) {
-            put("type", "array")
-            putJsonObject("items") { put("type", "string") }
-        }
-    }
-
-    private fun JsonArrayBuilder.addAll(vararg values: String) {
-        values.forEach { add(JsonPrimitive(it)) }
-    }
-}

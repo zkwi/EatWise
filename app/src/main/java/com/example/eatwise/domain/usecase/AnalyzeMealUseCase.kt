@@ -18,7 +18,8 @@ class AnalyzeMealUseCase(
     suspend operator fun invoke(originalImage: File): AppResult<AnalysisOutput> {
         val settings = settingsRepository.current()
         if (settings.apiKey.isBlank()) return AppResult.Failure("请先在设置中配置 API Key。")
-        if (settings.modelName.isBlank()) return AppResult.Failure("请先在设置中填写模型名称。")
+        val modelName = normalizeModelName(settings.modelName)
+        if (modelName.isBlank()) return AppResult.Failure("请先在设置中填写模型名称。")
 
         val compressed = try {
             imageCompressor.compress(originalImage)
@@ -26,25 +27,17 @@ class AnalyzeMealUseCase(
             return AppResult.Failure("图片处理失败，请重试。", error)
         }
 
-        val config = LlmConfig(settings.baseUrl, settings.modelName, settings.apiKey)
-        val raw = try {
-            client.analyzeMeal(config, settings.userGoal, compressed, useJsonSchema = true)
+        val config = LlmConfig(settings.baseUrl, modelName, settings.apiKey)
+        val rawContent = try {
+            client.analyzeMeal(config, settings.userGoal, compressed)
         } catch (error: ApiException) {
-            if (error.statusCode == 400) {
-                runCatching {
-                    client.analyzeMeal(config, settings.userGoal, compressed, useJsonSchema = false)
-                }.getOrElse { retryError ->
-                    return AppResult.Failure((retryError as? ApiException)?.message ?: "网络请求失败，请检查网络或 API 配置。", retryError)
-                }
-            } else {
-                return AppResult.Failure(error.message, error)
-            }
+            return AppResult.Failure(error.message, error)
         } catch (error: Throwable) {
             return AppResult.Failure("网络请求失败，请检查网络或 API 配置。", error)
         }
 
-        val extractedJson = JsonUtils.extractJson(raw)
-        val result = runCatching { JsonUtils.parseMealAnalysis(raw) }.getOrElse { error ->
+        val extractedJson = JsonUtils.extractJson(rawContent)
+        val result = runCatching { JsonUtils.parseMealAnalysis(rawContent) }.getOrElse { error ->
             return AppResult.Failure("AI 返回格式异常，请重新分析。", error)
         }
 
@@ -58,6 +51,13 @@ class AnalyzeMealUseCase(
             ),
         )
     }
+
+    private fun normalizeModelName(value: String): String =
+        value
+            .lines()
+            .map { it.trim() }
+            .firstOrNull { it.isNotBlank() }
+            .orEmpty()
 }
 
 data class AnalysisOutput(
