@@ -26,6 +26,13 @@ class JsonUtilsTest {
         assertEquals("番茄鸡蛋面", result.ingredients.first().dish)
     }
 
+    @Test
+    fun parseLegacyIngredientWithoutDish() {
+        val legacyJson = sampleJson.replace("\"dish\": \"番茄鸡蛋面\",\n", "")
+        val result = JsonUtils.parseMealAnalysis(legacyJson)
+        assertEquals("", result.ingredients.first().dish)
+    }
+
     private val sampleJson = """
         {
           "meal_name": "番茄鸡蛋面配烧烤",

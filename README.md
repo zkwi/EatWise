@@ -7,7 +7,8 @@
 - 配置 OpenAI-compatible API：Base URL、模型名称、API Key、个人饮食目标
 - 从相册选择餐食图片或使用 CameraX 拍照
 - 压缩图片后以 base64 data URL 发送给用户配置的模型
-- 展示餐食名称、热量、三大营养素、目标匹配、建议、食材和标签
+- 展示餐食名称、热量、三大营养素、目标匹配、建议、多食材明细和短标签
+- 支持多个菜品或复合食材的分析结果展示，食材可按菜品归属分组
 - 保存本地历史记录，支持查看详情、收藏和删除
 - API Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
 
@@ -69,6 +70,13 @@ POST {baseUrl}/chat/completions
 - App 不打印 API Key、Authorization header 或完整 base64 图片内容。
 - 图片保存到 App 私有目录。
 - 除用户配置的大模型 API 外，App 不上传数据到其他服务。
+
+## 工程治理
+
+- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 2`。
+- 结果 JSON 保持向后兼容，新增字段优先设默认值。
+- 提交代码前运行 `.\gradlew.bat test assembleDebug`。
+- 编译、Debug、日志采集和 AI 接手维护流程见 [docs/MAINTENANCE.md](docs/MAINTENANCE.md)。
 
 ## 常见错误
 

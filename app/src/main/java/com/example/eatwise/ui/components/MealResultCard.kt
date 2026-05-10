@@ -141,6 +141,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
 
         if (result.ingredients.isNotEmpty()) {
             SoftCard {
+                val groups = ingredientGroups(result.ingredients)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text("多食材明细", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Spacer(Modifier.weight(1f))
@@ -149,7 +150,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                ingredientGroups(result.ingredients).forEachIndexed { groupIndex, group ->
+                groups.forEachIndexed { groupIndex, group ->
                     if (group.title.isNotBlank()) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(
@@ -174,7 +175,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                             HorizontalDivider(color = Color(0xFFF0F1F2))
                         }
                     }
-                    if (groupIndex != ingredientGroups(result.ingredients).lastIndex) {
+                    if (groupIndex != groups.lastIndex) {
                         Spacer(Modifier.height(2.dp))
                     }
                 }

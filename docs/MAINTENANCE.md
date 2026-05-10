@@ -11,21 +11,33 @@
 
 - 模型名称由用户在设置页填写。
 - 模型必须支持图片输入。
-- 如果模型不支持 structured output，代码会降级到 JSON mode。
-- 如果模型返回不稳定，可降低 temperature 或更换模型。
+- 当前实现不依赖 `response_format` 或流式输出，使用 prompt 约束模型只返回 JSON。
+- 如果模型返回不稳定，优先调整 prompt、降低 temperature 或更换模型，不要先引入复杂兼容层。
 
 ## Prompt 维护
 
 - 系统提示词集中在 `OpenAiCompatibleClient`。
-- 当前 `promptVersion = 1`。
+- 当前 `promptVersion = 2`。
+- `promptVersion = 2` 要求模型识别多个菜品和复合食材，并在食材条目中尽量填写可选 `dish` 字段。
+- 标签必须短，适合移动端胶囊展示；建议必须明确、可执行，避免长段落。
 - 修改 prompt 后，历史记录仍保留 `userGoalSnapshot` 和 `aiResultJson`。
 
-## JSON Schema 维护
+## JSON 结构维护
 
-- 当前 `schemaVersion = 1`。
-- 新增字段时尽量兼容旧记录。
+- 当前结果结构以 `promptVersion = 2` 管理，Room 数据库仍是 version 1。
+- `Ingredient.dish` 是可选字段，旧历史记录没有该字段也必须正常展示。
+- 新增 JSON 字段时尽量提供默认值，避免旧记录解析失败。
 - 不要删除历史记录依赖字段。
 - `aiResultJson` 永远保存原始 JSON。
+
+## 工程治理原则
+
+- 这是个人项目，优先保持主链路清晰，不为少量兼容问题引入大型框架。
+- UI、ViewModel、Repository、UseCase、core 工具的简单分层已经足够，新增抽象前必须能减少真实重复或复杂度。
+- 修改 AI 输出结构时，优先保持向后兼容；只有数据库 Entity 字段变化才升级 Room version 并添加 Migration。
+- 不提交本地调试产物、日志、截图、真实 Key 或用户图片。
+- 每次代码提交前至少运行 `.\gradlew.bat test assembleDebug`；只改文档时可说明未运行构建。
+- 修复 UI 时必须用模拟器或真机截图复核，重点看文字是否截断、标签是否换行、按钮是否被系统导航栏遮挡。
 
 ## 数据库维护
 
