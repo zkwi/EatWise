@@ -37,6 +37,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -122,9 +123,9 @@ fun HomeScreen(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("最近记录", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
-                Text("查看全部", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-                IconButton(onClick = onOpenHistory) {
-                    Icon(Icons.Rounded.ChevronRight, contentDescription = "查看全部", tint = MaterialTheme.colorScheme.primary)
+                TextButton(onClick = onOpenHistory) {
+                    Text("查看全部", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                    Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }

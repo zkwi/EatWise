@@ -1,5 +1,6 @@
 package com.example.eatwise.ui.history
 
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +52,7 @@ import java.io.File
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var manageMode by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier
@@ -65,7 +70,20 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
             ) {
                 Text("饮食记录", fontSize = 36.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
-                Text("管理", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Card(
+                    onClick = { manageMode = !manageMode },
+                    shape = RoundedCornerShape(50),
+                    colors = CardDefaults.cardColors(containerColor = if (manageMode) GreenSoft else Color.Transparent),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                ) {
+                    Text(
+                        if (manageMode) "完成" else "管理",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
+                }
             }
         }
         item {
@@ -95,6 +113,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     onClick = { onOpenDetail(record.id) },
                     onFavorite = { viewModel.toggleFavorite(record) },
                     onDelete = { viewModel.delete(record) },
+                    manageMode = manageMode,
                 )
             }
             item {
@@ -132,6 +151,7 @@ private fun HistoryRecordCard(
     onClick: () -> Unit,
     onFavorite: () -> Unit,
     onDelete: () -> Unit,
+    manageMode: Boolean,
 ) {
     Card(
         onClick = onClick,
@@ -177,8 +197,16 @@ private fun HistoryRecordCard(
                         modifier = Modifier.size(30.dp),
                     )
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Rounded.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (manageMode) {
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Rounded.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.error)
+                    }
+                } else {
+                    Icon(
+                        Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }

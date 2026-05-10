@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -78,137 +79,155 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         }
     }
 
-    LazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+            .background(MaterialTheme.colorScheme.background),
     ) {
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 36.dp, bottom = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("设置", fontSize = 38.sp, lineHeight = 42.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                Box(
-                    contentAlignment = Alignment.Center,
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item {
+                Row(
                     modifier = Modifier
-                        .size(58.dp)
-                        .background(Color.White, CircleShape),
+                        .fillMaxWidth()
+                        .padding(top = 36.dp, bottom = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Text("设置", fontSize = 38.sp, lineHeight = 42.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(58.dp)
+                            .background(Color.White, CircleShape),
+                    ) {
+                        Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+
+            item {
+                AiConfigHero(isConfigured = state.apiKey.isNotBlank() && state.modelName.isNotBlank())
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                ) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        SectionTitle(Icons.Rounded.Key, "API 配置")
+                        OutlinedTextField(
+                            value = state.baseUrl,
+                            onValueChange = viewModel::updateBaseUrl,
+                            label = { Text("API Base URL") },
+                            placeholder = { Text("例如：https://openrouter.ai/api/v1") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = fieldColors,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = state.apiKey,
+                            onValueChange = viewModel::updateApiKey,
+                            label = { Text("API Key") },
+                            placeholder = { Text("输入您的 API Key") },
+                            visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showKey = !showKey }) {
+                                    Icon(
+                                        if (showKey) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
+                                        contentDescription = "显示或隐藏 API Key",
+                                    )
+                                }
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = fieldColors,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = state.modelName,
+                            onValueChange = viewModel::updateModelName,
+                            label = { Text("模型名称") },
+                            placeholder = { Text("例如：google/gemini-3.1-flash-lite") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = fieldColors,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                ) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        SectionTitle(Icons.Rounded.SettingsSuggest, "通用设置")
+                        OutlinedTextField(
+                            value = state.userGoal,
+                            onValueChange = viewModel::updateUserGoal,
+                            label = { Text("默认目标") },
+                            minLines = 4,
+                            shape = RoundedCornerShape(14.dp),
+                            colors = fieldColors,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text("单位：kcal", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            item { Spacer(Modifier.height(112.dp)) }
+        }
+
+        Card(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .imePadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        ) {
+            Row(
+                Modifier.padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Button(
+                    onClick = viewModel::save,
+                    enabled = !state.isSaving && !state.isTesting,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(if (state.isSaving) "保存中..." else "保存配置", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = viewModel::testConnection,
+                    enabled = !state.isSaving && !state.isTesting,
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text(if (state.isTesting) "测试中..." else "测试连接", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
 
-        item {
-            AiConfigHero(isConfigured = state.apiKey.isNotBlank() && state.modelName.isNotBlank())
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            ) {
-                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    SectionTitle(Icons.Rounded.Key, "API 配置")
-                    OutlinedTextField(
-                        value = state.baseUrl,
-                        onValueChange = viewModel::updateBaseUrl,
-                        label = { Text("API Base URL") },
-                        placeholder = { Text("例如：https://openrouter.ai/api/v1") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedTextField(
-                        value = state.apiKey,
-                        onValueChange = viewModel::updateApiKey,
-                        label = { Text("API Key") },
-                        placeholder = { Text("输入您的 API Key") },
-                        visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showKey = !showKey }) {
-                                Icon(
-                                    if (showKey) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                                    contentDescription = "显示或隐藏 API Key",
-                                )
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedTextField(
-                        value = state.modelName,
-                        onValueChange = viewModel::updateModelName,
-                        label = { Text("模型名称") },
-                        placeholder = { Text("例如：google/gemini-3.1-flash-lite") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            ) {
-                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    SectionTitle(Icons.Rounded.SettingsSuggest, "通用设置")
-                    OutlinedTextField(
-                        value = state.userGoal,
-                        onValueChange = viewModel::updateUserGoal,
-                        label = { Text("默认目标") },
-                        minLines = 4,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = fieldColors,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Text("单位：kcal", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-
-        item {
-            Button(
-                onClick = viewModel::save,
-                enabled = !state.isSaving && !state.isTesting,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-            ) {
-                Text(if (state.isSaving) "保存中..." else "保存配置", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        item {
-            OutlinedButton(
-                onClick = viewModel::testConnection,
-                enabled = !state.isSaving && !state.isTesting,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-            ) {
-                Text(if (state.isTesting) "测试中..." else "测试连接", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        item { Spacer(Modifier.height(18.dp)) }
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 104.dp))
     }
-
-    SnackbarHost(hostState = snackbarHostState)
 }
 
 @Composable
