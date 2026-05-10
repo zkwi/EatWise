@@ -56,6 +56,46 @@ class OpenAiCompatibleClient(
         }
     }
 
+    suspend fun testConnection(config: LlmConfig): Unit = withContext(Dispatchers.IO) {
+        val body = buildJsonObject {
+            put("model", config.modelName)
+            put("temperature", 0.0)
+            put("max_tokens", 50)
+            putJsonArray("messages") {
+                add(message("user", JsonPrimitive("请只回复 JSON：{\"ok\":true}")))
+            }
+        }
+        val requestBuilder = Request.Builder()
+            .url(buildEndpoint(config.baseUrl))
+            .post(json.encodeToString(JsonObject.serializer(), body).toRequestBody(mediaType))
+            .addHeader("Authorization", "Bearer ${config.apiKey}")
+            .addHeader("Content-Type", "application/json")
+
+        if (config.baseUrl.contains("openrouter.ai", ignoreCase = true)) {
+            requestBuilder
+                .addHeader("HTTP-Referer", "meal-ai-local")
+                .addHeader("X-OpenRouter-Title", "Meal AI Local")
+        }
+
+        okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
+            val responseBody = response.body.string()
+            if (!response.isSuccessful) {
+                throw ApiException(response.code, mapStatusMessage(response.code, responseBody))
+            }
+            val content = json.decodeFromString(ChatCompletionResponse.serializer(), responseBody)
+                .choices
+                .firstOrNull()
+                ?.message
+                ?.content
+            if (content.isNullOrBlank()) throw ApiException(null, "模型返回内容为空。")
+            runCatching {
+                json.decodeFromString(JsonObject.serializer(), JsonUtils.extractJson(content))
+            }
+                .getOrElse { throw ApiException(null, "模型连接正常，但返回格式异常。") }
+            Unit
+        }
+    }
+
     private fun buildRequestBody(
         modelName: String,
         userGoal: String,

@@ -91,7 +91,7 @@ fun AppNavGraph(container: AppContainer) {
             }
             composable(Routes.Settings) {
                 val vm: SettingsViewModel = viewModel(
-                    factory = simpleFactory { SettingsViewModel(container.settingsRepository) },
+                    factory = simpleFactory { SettingsViewModel(container.settingsRepository, container.openAiClient) },
                 )
                 SettingsScreen(vm)
             }

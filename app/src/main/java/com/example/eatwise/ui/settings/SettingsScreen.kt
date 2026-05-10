@@ -20,9 +20,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -136,11 +136,21 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         item {
             Button(
                 onClick = viewModel::save,
-                enabled = !state.isSaving,
+                enabled = !state.isSaving && !state.isTesting,
                 modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(16.dp),
             ) {
                 Text(if (state.isSaving) "保存中..." else "保存配置")
+            }
+        }
+        item {
+            OutlinedButton(
+                onClick = viewModel::testConnection,
+                enabled = !state.isSaving && !state.isTesting,
+                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Text(if (state.isTesting) "测试中..." else "测试连接")
             }
         }
         item { Spacer(Modifier.height(18.dp)) }
