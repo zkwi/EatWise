@@ -3,6 +3,7 @@ package com.example.eatwise.ui.history
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,8 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material3.AssistChip
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,7 +38,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.MealRecord
-import com.example.eatwise.ui.components.goalLabel
+import com.example.eatwise.ui.components.GoalBadge
+import com.example.eatwise.ui.components.TagChip
+import com.example.eatwise.ui.theme.GreenDeep
+import com.example.eatwise.ui.theme.GreenSoft
+import com.example.eatwise.ui.theme.RedPrimary
 import java.io.File
 
 @Composable
@@ -47,27 +54,38 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 36.dp),
+                    .padding(top = 36.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("记录", fontSize = 36.sp, fontWeight = FontWeight.Bold)
+                Text("饮食记录", fontSize = 36.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
-                AssistChip(
-                    onClick = viewModel::toggleFavoriteFirst,
-                    label = { Text(if (state.favoriteFirst) "收藏优先" else "最新优先") },
-                )
+                Text("管理", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                FilterPill("全部", !state.favoriteFirst, onClick = {
+                    if (state.favoriteFirst) viewModel.toggleFavoriteFirst()
+                })
+                FilterPill("收藏", state.favoriteFirst, onClick = {
+                    if (!state.favoriteFirst) viewModel.toggleFavoriteFirst()
+                })
             }
         }
         if (state.records.isEmpty()) {
             item {
-                Card(Modifier.fillMaxWidth()) {
-                    Text("暂无历史记录。", modifier = Modifier.padding(22.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Card(
+                    Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                ) {
+                    Text("暂无历史记录。", modifier = Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         } else {
@@ -79,7 +97,32 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     onDelete = { viewModel.delete(record) },
                 )
             }
+            item {
+                Text(
+                    "——  已经到底啦  ——",
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 14.sp,
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun FilterPill(text: String, selected: Boolean, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF1F2F4)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+    ) {
+        Text(
+            text = text,
+            color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 28.dp, vertical = 14.dp),
+        )
     }
 }
 
@@ -90,30 +133,53 @@ private fun HistoryRecordCard(
     onFavorite: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
                 model = File(record.thumbnailPath ?: record.imagePath),
                 contentDescription = record.mealName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(82.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .size(width = 108.dp, height = 108.dp)
+                    .clip(RoundedCornerShape(18.dp)),
             )
-            Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(record.mealName, fontWeight = FontWeight.Bold)
-                Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal · ${goalLabel(record.goalMatchLevel)}")
-                Text(DateTimeUtils.formatShort(record.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(start = 14.dp, end = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(record.mealName, fontWeight = FontWeight.Bold, fontSize = 18.sp, maxLines = 1)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 17.sp)
+                    GoalBadge(record.goalMatchLevel)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Rounded.Schedule, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                    Text(DateTimeUtils.formatShort(record.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    record.tags.take(2).forEach { TagChip(it) }
+                }
             }
-            IconButton(onClick = onFavorite) {
-                Icon(
-                    if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                    contentDescription = "收藏",
-                    tint = if (record.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Rounded.Delete, contentDescription = "删除")
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                IconButton(onClick = onFavorite) {
+                    Icon(
+                        if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = "收藏",
+                        tint = if (record.isFavorite) RedPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(30.dp),
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Rounded.Delete, contentDescription = "删除", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

@@ -1,19 +1,28 @@
 package com.example.eatwise.ui.navigation
 
 import android.net.Uri
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -22,6 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.eatwise.core.di.AppContainer
+import com.example.eatwise.ui.theme.GreenSoft
 import com.example.eatwise.ui.analysis.AnalysisScreen
 import com.example.eatwise.ui.analysis.AnalysisViewModel
 import com.example.eatwise.ui.camera.CameraScreen
@@ -45,7 +55,16 @@ fun AppNavGraph(container: AppContainer) {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
+                NavigationBar(
+                    modifier = Modifier
+                        .padding(horizontal = 18.dp, vertical = 12.dp)
+                        .fillMaxWidth()
+                        .height(86.dp)
+                        .shadow(8.dp, RoundedCornerShape(34.dp))
+                        .clip(RoundedCornerShape(34.dp)),
+                    containerColor = Color.White,
+                    tonalElevation = 0.dp,
+                ) {
                     listOf(
                         BottomItem(Routes.Home, "首页", Icons.Rounded.Home),
                         BottomItem(Routes.History, "记录", Icons.Rounded.History),
@@ -63,6 +82,13 @@ fun AppNavGraph(container: AppContainer) {
                             },
                             icon = { Icon(item.icon, contentDescription = item.label) },
                             label = { Text(item.label) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = GreenSoft,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                         )
                     }
                 }

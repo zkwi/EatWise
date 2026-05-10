@@ -5,7 +5,9 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -16,13 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Image
+import androidx.compose.material.icons.rounded.RestaurantMenu
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -39,6 +44,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,7 +54,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.MealRecord
-import com.example.eatwise.ui.components.goalLabel
+import com.example.eatwise.ui.components.GoalBadge
+import com.example.eatwise.ui.theme.GreenDeep
+import com.example.eatwise.ui.theme.GreenPale
 import com.example.eatwise.ui.theme.GreenSoft
 import java.io.File
 
@@ -84,94 +93,93 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 36.dp),
+                    .padding(top = 34.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text("今天吃了什么？", fontSize = 34.sp, fontWeight = FontWeight.Bold)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("今天吃了什么？", fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold)
                     Text("拍一张照片，让 AI 帮你记录和分析。", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                IconButton(onClick = onOpenSettings) {
-                    Icon(Icons.Rounded.Settings, contentDescription = "设置")
+                IconButton(
+                    onClick = onOpenSettings,
+                    modifier = Modifier
+                        .size(58.dp)
+                        .background(Color.White, CircleShape),
+                ) {
+                    Icon(Icons.Rounded.Settings, contentDescription = "设置", tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
 
         item {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = GreenSoft),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Text("开始记录这一餐", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Button(onClick = onOpenCamera, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-                        Icon(Icons.Rounded.CameraAlt, contentDescription = null)
-                        Spacer(Modifier.size(10.dp))
-                        Text("拍照分析")
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                    ) {
-                        Icon(Icons.Rounded.Image, contentDescription = null)
-                        Spacer(Modifier.size(10.dp))
-                        Text("从相册选择")
-                    }
-                }
-            }
-        }
-
-        item {
-            TodaySummary(state.recentRecords)
+            StartMealCard(
+                onOpenCamera = onOpenCamera,
+                onPickImage = { photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            )
         }
 
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("最近记录", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("最近记录", fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
-                Text("查看全部", color = MaterialTheme.colorScheme.primary)
+                Text("查看全部", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                 IconButton(onClick = onOpenHistory) {
-                    Icon(Icons.Rounded.ChevronRight, contentDescription = "查看全部")
+                    Icon(Icons.Rounded.ChevronRight, contentDescription = "查看全部", tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
 
         if (state.recentRecords.isEmpty()) {
             item {
-                Card(Modifier.fillMaxWidth()) {
-                    Text(
-                        "还没有记录，先拍一餐试试。",
-                        modifier = Modifier.padding(22.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                EmptyCard("还没有记录，先拍一餐试试。")
             }
         } else {
-            items(state.recentRecords) { record ->
+            items(state.recentRecords.take(4)) { record ->
                 RecentRecordCard(record, onClick = { onOpenDetail(record.id) })
             }
         }
 
-        item { Spacer(Modifier.height(10.dp)) }
+        item { Spacer(Modifier.height(12.dp)) }
     }
 
     SnackbarHost(hostState = snackbarHostState)
 }
 
 @Composable
-private fun TodaySummary(records: List<MealRecord>) {
-    val total = records.sumOf { it.totalKcal ?: 0.0 }
-    Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("今日小结", fontWeight = FontWeight.Bold)
-                Text("已记录 ${records.size} 餐", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("%.0f kcal".format(total), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                Text("数据仅为 AI 估算", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = GreenPale),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .background(Brush.linearGradient(listOf(Color(0xFFE2F8C9), Color(0xFFFFF7C8), GreenSoft)))
+                .padding(22.dp),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
+                Text("开始记录这一餐", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = GreenDeep)
+                Button(
+                    onClick = onOpenCamera,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Icon(Icons.Rounded.CameraAlt, contentDescription = null)
+                    Spacer(Modifier.size(10.dp))
+                    Text("拍照分析", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onPickImage,
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
+                ) {
+                    Icon(Icons.Rounded.Image, contentDescription = null)
+                    Spacer(Modifier.size(10.dp))
+                    Text("从相册选择", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
@@ -179,22 +187,61 @@ private fun TodaySummary(records: List<MealRecord>) {
 
 @Composable
 private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
                 model = File(record.thumbnailPath ?: record.imagePath),
                 contentDescription = record.mealName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(76.dp)
-                    .aspectRatio(1.2f)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .size(width = 104.dp, height = 76.dp)
+                    .aspectRatio(1.35f)
+                    .clip(RoundedCornerShape(16.dp)),
             )
-            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text(record.mealName, fontWeight = FontWeight.Bold)
-                Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal · ${goalLabel(record.goalMatchLevel)}")
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(record.mealName, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("${record.totalKcal?.let { "%.0f".format(it) } ?: "--"} kcal", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    GoalBadge(record.goalMatchLevel)
+                }
             }
-            Text(DateTimeUtils.formatShort(record.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(DateTimeUtils.formatShort(record.createdAt), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
         }
+    }
+}
+
+@Composable
+private fun EmptyCard(text: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+    ) {
+        Row(Modifier.padding(22.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IconBubble(Icons.Rounded.RestaurantMenu, GreenSoft, MaterialTheme.colorScheme.primary)
+            Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun IconBubble(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    container: Color,
+    content: Color,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(48.dp)
+            .background(container, CircleShape),
+    ) {
+        Icon(icon, contentDescription = null, tint = content, modifier = Modifier.size(25.dp))
     }
 }

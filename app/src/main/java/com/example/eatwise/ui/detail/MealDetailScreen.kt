@@ -17,7 +17,9 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -71,7 +73,7 @@ fun MealDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1.6f)
-                            .clip(RoundedCornerShape(20.dp)),
+                            .clip(RoundedCornerShape(22.dp)),
                     )
                 }
                 item {
@@ -89,7 +91,12 @@ fun MealDetailScreen(
                     )
                 }
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(22.dp),
+                        colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    ) {
                         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("目标快照", fontWeight = FontWeight.Bold)
                             Text(record.userGoalSnapshot)
@@ -99,11 +106,20 @@ fun MealDetailScreen(
                 }
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        Button(onClick = viewModel::toggleFavorite, modifier = Modifier.weight(1f).height(52.dp)) {
+                        Button(
+                            onClick = viewModel::toggleFavorite,
+                            modifier = Modifier.weight(1f).height(52.dp),
+                            shape = RoundedCornerShape(18.dp),
+                        ) {
                             Icon(if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = null)
                             Text(if (record.isFavorite) "取消收藏" else "收藏")
                         }
-                        Button(onClick = { viewModel.delete(onDeleted) }, modifier = Modifier.weight(1f).height(52.dp)) {
+                        Button(
+                            onClick = { viewModel.delete(onDeleted) },
+                            modifier = Modifier.weight(1f).height(52.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        ) {
                             Icon(Icons.Rounded.Delete, contentDescription = null)
                             Text("删除")
                         }

@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -63,8 +65,8 @@ fun AnalysisScreen(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1.9f)
-                        .clip(RoundedCornerShape(20.dp)),
+                        .aspectRatio(1.65f)
+                        .clip(RoundedCornerShape(22.dp)),
                 )
             }
             if (state.isAnalyzing) {
@@ -88,17 +90,20 @@ fun AnalysisScreen(
                             onClick = viewModel::save,
                             enabled = !state.isSaving,
                             modifier = Modifier.weight(1f).height(52.dp),
+                            shape = RoundedCornerShape(18.dp),
                         ) {
                             Icon(Icons.Rounded.BookmarkAdd, contentDescription = null)
-                            Text(if (state.isSaving) "保存中" else "保存记录")
+                            Text(if (state.isSaving) "保存中" else "保存记录", fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = viewModel::analyze,
                             enabled = !state.isAnalyzing,
                             modifier = Modifier.weight(1f).height(52.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary),
                         ) {
                             Icon(Icons.Rounded.Refresh, contentDescription = null)
-                            Text("重新分析")
+                            Text("重新分析", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
