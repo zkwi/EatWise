@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -67,7 +68,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
     val overallScore = overallScore(result.eatingAdvice, result.goalMatch.level)
     val primaryTags = result.tags.take(4)
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
@@ -202,7 +203,7 @@ private fun SuggestionRow(text: String, goalLevel: String) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(Color(0xFFFAFBFA))
-            .padding(horizontal = 9.dp, vertical = 8.dp),
+            .padding(horizontal = 9.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
     ) {
@@ -222,27 +223,29 @@ private fun DishAdviceRow(dish: DishAdvice) {
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(vertical = 1.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        ExpandableText(
-            text = dish.title,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            collapsedMaxLines = 1,
-        )
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
+            Text(
+                text = dish.title,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                lineHeight = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             dish.hints.forEach { hint -> IngredientHintChip(hint) }
         }
         ExpandableText(
             text = dish.advice,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 12.sp,
-            lineHeight = 16.sp,
+            lineHeight = 15.sp,
             collapsedMaxLines = 2,
         )
     }
@@ -289,8 +292,8 @@ private fun ExpandableText(
     }
 }
 
-private data class IngredientGroup(val title: String, val items: List<Ingredient>)
-private data class IngredientHint(val label: String, val container: Color, val content: Color)
+internal data class IngredientGroup(val title: String, val items: List<Ingredient>)
+internal data class IngredientHint(val label: String, val container: Color, val content: Color)
 private data class DishAdvice(val title: String, val hints: List<IngredientHint>, val advice: String)
 private data class SuggestionAction(val label: String, val container: Color, val content: Color)
 private data class AdviceStyle(val container: Color, val content: Color, val label: String)
@@ -354,10 +357,11 @@ private fun IngredientHintChip(hint: IngredientHint) {
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .widthIn(max = 104.dp)
+            .heightIn(min = 20.dp)
+            .widthIn(max = 92.dp)
             .clip(RoundedCornerShape(50))
             .background(hint.container)
-            .padding(horizontal = 7.dp, vertical = 3.dp),
+            .padding(horizontal = 6.dp, vertical = 2.dp),
     )
 }
 
@@ -370,11 +374,11 @@ private fun dishAdvices(result: MealAnalysisResult): List<DishAdvice> {
         val hints = dishHints(group).ifEmpty {
             listOf(IngredientHint("适量吃", Color(0xFFF0F2F5), Color(0xFF6D7484)))
         }
-        DishAdvice(title, hints, dishAdviceText(hints, strings, language))
+        DishAdvice(title, hints, dishAdviceText(hints, language))
     }
 }
 
-private fun dishHints(group: IngredientGroup): List<IngredientHint> {
+internal fun dishHints(group: IngredientGroup): List<IngredientHint> {
     val text = buildString {
         append(group.title)
         group.items.forEach {
@@ -382,223 +386,303 @@ private fun dishHints(group: IngredientGroup): List<IngredientHint> {
             append(it.name)
         }
     }
-    return buildList {
-        if (text.hasAny("油炸", "炸物", "煎炸", "炸", "fried", "deep-fried", "揚げ物", "フライ", "天ぷら")) {
-            add(IngredientHint("油炸", RedSoft, RedPrimary))
-        }
-        if (text.hasAny(
-                "红油",
-                "重油",
-                "肥肉",
-                "五花",
-                "黄油",
-                "奶油",
-                "芝麻酱",
-                "沙拉酱",
-                "greasy",
-                "oily",
-                "fatty",
-                "butter",
-                "cream",
-                "mayo",
-                "油多め",
-                "脂身",
-                "バター",
-                "クリーム",
-                "マヨ",
-            ) ||
-            text.hasAny("油", "酱") && !text.hasAny("油麦菜")
-        ) {
-            add(IngredientHint("油脂高", YellowSoft, YellowPrimary))
-        }
-        if (text.hasAny(
-                "重口味",
-                "麻辣",
-                "重辣",
-                "红油",
-                "花椒",
-                "辣椒",
-                "腌",
-                "卤",
-                "咸",
-                "heavy flavor",
-                "strong flavor",
-                "spicy",
-                "salty",
-                "sauce",
-                "味濃い",
-                "辛い",
-                "塩分",
-                "ソース",
-                "たれ",
-            )
-        ) {
-            add(IngredientHint("重口味", RedSoft, RedPrimary))
-        }
-        if (text.hasAny(
-                "糖",
-                "甜",
-                "蜜",
-                "奶茶",
-                "饮料",
-                "sugar",
-                "sweet",
-                "dessert",
-                "honey",
-                "soda",
-                "cake",
-                "ice cream",
-                "甘い",
-                "デザート",
-                "ケーキ",
-                "アイス",
-            )
-        ) {
-            add(IngredientHint("糖偏高", RedSoft, RedPrimary))
-        }
-        if (text.hasAny(
-                "米",
-                "饭",
-                "面",
-                "粉",
-                "饼",
-                "馒头",
-                "面包",
-                "薯",
-                "土豆",
-                "rice",
-                "noodle",
-                "pasta",
-                "bread",
-                "potato",
-                "dumpling",
-                "ご飯",
-                "麺",
-                "パン",
-                "いも",
-                "じゃがいも",
-            )
-        ) {
-            add(IngredientHint("主食", YellowSoft, YellowPrimary))
-        }
-        if (text.hasAny(
-                "鸡",
-                "牛",
-                "猪",
-                "鱼",
-                "虾",
-                "蛋",
-                "豆腐",
-                "豆",
-                "肉",
-                "奶",
-                "chicken",
-                "beef",
-                "pork",
-                "fish",
-                "shrimp",
-                "egg",
-                "tofu",
-                "bean",
-                "meat",
-                "milk",
-                "protein",
-                "鶏",
-                "牛",
-                "豚",
-                "魚",
-                "えび",
-                "卵",
-                "肉",
-                "たんぱく",
-            )
-        ) {
-            add(IngredientHint("有蛋白", GreenSoft, GreenDeep))
-        }
-        if (text.hasAny(
-                "菜",
-                "青",
-                "叶",
-                "瓜",
-                "番茄",
-                "西红柿",
-                "菌",
-                "菇",
-                "萝卜",
-                "椒",
-                "海带",
-                "vegetable",
-                "salad",
-                "tomato",
-                "mushroom",
-                "broccoli",
-                "leafy",
-                "fiber",
-                "野菜",
-                "サラダ",
-                "トマト",
-                "きのこ",
-                "葉物",
-            )
-        ) {
-            add(IngredientHint("有蔬菜", GreenSoft, GreenDeep))
-        }
+    val hints = mutableListOf<IngredientHint>()
+    fun addHint(label: String, container: Color, content: Color) {
+        if (hints.none { it.label == label }) hints += IngredientHint(label, container, content)
     }
-        .distinctBy { it.label }
-        .take(3)
+
+    val lightCooking = text.hasAny(
+        "清蒸",
+        "蒸",
+        "白灼",
+        "清炖",
+        "清燉",
+        "清炒",
+        "steamed",
+        "boiled",
+        "simmered",
+        "蒸し",
+        "茹で",
+    ) || (text.hasAny("炖", "燉") && text.hasAny("菜", "蔬菜", "vegetable"))
+    val panOrRoast = text.hasAny("煎", "烤", "烧烤", "燒烤", "pan-fried", "grilled", "roasted", "焼き")
+    val redBraised = text.hasAny("红烧", "紅燒", "卤", "滷", "braised", "teriyaki", "照り焼き")
+
+    if (text.hasAny("油炸", "炸物", "煎炸", "炸", "fried", "deep-fried", "揚げ物", "フライ", "天ぷら")) {
+        addHint("油炸", RedSoft, RedPrimary)
+    }
+    if (
+        text.hasAny(
+            "红油",
+            "紅油",
+            "重油",
+            "肥肉",
+            "五花",
+            "黄油",
+            "奶油",
+            "芝麻酱",
+            "沙拉酱",
+            "greasy",
+            "oily",
+            "fatty",
+            "butter",
+            "cream",
+            "mayo",
+            "油多め",
+            "脂身",
+            "バター",
+            "クリーム",
+            "マヨ",
+        ) ||
+        panOrRoast ||
+        text.hasAny("油", "酱", "醬") && !text.hasAny("油麦菜")
+    ) {
+        addHint("油脂高", YellowSoft, YellowPrimary)
+    }
+    if (text.hasAny(
+            "重口味",
+            "麻辣",
+            "重辣",
+            "红油",
+            "紅油",
+            "红烧",
+            "紅燒",
+            "花椒",
+            "辣椒",
+            "腌",
+            "卤",
+            "咸",
+            "heavy flavor",
+            "strong flavor",
+            "spicy",
+            "salty",
+            "sauce",
+            "味濃い",
+            "辛い",
+            "塩分",
+            "ソース",
+            "たれ",
+        ) ||
+        redBraised
+    ) {
+        addHint("重口味", RedSoft, RedPrimary)
+    }
+    if (text.hasSugarRisk()) {
+        addHint("糖偏高", RedSoft, RedPrimary)
+    }
+
+    val hasStaple = text.hasAny(
+        "米",
+        "饭",
+        "飯",
+        "面",
+        "麵",
+        "粉",
+        "饼",
+        "餅",
+        "馒头",
+        "饅頭",
+        "面包",
+        "麵包",
+        "玉米",
+        "红薯",
+        "紅薯",
+        "地瓜",
+        "薯",
+        "土豆",
+        "rice",
+        "noodle",
+        "pasta",
+        "bread",
+        "potato",
+        "dumpling",
+        "ご飯",
+        "麺",
+        "パン",
+        "いも",
+        "じゃがいも",
+    )
+    val hasProtein = text.hasAny(
+        "鸡",
+        "雞",
+        "牛",
+        "猪",
+        "豬",
+        "鱼",
+        "魚",
+        "虾",
+        "蝦",
+        "蛋",
+        "豆腐",
+        "豆",
+        "肉",
+        "奶",
+        "chicken",
+        "beef",
+        "pork",
+        "fish",
+        "shrimp",
+        "egg",
+        "tofu",
+        "bean",
+        "meat",
+        "milk",
+        "protein",
+        "鶏",
+        "牛",
+        "豚",
+        "魚",
+        "えび",
+        "卵",
+        "肉",
+        "たんぱく",
+    )
+    val hasVegetable = text.hasAny(
+        "菜",
+        "青",
+        "叶",
+        "葉",
+        "瓜",
+        "番茄",
+        "西红柿",
+        "西紅柿",
+        "菌",
+        "菇",
+        "萝卜",
+        "蘿蔔",
+        "椒",
+        "海带",
+        "海帶",
+        "vegetable",
+        "salad",
+        "tomato",
+        "mushroom",
+        "broccoli",
+        "leafy",
+        "fiber",
+        "野菜",
+        "サラダ",
+        "トマト",
+        "きのこ",
+        "葉物",
+    )
+
+    if (hasStaple) addHint("主食", YellowSoft, YellowPrimary)
+    if (hasProtein) addHint("有蛋白", GreenSoft, GreenDeep)
+    if (hasVegetable) addHint("有蔬菜", GreenSoft, GreenDeep)
+    if (lightCooking) addHint("清淡", GreenSoft, GreenDeep)
+
+    val hasRisk = hints.hasRiskHint()
+    when {
+        hasVegetable && !hasRisk -> addHint("可多吃", GreenSoft, GreenDeep)
+        hasStaple -> addHint("适量吃", Color(0xFFF0F2F5), Color(0xFF6D7484))
+        hasProtein && !hasRisk -> addHint("适量吃", Color(0xFFF0F2F5), Color(0xFF6D7484))
+    }
+
+    return hints.take(3)
 }
 
-private fun dishAdviceText(hints: List<IngredientHint>, strings: AppStrings, language: AppLanguage): String {
+private fun dishAdviceText(hints: List<IngredientHint>, language: AppLanguage): String {
     val labels = hints.map { it.label }
     return when (language) {
         AppLanguage.ZhHans -> when {
             "油炸" in labels -> "油炸部分少量尝即可，搭配清淡蔬菜更稳。"
-            "油脂高" in labels -> "油脂偏高，控制分量，少蘸酱汁更合适。"
-            "重口味" in labels -> "口味偏重，少喝汤汁酱汁，下一餐清淡一点。"
+            "油脂高" in labels && "有蛋白" in labels -> "蛋白能补上，但油脂也偏高；优先吃鱼肉或瘦肉，肥肉和酱汁少一点。"
+            "油脂高" in labels -> "油脂偏高，控制分量，酱汁和带油汤汁少入口。"
+            "重口味" in labels -> "口味偏重，汤汁酱汁少入口，下一餐清淡一点。"
             "糖偏高" in labels -> "甜度偏高，适合浅尝，别和含糖饮料叠加。"
+            "有蔬菜" in labels && "清淡" in labels -> "这道菜是这餐的平衡项，可以多夹一些；如果带油汤，尽量少带汁。"
             "有蔬菜" in labels && "有蛋白" in labels -> "蛋白质和蔬菜搭配不错，可以作为这餐主力。"
             "有蛋白" in labels -> "蛋白质够用，注意分量和烹调油盐。"
             "有蔬菜" in labels -> "蔬菜够用，可以多吃一点平衡这餐。"
+            "主食" in labels && "清淡" in labels -> "主食做得清淡，适量吃即可；搭配蛋白和蔬菜更稳。"
             "主食" in labels -> "主食适量就好，搭配蛋白质和蔬菜更稳。"
             else -> "按正常分量吃，留意整体油盐和饱腹感。"
         }
         AppLanguage.ZhHant -> when {
             "油炸" in labels -> "油炸部分少量嚐即可，搭配清淡蔬菜更穩。"
-            "油脂高" in labels -> "油脂偏高，控制份量，少蘸醬汁更合適。"
-            "重口味" in labels -> "口味偏重，少喝湯汁醬汁，下一餐清淡一點。"
+            "油脂高" in labels && "有蛋白" in labels -> "蛋白質能補上，但油脂也偏高；優先吃魚肉或瘦肉，肥肉和醬汁少一點。"
+            "油脂高" in labels -> "油脂偏高，控制份量，醬汁和帶油湯汁少入口。"
+            "重口味" in labels -> "口味偏重，湯汁醬汁少入口，下一餐清淡一點。"
             "糖偏高" in labels -> "甜度偏高，適合淺嚐，別和含糖飲料疊加。"
+            "有蔬菜" in labels && "清淡" in labels -> "這道菜是這餐的平衡項，可以多夾一些；如果帶油湯，盡量少帶汁。"
             "有蔬菜" in labels && "有蛋白" in labels -> "蛋白質和蔬菜搭配不錯，可以作為這餐主力。"
             "有蛋白" in labels -> "蛋白質夠用，注意份量和烹調油鹽。"
             "有蔬菜" in labels -> "蔬菜夠用，可以多吃一點平衡這餐。"
+            "主食" in labels && "清淡" in labels -> "主食做得清淡，適量吃即可；搭配蛋白質和蔬菜更穩。"
             "主食" in labels -> "主食適量就好，搭配蛋白質和蔬菜更穩。"
             else -> "按正常份量吃，留意整體油鹽和飽足感。"
         }
         AppLanguage.En -> when {
             "油炸" in labels -> "Keep fried parts to a small taste and pair with lighter vegetables."
-            "油脂高" in labels -> "Oil is on the high side; control portions and use less sauce."
-            "重口味" in labels -> "Seasoning is heavy; drink less broth or sauce and keep the next meal lighter."
+            "油脂高" in labels && "有蛋白" in labels -> "Protein is useful, but oil is high; prioritize lean pieces and use less sauce."
+            "油脂高" in labels -> "Oil is on the high side; control portions and leave oily sauce or broth behind."
+            "重口味" in labels -> "Seasoning is heavy; take less broth or sauce and keep the next meal lighter."
             "糖偏高" in labels -> "Sweetness is high; taste a little and skip sugary drinks."
+            "有蔬菜" in labels && "清淡" in labels -> "This helps balance the meal, so it can be a larger share; leave oily broth behind if present."
             "有蔬菜" in labels && "有蛋白" in labels -> "Protein and vegetables are a solid base for this meal."
             "有蛋白" in labels -> "Protein is covered; watch portions and cooking oil or salt."
             "有蔬菜" in labels -> "Vegetables help balance this meal; they can be the larger part."
+            "主食" in labels && "清淡" in labels -> "The staple is simply cooked; keep it moderate and pair with protein or vegetables."
             "主食" in labels -> "Keep staples moderate and pair them with protein and vegetables."
             else -> "Eat a normal portion and watch overall oil, salt, and fullness."
         }
         AppLanguage.Ja -> when {
             "油炸" in labels -> "揚げ物は少し味見程度にして、あっさりした野菜を合わせると安定します。"
-            "油脂高" in labels -> "油が多めなので、量を控えめにしてソースは少なめが合います。"
+            "油脂高" in labels && "有蛋白" in labels -> "たんぱく質は取れますが油も多めです。脂身やソースは控えめにしましょう。"
+            "油脂高" in labels -> "油が多めなので、量を控えめにして油っぽい汁やソースは残すとよいです。"
             "重口味" in labels -> "味が濃いめです。汁やソースを控え、次の食事は軽めにしましょう。"
             "糖偏高" in labels -> "甘さが強めです。少しだけにして甘い飲み物は足さないのが無難です。"
+            "有蔬菜" in labels && "清淡" in labels -> "この食事のバランス役にできます。油っぽい汁があれば少なめにしましょう。"
             "有蔬菜" in labels && "有蛋白" in labels -> "たんぱく質と野菜の組み合わせがあり、この食事の軸にできます。"
             "有蛋白" in labels -> "たんぱく質は取れます。量と調理の油塩に注意しましょう。"
             "有蔬菜" in labels -> "野菜があるので、この食事のバランス役にできます。"
+            "主食" in labels && "清淡" in labels -> "主食はシンプルな調理です。適量にして、たんぱく質や野菜と合わせると安定します。"
             "主食" in labels -> "主食は適量にし、たんぱく質と野菜を合わせると安定します。"
             else -> "普通量を目安に、油塩と満腹感を見ながら食べましょう。"
         }
     }
 }
 
+private fun List<IngredientHint>.hasRiskHint(): Boolean =
+    any { it.label in setOf("油炸", "油脂高", "重口味", "糖偏高") }
+
 private fun String.hasAny(vararg keywords: String): Boolean = keywords.any { contains(it, ignoreCase = true) }
+
+private fun String.hasSugarRisk(): Boolean {
+    val lower = lowercase()
+    if (
+        hasAny(
+            "糖",
+            "蜜",
+            "奶茶",
+            "饮料",
+            "飲料",
+            "甜点",
+            "甜點",
+            "甜品",
+            "甜饮",
+            "甜飲",
+            "甜食",
+            "sugar",
+            "sugary",
+            "dessert",
+            "honey",
+            "soda",
+            "cake",
+            "ice cream",
+            "sweet drink",
+            "sweets",
+            "甘い飲み物",
+            "デザート",
+            "ケーキ",
+            "アイス",
+        )
+    ) {
+        return true
+    }
+
+    return lower.contains("sweet") && !lower.contains("sweet potato")
+}
 
 private fun suggestionAction(text: String, goalLevel: String, strings: AppStrings): SuggestionAction {
     val clean = text.trim()
@@ -666,6 +750,6 @@ private fun SoftCard(content: @Composable ColumnScope.() -> Unit) {
         border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(Modifier.padding(11.dp), verticalArrangement = Arrangement.spacedBy(7.dp), content = content)
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
     }
 }

@@ -2,6 +2,7 @@ package com.example.eatwise
 
 import com.example.eatwise.core.i18n.AppLanguage
 import com.example.eatwise.core.i18n.MealLanguageText
+import com.example.eatwise.core.network.OpenAiCompatibleClient
 import com.example.eatwise.core.util.JsonUtils
 import com.example.eatwise.core.util.MealAnalysisPolisher
 import com.example.eatwise.domain.model.GoalMatch
@@ -93,6 +94,23 @@ class JsonUtilsTest {
     }
 
     @Test
+    fun polishKeepsEnoughContextForDetailText() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "家庭聚餐",
+                summary = "包含蒸粗粮、绿叶菜、鱼肉和红烧肉，整体种类丰富，有清淡部分，也有油脂和酱汁需要少量注意。",
+                goalMatch = GoalMatch(
+                    level = "partial",
+                    reason = "食材多样且有蛋白和蔬菜，适合做主餐基础，但红烧肉和煎鱼让油盐负担明显偏高。",
+                ),
+            ),
+        )
+
+        assertEquals("包含蒸粗粮、绿叶菜、鱼肉和红烧肉，整体种类丰富，有清淡部分，也有油脂和酱汁需要少量注意", result.summary)
+        assertEquals("食材多样且有蛋白和蔬菜，适合做主餐基础，但红烧肉和煎鱼让油盐负担明显偏高", result.goalMatch.reason)
+    }
+
+    @Test
     fun polishEnglishResultKeepsLocalizedTagsReadable() {
         val result = MealAnalysisPolisher.polish(
             MealAnalysisResult(
@@ -156,6 +174,11 @@ class JsonUtilsTest {
             "This is image-based dietary guidance only and does not replace professional advice.",
             result.disclaimer,
         )
+    }
+
+    @Test
+    fun promptVersionTracksDishAdvicePromptUpdate() {
+        assertEquals(12, OpenAiCompatibleClient.promptVersion)
     }
 
     private val sampleJson = """

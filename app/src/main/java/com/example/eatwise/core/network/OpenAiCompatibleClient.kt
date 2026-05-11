@@ -290,13 +290,14 @@ class OpenAiCompatibleClient(
             }
           ],
           "suggestions": ["localized actionable tip 1", "localized actionable tip 2"],
-          "tags": ["localized tag 1"],
+          "tags": ["localized tag 1", "localized tag 2", "localized tag 3"],
           "disclaimer": "${MealLanguageText.disclaimer(language)}"
         }
 
         Constraints:
         - If there are multiple dishes, use an overall meal name.
         - ingredients must cover the main dishes and key visible ingredients. For mixed meals, use dish to show which dish an ingredient belongs to.
+        - For each visible dish, include enough dish/name entries for the UI to infer its role and visible cooking cue, such as staple, protein, vegetable, steamed, fried, grilled, sauced, or braised. Do not invent invisible seasonings.
         - For compound dishes, list only major parts and visible risk points. Do not list invisible details, scattered seasonings, or low-value tiny items.
         - Do not estimate grams, weight, calories, macro nutrients, or phrases like "about 150g" or "about xx kcal".
         - eating_advice must be exactly one localized option from: ${MealLanguageText.eatingAdviceOptions(language)}.
@@ -306,12 +307,12 @@ class OpenAiCompatibleClient(
         - Do not write abstract reminders such as "control it", "keep balanced", or "control frequency" unless you also say the exact action.
         - If this meal fits the goal well, still give one maintenance tip.
         - Do not give extreme plans, fasting advice, single-food diets, strict weighing, complex recipes, medical diagnosis, medicine, or treatment advice.
-        - tags must return 2 to 4 short localized labels with decision value. Examples: ${MealLanguageText.tagExamples(language)}.
+        - tags must return 2 to 4 short localized labels with decision value, preferably 3 to 4 when the meal has multiple dishes. Examples: ${MealLanguageText.tagExamples(language)}.
         - Do not return low-value tags such as: ${MealLanguageText.lowValueTagExamples(language)}.
         - Do not express the same fact as both positive and negative.
         - Do not return long tags, repeated tags, diagnosis terms, or vague "healthy/unhealthy" labels.
-        - summary should state the 1 to 2 most important features of this meal, short enough for a mobile card.
-        - goal_match.reason should briefly explain why this meal fits or does not fit the current goal.
+        - summary should be one compact sentence with the 2 to 3 most important features of this meal, short enough for a mobile card.
+        - goal_match.reason should be one compact sentence explaining both the fit and the main tradeoff for the current goal.
         - Return null for uncertain numeric fields, but avoid numeric nutrition estimates.
         - No Markdown, no code fences, no extra explanation.
     """.trimIndent()
@@ -370,7 +371,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 11
+        const val promptVersion = 12
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 
@@ -378,28 +379,28 @@ class OpenAiCompatibleClient(
             AppLanguage.ZhHans -> """
                 你是一个个人饮食记录和营养分析助手。
                 用户会上传餐食图片，并提供自己的饮食目标。请用简体中文输出所有用户可见内容。
-                识别主要食物；多菜品时拆分主要菜品和可见食材；不估算重量、卡路里或宏量营养素。
+                识别主要食物；多菜品时拆分主要菜品、可见食材和明显烹饪方式；不估算重量、卡路里或宏量营养素。
                 根据食物类型、烹饪方式和用户目标判断这餐是否适合，给出普通人当场能做的小动作。
                 不做医学诊断，不替代医生、营养师或药物治疗建议。必须只返回 JSON。
             """.trimIndent()
             AppLanguage.ZhHant -> """
                 你是一個個人飲食記錄和營養分析助手。
                 使用者會上傳餐食圖片，並提供自己的飲食目標。請用繁體中文輸出所有使用者可見內容。
-                識別主要食物；多菜品時拆分主要菜品和可見食材；不估算重量、卡路里或宏量營養素。
+                識別主要食物；多菜品時拆分主要菜品、可見食材和明顯烹飪方式；不估算重量、卡路里或宏量營養素。
                 根據食物類型、烹飪方式和使用者目標判斷這餐是否適合，給出普通人當場能做的小動作。
                 不做醫學診斷，不替代醫生、營養師或藥物治療建議。必須只返回 JSON。
             """.trimIndent()
             AppLanguage.En -> """
                 You are a personal meal logging and nutrition guidance assistant.
                 The user uploads a meal photo and a meal goal. Write every user-visible value in English.
-                Identify main foods; split visible dishes and ingredients when there are multiple dishes; do not estimate weight, calories, or macros.
+                Identify main foods; split visible dishes, ingredients, and obvious cooking styles when there are multiple dishes; do not estimate weight, calories, or macros.
                 Judge whether the meal fits the goal based on food type and cooking style, then give actions a normal person can do immediately.
                 Do not diagnose, prescribe medicine, or replace professional medical or nutrition advice. Return JSON only.
             """.trimIndent()
             AppLanguage.Ja -> """
                 あなたは個人向けの食事記録と栄養アドバイスのアシスタントです。
                 ユーザーは食事写真と食事目標を提供します。ユーザーに見える値はすべて日本語で書いてください。
-                主な食べ物を識別し、複数料理の場合は見える料理と食材を分けてください。重量、カロリー、三大栄養素は推定しません。
+                主な食べ物を識別し、複数料理の場合は見える料理、食材、明らかな調理方法を分けてください。重量、カロリー、三大栄養素は推定しません。
                 食材や調理方法、目標に照らしてこの食事が合うかを判断し、すぐ実行できる小さな行動を提案してください。
                 医学的診断、薬の助言、治療提案はしません。必ず JSON のみを返してください。
             """.trimIndent()

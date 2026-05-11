@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,6 +56,7 @@ import java.io.File
 fun AnalysisScreen(
     viewModel: AnalysisViewModel,
     onBack: () -> Unit,
+    onOpenSettings: () -> Unit,
     onSaved: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -105,11 +107,36 @@ fun AnalysisScreen(
             }
             state.errorMessage?.let { message ->
                 item {
+                    val showSettingsAction = analysisNeedsSettingsAction(message)
                     ErrorCard(message)
                     Spacer(Modifier.height(8.dp))
-                    Button(onClick = viewModel::analyze, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Rounded.Refresh, contentDescription = null)
-                        Text(strings.retry)
+                    if (showSettingsAction) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                            OutlinedButton(
+                                onClick = viewModel::analyze,
+                                modifier = Modifier.weight(1f).height(44.dp),
+                                shape = RoundedCornerShape(16.dp),
+                            ) {
+                                Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(strings.retry, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = onOpenSettings,
+                                modifier = Modifier.weight(1f).height(44.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                            ) {
+                                Icon(Icons.Rounded.Settings, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(strings.settings, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else {
+                        Button(onClick = viewModel::analyze, modifier = Modifier.fillMaxWidth()) {
+                            Icon(Icons.Rounded.Refresh, contentDescription = null)
+                            Text(strings.retry)
+                        }
                     }
                 }
             }
@@ -189,4 +216,23 @@ fun AnalysisScreen(
             item { Spacer(Modifier.height(8.dp)) }
         }
     }
+}
+
+internal fun analysisNeedsSettingsAction(message: String): Boolean {
+    val clean = message.trim()
+    return clean.contains("API Key", ignoreCase = true) ||
+        clean.contains("model name", ignoreCase = true) ||
+        clean.contains("image-capable model", ignoreCase = true) ||
+        clean.contains("Base URL", ignoreCase = true) ||
+        clean.contains("request parameters", ignoreCase = true) ||
+        clean.contains("设置") ||
+        clean.contains("設定") ||
+        clean.contains("支持图片") ||
+        clean.contains("支援圖片") ||
+        clean.contains("模型名称") ||
+        clean.contains("模型名稱") ||
+        clean.contains("モデル名") ||
+        clean.contains("画像対応モデル") ||
+        clean.contains("リクエストパラメータ") ||
+        clean.contains("接続先")
 }

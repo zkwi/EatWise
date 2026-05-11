@@ -32,8 +32,8 @@
 ## Prompt 维护
 
 - 系统提示词集中在 `OpenAiCompatibleClient`。
-- 当前 `promptVersion = 11`。
-- `promptVersion = 11` 要求模型识别多个菜品和复合食材，并按当前 App 语言输出所有用户可见字段。
+- 当前 `promptVersion = 12`。
+- `promptVersion = 12` 要求模型识别多个菜品、复合食材和明显烹饪方式，并按当前 App 语言输出所有用户可见字段。
 - 当前支持语言：简体中文、繁体中文、英语、日语。
 - 建议必须是可执行小动作，避免只输出“注意控制、保持均衡、控制频率”等抽象提醒。
 - 食材条目中尽量填写可选 `dish` 字段。
@@ -57,7 +57,7 @@
 
 ## JSON 结构维护
 
-- 当前结果结构以 `promptVersion = 11` 管理，Room 数据库是 version 2。
+- 当前结果结构以 `promptVersion = 12` 管理，Room 数据库是 version 2。
 - `Ingredient.dish` 用于多菜品分组，`Ingredient` 不保留重量、分量或热量字段。
 - 新增 JSON 字段前先确认 UI 或业务确实需要，不为“可能用到”提前扩展 schema。
 - 删除字段时同步更新 prompt、模型、测试和手工验收清单。

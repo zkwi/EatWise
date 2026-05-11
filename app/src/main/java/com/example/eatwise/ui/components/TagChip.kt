@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.eatwise.core.i18n.AppLanguage
 import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.ui.i18n.LocalAppLanguage
 import com.example.eatwise.ui.i18n.LocalAppStrings
@@ -33,7 +34,7 @@ fun TagChip(text: String, modifier: Modifier = Modifier, compact: Boolean = fals
     val style = tagStyle(text)
     val fontSize = if (compact) 10.sp else 11.sp
     val minHeight = if (compact) 20.dp else 23.dp
-    val maxWidth = if (compact) 70.dp else 88.dp
+    val maxWidth = tagMaxWidth(language, compact)
     val horizontalPadding = if (compact) 6.dp else 8.dp
     Text(
         text = label,
@@ -67,9 +68,16 @@ private fun tagStyle(text: String): TagStyle {
     }
 }
 
-private fun compactLabel(text: String, language: com.example.eatwise.core.i18n.AppLanguage): String {
+internal fun tagMaxWidth(language: AppLanguage, compact: Boolean) = when {
+    language == AppLanguage.En && compact -> 102.dp
+    language == AppLanguage.En -> 124.dp
+    compact -> 70.dp
+    else -> 88.dp
+}
+
+private fun compactLabel(text: String, language: AppLanguage): String {
     val translated = MealLanguageText.compactTag(text, language)
-    if (language != com.example.eatwise.core.i18n.AppLanguage.ZhHans || !translated.equals(text.trim(), ignoreCase = true)) {
+    if (language != AppLanguage.ZhHans || !translated.equals(text.trim(), ignoreCase = true)) {
         return translated
     }
     val clean = text.trim().replace(Regex("\\s+"), "")

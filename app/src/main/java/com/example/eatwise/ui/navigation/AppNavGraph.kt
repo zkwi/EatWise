@@ -147,7 +147,17 @@ fun AppNavGraph(container: AppContainer) {
                         AnalysisViewModel(imagePath, container.analysisTaskManager)
                     },
                 )
-                AnalysisScreen(vm, onBack = { navController.popBackStack() }, onSaved = { navController.navigate(Routes.detail(it)) })
+                AnalysisScreen(
+                    viewModel = vm,
+                    onBack = { navController.popBackStack() },
+                    onOpenSettings = {
+                        navController.navigate(Routes.Settings) {
+                            popUpTo(Routes.Home) { saveState = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onSaved = { navController.navigate(Routes.detail(it)) },
+                )
             }
             composable(Routes.Detail) { entry ->
                 val recordId = Uri.decode(entry.arguments?.getString("recordId").orEmpty())

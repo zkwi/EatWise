@@ -19,9 +19,9 @@ object MealAnalysisPolisher {
 
         return result.copy(
             mealName = localizedMealName(result.mealName, language),
-            summary = compactSentence(result.summary, 42),
+            summary = compactSentence(result.summary, 58),
             goalMatch = result.goalMatch.copy(
-                reason = compactSentence(result.goalMatch.reason, 36),
+                reason = compactSentence(result.goalMatch.reason, 52),
             ),
             eatingAdvice = normalizeEatingAdvice(result.eatingAdvice, result.goalMatch.level, analysisText(result)),
             suggestions = suggestions,
@@ -70,9 +70,9 @@ object MealAnalysisPolisher {
 
         return result.copy(
             mealName = localizedMealName(result.mealName, language),
-            summary = compactSentence(result.summary, if (language == AppLanguage.En) 96 else 42),
+            summary = compactSentence(result.summary, if (language == AppLanguage.En) 112 else 58),
             goalMatch = result.goalMatch.copy(
-                reason = compactSentence(result.goalMatch.reason, if (language == AppLanguage.En) 88 else 36),
+                reason = compactSentence(result.goalMatch.reason, if (language == AppLanguage.En) 104 else 52),
             ),
             eatingAdvice = MealLanguageText.displayAdvice(result.eatingAdvice.ifBlank { MealLanguageText.displayAdvice("可以适量吃", language) }, language),
             suggestions = suggestions,
