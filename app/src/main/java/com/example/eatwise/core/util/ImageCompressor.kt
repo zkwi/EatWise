@@ -8,7 +8,7 @@ import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
 import com.example.eatwise.core.storage.ImageStorage
 import java.io.File
-import kotlin.math.max
+import kotlin.math.min
 
 class ImageCompressor(context: Context) {
     private val imageStorage = ImageStorage(context)
@@ -16,35 +16,45 @@ class ImageCompressor(context: Context) {
     fun compress(original: File): File {
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(original.absolutePath, options)
-        val sample = calculateSampleSize(options.outWidth, options.outHeight, 1280)
+        val sample = calculateSampleSize(options.outWidth, options.outHeight)
         val bitmap = BitmapFactory.Options().run {
             inSampleSize = sample
             BitmapFactory.decodeFile(original.absolutePath, this)
         } ?: error("图片处理失败，请重试。")
 
-        val fixed = bitmap.fixOrientation(original)
-        val scaled = fixed.scaleToMaxSide(1280)
-        val target = imageStorage.compressedFileFor(original)
-        target.outputStream().use { output ->
-            scaled.compress(Bitmap.CompressFormat.JPEG, 80, output)
+        var fixed: Bitmap? = null
+        var scaled: Bitmap? = null
+        try {
+            fixed = bitmap.fixOrientation(original)
+            scaled = fixed.scaleToFit(MAX_UPLOAD_WIDTH, MAX_UPLOAD_HEIGHT)
+            val target = imageStorage.compressedFileFor(original)
+            target.outputStream().use { output ->
+                scaled.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, output)
+            }
+            return target
+        } finally {
+            if (scaled != null && scaled !== fixed) scaled.recycleIfNeeded()
+            if (fixed != null && fixed !== bitmap) fixed.recycleIfNeeded()
+            bitmap.recycleIfNeeded()
         }
-        if (fixed !== bitmap) bitmap.recycle()
-        if (scaled !== fixed) fixed.recycle()
-        return target
     }
 
-    private fun calculateSampleSize(width: Int, height: Int, maxSide: Int): Int {
+    private fun calculateSampleSize(width: Int, height: Int): Int {
+        if (width <= 0 || height <= 0) return 1
         var sample = 1
-        var largest = max(width, height)
-        while (largest / sample > maxSide * 2) sample *= 2
+        while (width / sample > MAX_UPLOAD_WIDTH * 2 || height / sample > MAX_UPLOAD_HEIGHT * 2) {
+            sample *= 2
+        }
         return sample
     }
 
-    private fun Bitmap.scaleToMaxSide(maxSide: Int): Bitmap {
-        val largest = max(width, height)
-        if (largest <= maxSide) return this
-        val ratio = maxSide.toFloat() / largest
-        return scale((width * ratio).toInt(), (height * ratio).toInt())
+    private fun Bitmap.scaleToFit(maxWidth: Int, maxHeight: Int): Bitmap {
+        if (width <= maxWidth && height <= maxHeight) return this
+        val ratio = min(maxWidth.toFloat() / width, maxHeight.toFloat() / height)
+        return scale(
+            (width * ratio).toInt().coerceAtLeast(1),
+            (height * ratio).toInt().coerceAtLeast(1),
+        )
     }
 
     private fun Bitmap.fixOrientation(file: File): Bitmap {
@@ -63,5 +73,15 @@ class ImageCompressor(context: Context) {
         }
         if (rotation == 0f) return this
         return Bitmap.createBitmap(this, 0, 0, width, height, Matrix().apply { postRotate(rotation) }, true)
+    }
+
+    private fun Bitmap.recycleIfNeeded() {
+        if (!isRecycled) recycle()
+    }
+
+    private companion object {
+        const val MAX_UPLOAD_WIDTH = 1600
+        const val MAX_UPLOAD_HEIGHT = 1600
+        const val JPEG_QUALITY = 85
     }
 }

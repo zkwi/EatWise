@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.eatwise.core.storage.ImageStorage
 import com.example.eatwise.data.repository.MealRepository
 import com.example.eatwise.domain.model.MealRecord
+import com.example.eatwise.domain.usecase.AnalysisTaskManager
+import com.example.eatwise.domain.usecase.AnalysisTaskState
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +17,7 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val recentRecords: List<MealRecord> = emptyList(),
+    val backgroundAnalysis: AnalysisTaskState? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
 )
@@ -21,6 +25,7 @@ data class HomeUiState(
 class HomeViewModel(
     private val mealRepository: MealRepository,
     private val imageStorage: ImageStorage,
+    private val analysisTaskManager: AnalysisTaskManager,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -31,25 +36,34 @@ class HomeViewModel(
                 _uiState.update { it.copy(recentRecords = records, isLoading = false) }
             }
         }
+        viewModelScope.launch {
+            analysisTaskManager.latestTask.collect { task ->
+                _uiState.update { it.copy(backgroundAnalysis = task) }
+            }
+        }
     }
 
     fun importImage(uri: Uri, onReady: (String) -> Unit) {
         viewModelScope.launch {
-            runCatching { imageStorage.copyToPrivateStorage(uri) }
-                .onSuccess { onReady(it.absolutePath) }
-                .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message ?: "图片读取失败，请换一张图片。") }
-                }
+            try {
+                onReady(imageStorage.copyToPrivateStorage(uri).absolutePath)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(errorMessage = error.message ?: "图片读取失败，请换一张图片。") }
+            }
         }
     }
 
     fun importSampleImage(resourceId: Int, name: String, onReady: (String) -> Unit) {
         viewModelScope.launch {
-            runCatching { imageStorage.copyResourceToPrivateStorage(resourceId, name) }
-                .onSuccess { onReady(it.absolutePath) }
-                .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message ?: "示例图片读取失败，请重试。") }
-                }
+            try {
+                onReady(imageStorage.copyResourceToPrivateStorage(resourceId, name).absolutePath)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { it.copy(errorMessage = error.message ?: "示例图片读取失败，请重试。") }
+            }
         }
     }
 

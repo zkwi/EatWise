@@ -7,6 +7,7 @@ import com.example.eatwise.core.network.LlmConfig
 import com.example.eatwise.core.network.OpenAiCompatibleClient
 import com.example.eatwise.data.repository.SettingsRepository
 import com.example.eatwise.domain.model.AppSettings
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -70,7 +71,7 @@ class SettingsViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isTesting = true) }
-            runCatching {
+            try {
                 openAiClient.testConnection(
                     LlmConfig(
                         baseUrl = state.baseUrl.trim(),
@@ -78,9 +79,10 @@ class SettingsViewModel(
                         apiKey = state.apiKey.trim(),
                     ),
                 )
-            }.onSuccess {
                 _uiState.update { it.copy(isTesting = false, modelName = modelName, message = "连接正常，模型支持图片输入。") }
-            }.onFailure { error ->
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
                 _uiState.update {
                     it.copy(
                         isTesting = false,
@@ -94,7 +96,7 @@ class SettingsViewModel(
     fun save() {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true) }
-            runCatching {
+            try {
                 val state = uiState.value
                 settingsRepository.save(
                     AppSettings(
@@ -104,9 +106,10 @@ class SettingsViewModel(
                         userGoal = state.userGoal.trim().ifBlank { AppSettings.DEFAULT_USER_GOAL },
                     ),
                 )
-            }.onSuccess {
                 _uiState.update { it.copy(isSaving = false, message = "设置已保存。") }
-            }.onFailure {
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
                 _uiState.update { it.copy(isSaving = false, message = "保存失败，请重试。") }
             }
         }

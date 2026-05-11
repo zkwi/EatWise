@@ -66,7 +66,7 @@ fun AnalysisScreen(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
                 Card(
@@ -82,13 +82,19 @@ fun AnalysisScreen(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(2.15f)
+                            .aspectRatio(2.85f)
                             .clip(RoundedCornerShape(20.dp)),
                     )
                 }
             }
             if (state.isAnalyzing) {
-                item { LoadingOverlay("正在分析这餐") }
+                item {
+                    LoadingOverlay(
+                        text = "第 ${state.analysisStage.ordinal + 1}/4 步 · ${state.analysisStage.title}",
+                        detail = state.analysisStage.detail,
+                        progress = (state.analysisStage.ordinal + 1) / 4f,
+                    )
+                }
             }
             state.errorMessage?.let { message ->
                 item {
@@ -140,7 +146,7 @@ fun AnalysisScreen(
                         OutlinedButton(
                             onClick = { state.savedRecordId?.let(onSaved) },
                             enabled = state.savedRecordId != null && !state.isSaving,
-                            modifier = Modifier.weight(1f).height(46.dp),
+                            modifier = Modifier.weight(1f).height(44.dp),
                             shape = RoundedCornerShape(16.dp),
                         ) {
                             Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -156,7 +162,7 @@ fun AnalysisScreen(
                         Button(
                             onClick = viewModel::analyze,
                             enabled = !state.isAnalyzing,
-                            modifier = Modifier.weight(1f).height(46.dp),
+                            modifier = Modifier.weight(1f).height(44.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         ) {

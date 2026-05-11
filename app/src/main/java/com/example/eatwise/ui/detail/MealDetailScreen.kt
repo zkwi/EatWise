@@ -73,7 +73,7 @@ fun MealDetailScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
                     Card(
@@ -89,7 +89,7 @@ fun MealDetailScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .aspectRatio(2.15f)
+                                .aspectRatio(2.85f)
                                 .clip(RoundedCornerShape(20.dp)),
                         )
                     }
@@ -132,7 +132,7 @@ fun MealDetailScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         Button(
                             onClick = viewModel::toggleFavorite,
-                            modifier = Modifier.weight(1f).height(46.dp),
+                            modifier = Modifier.weight(1f).height(44.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         ) {
@@ -141,7 +141,7 @@ fun MealDetailScreen(
                         }
                         Button(
                             onClick = { showDeleteDialog = true },
-                            modifier = Modifier.weight(1f).height(46.dp),
+                            modifier = Modifier.weight(1f).height(44.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         ) {

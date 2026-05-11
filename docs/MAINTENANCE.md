@@ -27,12 +27,13 @@
 - 模型必须支持图片输入。
 - 当前实现不依赖 `response_format` 或流式输出，使用 prompt 约束模型只返回 JSON。
 - 如果模型返回不稳定，优先调整 prompt、降低 temperature 或更换模型，不要先引入复杂兼容层。
+- AI 约束治理细则见 `docs/AI_GOVERNANCE.md`，这里仅保留维护入口和版本信息。
 
 ## Prompt 维护
 
 - 系统提示词集中在 `OpenAiCompatibleClient`。
-- 当前 `promptVersion = 5`。
-- `promptVersion = 5` 要求模型识别多个菜品和复合食材，并在食材条目中尽量填写可选 `dish` 字段。
+- 当前 `promptVersion = 6`。
+- `promptVersion = 6` 要求模型识别多个菜品和复合食材，并在食材条目中尽量填写可选 `dish` 字段。
 - 不要求模型返回食材重量、卡路里或宏量营养素数值；`Ingredient` 不保留分量和热量字段。
 - `eating_advice` 是核心建议字段，只允许“只能尝一小口、需要严格控量、可以适量吃、可以适量多吃”四类。
 - 标签必须短、生活化、有明确决策价值；不要输出“常规食材、常规分量、普通、粗估”等低信息量标签。
@@ -51,7 +52,7 @@
 
 ## JSON 结构维护
 
-- 当前结果结构以 `promptVersion = 5` 管理，Room 数据库是 version 2。
+- 当前结果结构以 `promptVersion = 6` 管理，Room 数据库是 version 2。
 - `Ingredient.dish` 用于多菜品分组，`Ingredient` 不保留重量、分量或热量字段。
 - 新增 JSON 字段前先确认 UI 或业务确实需要，不为“可能用到”提前扩展 schema。
 - 删除字段时同步更新 prompt、模型、测试和手工验收清单。
@@ -66,8 +67,7 @@
 - 每次代码提交前至少运行 `.\gradlew.bat test assembleDebug`；只改文档时可说明未运行构建。
 - 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
 - 修复 UI 时必须用模拟器或真机截图复核，重点看文字是否截断、标签是否换行、按钮是否被系统导航栏遮挡。
-- 对外协作入口以根目录文档为准：贡献流程见 `CONTRIBUTING.md`，安全策略见 `SECURITY.md`，变更记录见 `CHANGELOG.md`。
-- 当前仓库尚未声明开源许可证，公开发布前必须由项目所有者补充 `LICENSE`。
+- 对外协作入口以根目录文档为准：贡献流程见 `CONTRIBUTING.md`，安全策略见 `SECURITY.md`，变更记录见 `CHANGELOG.md`，许可证见 `LICENSE`。
 
 ## 数据库维护
 
@@ -222,6 +222,7 @@ data:image/jpeg;base64,/9j/4AAQ...
 
 AI 修改代码时必须遵守：
 
+- 先阅读 `AGENTS.md` 和 `docs/AI_GOVERNANCE.md`。
 - 不读取项目外敏感文件。
 - 不写入真实 API Key。
 - 不把用户图片、base64、完整 AI 请求体写入日志或文档。
@@ -233,6 +234,7 @@ AI 修改代码时必须遵守：
 - 定期升级 Gradle、AGP、Kotlin、Compose、Room、CameraX。
 - 升级后运行 `assembleDebug` 和基础测试。
 - 保持依赖数量少。
+- AGP 9 已内置 Android Kotlin 支持，不要重新添加 `org.jetbrains.kotlin.android` 插件。
 
 ## 安全边界
 

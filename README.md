@@ -9,9 +9,11 @@
 - 导入相册餐食图片或使用 CameraX 拍照
 - 首次使用且暂无历史记录时提供示例图片，可直接点击体验分析链路
 - 压缩图片后以 base64 data URL 发送给用户配置的模型
-- 展示餐食名称、食用建议、健康判断、调整建议、食材拆分和短标签
-- 支持多个菜品或复合食材的分析结果展示，食材可按菜品归属分组
+- 展示餐食名称、1~5 星食用建议、健康判断、调整建议、菜品建议和短标签
+- 支持多个菜品或复合食材的分析结果展示，按菜品给出 2~3 个标签和简短建议
+- 分析等待页展示阶段进度、滚动提示，并允许返回首页后台继续分析
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
+- 历史记录使用紧凑移动端卡片，左滑可收藏或删除
 - API Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
 
 ## 技术栈
@@ -78,7 +80,8 @@ POST {baseUrl}/chat/completions
 
 ## 工程治理
 
-- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 5`。
+- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 6`。
+- AI 约束、输出 schema、标签语义和隐私边界见 [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md)。
 - 结果 JSON 以当前 schema 为准，避免为废弃字段保留兼容分支。
 - 提交代码前运行 `.\gradlew.bat test assembleDebug`。
 - 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
@@ -87,6 +90,7 @@ POST {baseUrl}/chat/completions
 - 安全边界和报告方式见 [SECURITY.md](SECURITY.md)。
 - 变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 - 编译、Debug、日志采集和 AI 接手维护流程见 [docs/MAINTENANCE.md](docs/MAINTENANCE.md)。
+- AI 代理维护约束见 [AGENTS.md](AGENTS.md)。
 
 ## 开源许可证
 

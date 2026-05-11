@@ -4,10 +4,10 @@ EatWise 是个人项目，治理目标是保持主链路清晰、可验证、易
 
 ## 开发流程
 
-1. 先阅读 [README.md](README.md) 和 [docs/MAINTENANCE.md](docs/MAINTENANCE.md)。
+1. 先阅读 [README.md](README.md)、[docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md) 和 [docs/MAINTENANCE.md](docs/MAINTENANCE.md)。
 2. 明确本次改动的用户价值和验收标准。
 3. 保持改动范围集中；UI、ViewModel、UseCase、Repository、core 工具的现有分层已经足够。
-4. 修改 AI 输出结构时保持向后兼容，新增字段需要默认值。
+4. 修改 AI 输出结构时维护当前 schema，不为废弃字段保留兼容分支。
 5. 提交前运行：
 
 ```powershell
@@ -21,7 +21,8 @@ $env:JAVA_HOME='C:\Program Files\Android\Android Studio\jbr'
 - 中文注释只解释原因，不重复代码正在做什么。
 - 不提交真实 API Key、用户图片、完整 AI 请求体、完整响应体或本地日志。
 - 不引入新依赖，除非能明显减少复杂度或维护风险。
-- 数据库 Entity 变化必须升级 Room version 并补 Migration。
+- 数据库 Entity 变化必须升级 Room version；当前阶段允许 destructive migration，长期保存真实历史前再补 Migration。
+- prompt、标签、建议和健康目标文案必须保持非诊断语气，不输出医疗结论、药物建议或治疗方案。
 
 ## 提交信息
 
@@ -38,4 +39,5 @@ Add project governance docs
 - [ ] `.\gradlew.bat test assembleDebug` 已通过，或明确说明无法运行的原因。
 - [ ] 涉及 UI 的改动已在真机或模拟器上检查主要页面。
 - [ ] 涉及 prompt、JSON、Room 或隐私边界的改动已同步文档。
+- [ ] 涉及 AI 输出的改动符合 [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md)。
 - [ ] 没有提交本地配置、日志、截图、密钥或用户数据。

@@ -90,28 +90,29 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 34.dp, bottom = 2.dp),
+                        .padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("设置", style = MaterialTheme.typography.displaySmall)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("设置", style = MaterialTheme.typography.displaySmall.copy(fontSize = 24.sp, lineHeight = 29.sp))
                         Text(
                             "连接模型，选择你的饮食目标。",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyLarge,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
                         )
                     }
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(58.dp)
+                            .size(40.dp)
                             .background(Color.White, CircleShape),
                     ) {
                         Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -126,12 +127,12 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 ) {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         SectionTitle(Icons.Rounded.Key, "模型连接")
                         OutlinedTextField(
                             value = state.baseUrl,
@@ -185,14 +186,19 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 ) {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         SectionTitle(Icons.Rounded.SettingsSuggest, "饮食目标")
-                        Text("先选一个常见目标，再按自己的情况微调。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            "先选一个常见目标，再按自己的情况微调。",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                        )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             goalPresets.forEach { preset ->
                                 GoalPresetChip(
@@ -206,12 +212,17 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             value = state.userGoal,
                             onValueChange = viewModel::updateUserGoal,
                             label = { Text("我的饮食目标") },
-                            minLines = 4,
+                            minLines = 3,
                             shape = RoundedCornerShape(14.dp),
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        Text("分析结果以定性建议为主，不展示卡路里或重量估算。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            "分析结果以定性建议为主，不展示卡路里或重量估算。",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                        )
                     }
                 }
             }
@@ -243,22 +254,22 @@ private fun SettingsActionButtons(
         Button(
             onClick = onSave,
             enabled = !isSaving && !isTesting,
-            modifier = Modifier.weight(1f).height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.weight(1f).height(44.dp),
+            shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
         ) {
-            Text(if (isSaving) "保存中..." else "保存配置", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+            Text(if (isSaving) "保存中..." else "保存配置", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
         }
         OutlinedButton(
             onClick = onTestConnection,
             enabled = !isSaving && !isTesting,
-            modifier = Modifier.weight(1f).height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.weight(1f).height(44.dp),
+            shape = RoundedCornerShape(14.dp),
             border = BorderStroke(1.5.dp, GreenPrimary),
         ) {
             Text(
                 if (isTesting) "测试中..." else "测试连接",
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = GreenPrimary,
             )
@@ -309,12 +320,12 @@ private data class GoalPreset(
 private fun GoalPresetChip(preset: GoalPreset, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF5F6F7)),
         border = BorderStroke(1.dp, if (selected) GreenPrimary.copy(alpha = 0.24f) else Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 1.dp else 0.dp),
     ) {
-        Column(Modifier.padding(horizontal = 13.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.padding(horizontal = 11.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(
                 preset.title,
                 color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurface,
@@ -336,48 +347,56 @@ private fun GoalPresetChip(preset: GoalPreset, selected: Boolean, onClick: () ->
 private fun AiConfigHero(isConfigured: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = GreenPale),
         border = BorderStroke(1.dp, Color(0xFFDDEBD8)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
             modifier = Modifier
                 .background(Brush.linearGradient(listOf(Color(0xFFF9FDF7), Color(0xFFEEF9E7))))
-                .padding(22.dp),
+                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("AI 服务配置", style = MaterialTheme.typography.headlineSmall, color = GreenDeep)
-                Text("填好 Key 和模型名称后，就可以拍照分析。", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
-                    if (isConfigured) "已配置，可开始识别" else "还缺 Key 或模型名称",
-                    color = if (isConfigured) GreenDeep else RedPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .background(if (isConfigured) GreenSoft else RedSoft, RoundedCornerShape(50))
-                        .padding(horizontal = 13.dp, vertical = 8.dp),
-                )
-            }
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(104.dp)
-                    .background(Color.White.copy(alpha = 0.68f), CircleShape),
+                    .size(38.dp)
+                    .background(Color.White.copy(alpha = 0.72f), CircleShape),
             ) {
-                Icon(Icons.Rounded.Cloud, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(58.dp))
+                Icon(Icons.Rounded.Cloud, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
             }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("AI 服务配置", fontSize = 16.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
+                Text(
+                    if (isConfigured) "已配置，可以开始识别。" else "填写 Key 和模型名称后即可分析。",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text(
+                if (isConfigured) "可用" else "待配置",
+                color = if (isConfigured) GreenDeep else RedPrimary,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .background(if (isConfigured) GreenSoft else RedSoft, RoundedCornerShape(50))
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+            )
         }
     }
 }
 
 @Composable
 private fun SectionTitle(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        Text(title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+        Text(title, fontWeight = FontWeight.Bold, fontSize = 17.sp, lineHeight = 21.sp)
     }
 }

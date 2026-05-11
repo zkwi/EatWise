@@ -204,8 +204,8 @@ class OpenAiCompatibleClient(
 
         约束：
         - 如果图片里有多个菜品，meal_name 用整体名称，例如“多菜品拼餐”或“米饭配三菜”。
-        - ingredients 必须覆盖主要菜品和复合食材；多个菜品混合时，用 dish 标明所属菜品。
-        - 复合菜品至少拆出主要可见食材，例如“煎饺”可拆为“面皮/肉馅/油”。
+        - ingredients 必须覆盖主要菜品和关键可见食材；多个菜品混合时，用 dish 标明所属菜品。
+        - 复合菜品只拆主要构成和明显风险点，不拆不可见细节、零散调料或低价值细项；每个菜品保留 1 到 3 条即可。
         - 不要估算每个食材的克数、重量或“约150g”这类分量；ingredients 不包含分量字段。
         - 不要输出任何具体卡路里、热量数值、克数或宏量营养素数值。
         - 不要使用“约xx kcal、约xx克、蛋白质xx克”这类表达。
@@ -244,7 +244,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 5
+        const val promptVersion = 6
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 

@@ -24,22 +24,26 @@ import com.example.eatwise.ui.theme.YellowPrimary
 import com.example.eatwise.ui.theme.YellowSoft
 
 @Composable
-fun TagChip(text: String, modifier: Modifier = Modifier) {
+fun TagChip(text: String, modifier: Modifier = Modifier, compact: Boolean = false) {
     val label = compactLabel(text)
     val style = tagStyle(text)
+    val fontSize = if (compact) 10.sp else 11.sp
+    val minHeight = if (compact) 22.dp else 24.dp
+    val maxWidth = if (compact) 74.dp else 82.dp
+    val horizontalPadding = if (compact) 7.dp else 8.dp
     Text(
         text = label,
         color = style.content,
-        fontSize = 11.sp,
+        fontSize = fontSize,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
-            .heightIn(min = 26.dp)
-            .widthIn(max = 82.dp)
+            .heightIn(min = minHeight)
+            .widthIn(max = maxWidth)
             .clip(RoundedCornerShape(50))
             .background(style.container)
-            .padding(horizontal = 9.dp, vertical = 4.dp),
+            .padding(horizontal = horizontalPadding, vertical = 3.dp),
     )
 }
 
@@ -76,7 +80,7 @@ private fun String.hasAny(vararg keywords: String): Boolean =
     keywords.any { contains(it, ignoreCase = true) }
 
 @Composable
-fun GoalBadge(level: String?, modifier: Modifier = Modifier) {
+fun GoalBadge(level: String?, modifier: Modifier = Modifier, compact: Boolean = false) {
     val label = goalLabel(level)
     val container: Color
     val content: Color
@@ -98,17 +102,20 @@ fun GoalBadge(level: String?, modifier: Modifier = Modifier) {
             content = Color(0xFF6D7484)
         }
     }
+    val fontSize = if (compact) 10.sp else 11.sp
+    val minHeight = if (compact) 22.dp else 24.dp
+    val horizontalPadding = if (compact) 7.dp else 8.dp
     Text(
         text = label,
         color = content,
-        fontSize = 11.sp,
+        fontSize = fontSize,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
-            .heightIn(min = 26.dp)
+            .heightIn(min = minHeight)
             .clip(RoundedCornerShape(50))
             .background(container)
-            .padding(horizontal = 9.dp, vertical = 4.dp),
+            .padding(horizontal = horizontalPadding, vertical = 3.dp),
     )
 }

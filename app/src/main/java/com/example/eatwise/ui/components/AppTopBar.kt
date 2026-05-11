@@ -26,7 +26,7 @@ fun AppTopBar(title: String, onBack: (() -> Unit)? = null) {
         modifier = Modifier
             .fillMaxWidth()
             .background(SurfaceWarm)
-            .height(48.dp),
+            .height(44.dp),
     ) {
         if (onBack != null) {
             IconButton(
@@ -36,7 +36,7 @@ fun AppTopBar(title: String, onBack: (() -> Unit)? = null) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(32.dp)
                         .background(MaterialTheme.colorScheme.surface, CircleShape),
                 ) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "返回")
@@ -50,7 +50,7 @@ fun AppTopBar(title: String, onBack: (() -> Unit)? = null) {
             Text(
                 title,
                 fontWeight = FontWeight.ExtraBold,
-                fontSize = 19.sp,
+                fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }

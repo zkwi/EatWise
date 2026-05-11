@@ -69,13 +69,13 @@ fun AppNavGraph(container: AppContainer) {
             if (showBottomBar) {
                 Row(
                     modifier = Modifier
-                        .padding(horizontal = 18.dp, vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                         .fillMaxWidth()
-                        .height(76.dp)
-                        .shadow(10.dp, RoundedCornerShape(30.dp), ambientColor = Color(0x181A1F2A), spotColor = Color(0x201A1F2A))
-                        .clip(RoundedCornerShape(30.dp))
+                        .height(64.dp)
+                        .shadow(8.dp, RoundedCornerShape(26.dp), ambientColor = Color(0x181A1F2A), spotColor = Color(0x201A1F2A))
+                        .clip(RoundedCornerShape(26.dp))
                         .background(Color.White)
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
@@ -104,7 +104,9 @@ fun AppNavGraph(container: AppContainer) {
         NavHost(navController = navController, startDestination = Routes.Home, modifier = Modifier.padding(padding)) {
             composable(Routes.Home) {
                 val vm: HomeViewModel = viewModel(
-                    factory = simpleFactory { HomeViewModel(container.mealRepository, container.imageStorage) },
+                    factory = simpleFactory {
+                        HomeViewModel(container.mealRepository, container.imageStorage, container.analysisTaskManager)
+                    },
                 )
                 HomeScreen(
                     viewModel = vm,
@@ -139,7 +141,7 @@ fun AppNavGraph(container: AppContainer) {
                 val vm: AnalysisViewModel = viewModel(
                     key = imagePath,
                     factory = simpleFactory {
-                        AnalysisViewModel(imagePath, container.analyzeMealUseCase, container.saveMealRecordUseCase)
+                        AnalysisViewModel(imagePath, container.analysisTaskManager)
                     },
                 )
                 AnalysisScreen(vm, onBack = { navController.popBackStack() }, onSaved = { navController.navigate(Routes.detail(it)) })
@@ -168,17 +170,17 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(18.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 1.dp),
+            .padding(vertical = 0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
                 .width(58.dp)
-                .height(32.dp)
-                .clip(RoundedCornerShape(18.dp))
+                .height(28.dp)
+                .clip(RoundedCornerShape(16.dp))
                 .background(if (selected) GreenSoft else Color.Transparent),
             contentAlignment = Alignment.Center,
         ) {
@@ -186,16 +188,16 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
                 item.icon,
                 contentDescription = item.label,
                 tint = if (selected) GreenDeep else inactiveColor,
-                modifier = Modifier.size(if (selected) 24.dp else 23.dp),
+                modifier = Modifier.size(if (selected) 22.dp else 21.dp),
             )
         }
         Text(
             item.label,
             color = if (selected) activeColor else inactiveColor,
-            fontSize = 12.sp,
-            lineHeight = 14.sp,
+            fontSize = 11.sp,
+            lineHeight = 13.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 3.dp),
+            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }
