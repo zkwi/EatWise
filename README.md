@@ -5,7 +5,7 @@
 ## 功能
 
 - 配置 OpenAI-compatible API：Base URL、模型名称、API Key、个人饮食目标
-- 设置页内置常见健康目标预设，如均衡饮食、减脂、控糖、控脂、控盐和增肌
+- 设置页内置常见健康目标预设，如均衡饮食、减脂、控糖、控脂、控盐和增肌，并支持自定义目标自动保存
 - 导入相册餐食图片或使用 CameraX 拍照
 - 首次使用且暂无历史记录时提供示例图片，可直接点击体验分析链路
 - 压缩图片后以 base64 data URL 发送给用户配置的模型
@@ -15,6 +15,18 @@
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
 - 历史记录使用紧凑移动端卡片，左滑可收藏或删除
 - API Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
+
+## 界面预览
+
+以下截图使用内置测试图片和合成分析记录生成，不包含真实用户照片、饮食目标或 API 配置。
+
+| 首页 | 详情页 |
+|---|---|
+| <img src="docs/screenshots/home.png" alt="首页" width="210" /> | <img src="docs/screenshots/detail.png" alt="详情页" width="210" /> |
+
+| 记录页 | 设置页 |
+|---|---|
+| <img src="docs/screenshots/history.png" alt="记录页" width="210" /> | <img src="docs/screenshots/settings.png" alt="设置页" width="210" /> |
 
 ## 技术栈
 

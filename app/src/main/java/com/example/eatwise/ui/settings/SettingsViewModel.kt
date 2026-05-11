@@ -8,6 +8,8 @@ import com.example.eatwise.core.network.OpenAiCompatibleClient
 import com.example.eatwise.data.repository.SettingsRepository
 import com.example.eatwise.domain.model.AppSettings
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +22,7 @@ data class SettingsUiState(
     val apiKey: String = "",
     val userGoal: String = AppSettings.DEFAULT_USER_GOAL,
     val isSaving: Boolean = false,
+    val isSavingGoal: Boolean = false,
     val isTesting: Boolean = false,
     val message: String? = null,
 )
@@ -30,26 +33,51 @@ class SettingsViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+    private var userGoalSaveJob: Job? = null
+    private var keepLocalConfig = false
+    private var keepLocalUserGoal = false
 
     init {
         viewModelScope.launch {
             settingsRepository.settings.collect { settings ->
                 _uiState.update {
                     it.copy(
-                        baseUrl = settings.baseUrl,
-                        modelName = settings.modelName,
-                        apiKey = settings.apiKey,
-                        userGoal = settings.userGoal,
+                        baseUrl = if (keepLocalConfig) it.baseUrl else settings.baseUrl,
+                        modelName = if (keepLocalConfig) it.modelName else settings.modelName,
+                        apiKey = if (keepLocalConfig) it.apiKey else settings.apiKey,
+                        userGoal = if (keepLocalUserGoal) it.userGoal else settings.userGoal,
                     )
                 }
             }
         }
     }
 
-    fun updateBaseUrl(value: String) = _uiState.update { it.copy(baseUrl = value) }
-    fun updateModelName(value: String) = _uiState.update { it.copy(modelName = value) }
-    fun updateApiKey(value: String) = _uiState.update { it.copy(apiKey = value) }
-    fun updateUserGoal(value: String) = _uiState.update { it.copy(userGoal = value) }
+    fun updateBaseUrl(value: String) {
+        keepLocalConfig = true
+        _uiState.update { it.copy(baseUrl = value) }
+    }
+
+    fun updateModelName(value: String) {
+        keepLocalConfig = true
+        _uiState.update { it.copy(modelName = value) }
+    }
+
+    fun updateApiKey(value: String) {
+        keepLocalConfig = true
+        _uiState.update { it.copy(apiKey = value) }
+    }
+
+    fun updateUserGoal(value: String) {
+        keepLocalUserGoal = true
+        _uiState.update { it.copy(userGoal = value) }
+        scheduleUserGoalSave(value, notify = false)
+    }
+
+    fun selectUserGoalPreset(value: String) {
+        keepLocalUserGoal = true
+        _uiState.update { it.copy(userGoal = value) }
+        scheduleUserGoalSave(value, notify = true, delayMillis = 0)
+    }
 
     fun testConnection() {
         val state = uiState.value
@@ -94,28 +122,61 @@ class SettingsViewModel(
     }
 
     fun save() {
+        userGoalSaveJob?.cancel()
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true) }
+            _uiState.update { it.copy(isSaving = true, isSavingGoal = false) }
             try {
                 val state = uiState.value
+                val userGoal = normalizedUserGoal(state.userGoal)
                 settingsRepository.save(
                     AppSettings(
                         baseUrl = state.baseUrl.trim(),
                         modelName = normalizeSingleLine(state.modelName),
                         apiKey = state.apiKey.trim(),
-                        userGoal = state.userGoal.trim().ifBlank { AppSettings.DEFAULT_USER_GOAL },
+                        userGoal = userGoal,
                     ),
                 )
-                _uiState.update { it.copy(isSaving = false, message = "设置已保存。") }
+                keepLocalConfig = false
+                keepLocalUserGoal = false
+                _uiState.update { it.copy(isSaving = false, isSavingGoal = false, userGoal = userGoal, message = "设置已保存。") }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                _uiState.update { it.copy(isSaving = false, message = "保存失败，请重试。") }
+                _uiState.update { it.copy(isSaving = false, isSavingGoal = false, message = "保存失败，请重试。") }
             }
         }
     }
 
     fun clearMessage() = _uiState.update { it.copy(message = null) }
+
+    private fun scheduleUserGoalSave(
+        value: String,
+        notify: Boolean,
+        delayMillis: Long = 700,
+    ) {
+        userGoalSaveJob?.cancel()
+        userGoalSaveJob = viewModelScope.launch {
+            if (delayMillis > 0) delay(delayMillis)
+            val userGoal = normalizedUserGoal(value)
+            _uiState.update { it.copy(isSavingGoal = true) }
+            try {
+                settingsRepository.saveUserGoal(userGoal)
+                val isCurrentGoal = normalizedUserGoal(uiState.value.userGoal) == userGoal
+                if (isCurrentGoal) keepLocalUserGoal = false
+                _uiState.update {
+                    it.copy(
+                        userGoal = if (isCurrentGoal) userGoal else it.userGoal,
+                        isSavingGoal = false,
+                        message = if (notify) "饮食目标已保存。" else it.message,
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isSavingGoal = false, message = "饮食目标保存失败，请重试。") }
+            }
+        }
+    }
 
     private fun normalizeSingleLine(value: String): String =
         value
@@ -123,4 +184,7 @@ class SettingsViewModel(
             .map { it.trim() }
             .firstOrNull { it.isNotBlank() }
             .orEmpty()
+
+    private fun normalizedUserGoal(value: String): String =
+        value.trim().ifBlank { AppSettings.DEFAULT_USER_GOAL }
 }

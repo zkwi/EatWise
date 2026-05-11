@@ -13,4 +13,6 @@ class SettingsRepository(
     suspend fun current(): AppSettings = settings.first()
 
     suspend fun save(settings: AppSettings) = settingsStore.save(settings)
+
+    suspend fun saveUserGoal(userGoal: String) = settingsStore.saveUserGoal(userGoal)
 }

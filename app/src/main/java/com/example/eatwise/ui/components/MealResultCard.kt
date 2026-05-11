@@ -2,6 +2,7 @@ package com.example.eatwise.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +54,7 @@ import com.example.eatwise.ui.theme.YellowSoft
 
 @Composable
 fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
-    val displayMealName = compactMealName(result.mealName)
+    val displayMealName = result.mealName.trim().ifBlank { "餐食分析" }
     val adviceStyle = adviceStyle(result.eatingAdvice, result.goalMatch.level)
     val overallScore = overallScore(result.eatingAdvice, result.goalMatch.level)
     val primaryTags = result.tags.take(4)
@@ -87,22 +92,20 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                         EatingAdviceChip(adviceStyle)
                         OverallRatingChip(overallScore, adviceStyle)
                     }
-                    Text(
-                        result.eatingAdvice,
+                    ExpandableText(
+                        text = result.eatingAdvice,
                         fontSize = 19.sp,
                         lineHeight = 23.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = adviceStyle.content,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        collapsedMaxLines = 1,
                     )
-                    Text(
-                        displayMealName,
+                    ExpandableText(
+                        text = displayMealName,
                         fontSize = 16.sp,
                         lineHeight = 20.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                        collapsedMaxLines = 1,
                     )
                     if (primaryTags.isNotEmpty()) {
                         FlowRow(
@@ -112,13 +115,12 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                             primaryTags.forEach { TagChip(it, compact = true) }
                         }
                     }
-                    Text(
-                        summaryForCard(result.summary),
+                    ExpandableText(
+                        text = result.summary,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         lineHeight = 16.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        collapsedMaxLines = 2,
                     )
                 }
             }
@@ -130,13 +132,12 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                 Spacer(Modifier.weight(1f))
                 GoalBadge(result.goalMatch.level)
             }
-            Text(
-                result.goalMatch.reason.ifBlank { "AI 未给出明确判断。" },
+            ExpandableText(
+                text = result.goalMatch.reason.ifBlank { "AI 未给出明确判断。" },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                collapsedMaxLines = 2,
             )
         }
 
@@ -144,7 +145,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             SoftCard {
                 Text("建议", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, lineHeight = 20.sp)
                 result.suggestions.take(3).forEach {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                         Icon(
                             Icons.Rounded.CheckCircle,
                             contentDescription = null,
@@ -152,13 +153,12 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                             modifier = Modifier.size(19.dp),
                         )
                         SuggestionActionChip(suggestionAction(it, result.goalMatch.level))
-                        Text(
-                            compactSuggestion(it),
+                        ExpandableText(
+                            text = it,
                             modifier = Modifier.weight(1f),
                             fontSize = 14.sp,
                             lineHeight = 18.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                            collapsedMaxLines = 1,
                         )
                     }
                 }
@@ -205,13 +205,12 @@ private fun DishAdviceRow(dish: DishAdvice) {
             .padding(vertical = 2.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(
-            dish.title,
+        ExpandableText(
+            text = dish.title,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
             lineHeight = 18.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            collapsedMaxLines = 1,
         )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -219,14 +218,53 @@ private fun DishAdviceRow(dish: DishAdvice) {
         ) {
             dish.hints.forEach { hint -> IngredientHintChip(hint) }
         }
-        Text(
-            dish.advice,
+        ExpandableText(
+            text = dish.advice,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 12.sp,
             lineHeight = 16.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+            collapsedMaxLines = 2,
         )
+    }
+}
+
+@Composable
+private fun ExpandableText(
+    text: String,
+    modifier: Modifier = Modifier,
+    collapsedMaxLines: Int,
+    color: Color = Color.Unspecified,
+    fontSize: androidx.compose.ui.unit.TextUnit = androidx.compose.ui.unit.TextUnit.Unspecified,
+    lineHeight: androidx.compose.ui.unit.TextUnit = androidx.compose.ui.unit.TextUnit.Unspecified,
+    fontWeight: FontWeight? = null,
+) {
+    var expanded by remember(text) { mutableStateOf(false) }
+    var canExpand by remember(text) { mutableStateOf(false) }
+    val cleanText = text.trim()
+
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            text = cleanText,
+            color = color,
+            fontSize = fontSize,
+            lineHeight = lineHeight,
+            fontWeight = fontWeight,
+            maxLines = if (expanded) Int.MAX_VALUE else collapsedMaxLines,
+            overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
+            onTextLayout = { result ->
+                if (!expanded) canExpand = result.hasVisualOverflow
+            },
+        )
+        if (canExpand) {
+            Text(
+                text = if (expanded) "收起" else "展开",
+                color = GreenPrimary,
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { expanded = !expanded },
+            )
+        }
     }
 }
 
@@ -299,7 +337,7 @@ private fun IngredientHintChip(hint: IngredientHint) {
 
 private fun dishAdvices(result: MealAnalysisResult): List<DishAdvice> =
     ingredientGroups(result.ingredients).map { group ->
-        val title = group.title.ifBlank { compactMealName(result.mealName).ifBlank { "这道菜" } }
+        val title = group.title.ifBlank { result.mealName.trim().ifBlank { "这道菜" } }
         val hints = dishHints(group).ifEmpty {
             listOf(IngredientHint("适量", Color(0xFFF0F2F5), Color(0xFF6D7484)))
         }
@@ -386,31 +424,6 @@ private fun suggestionAction(text: String, goalLevel: String): SuggestionAction 
     }
 }
 
-private fun compactSuggestion(text: String): String {
-    val clean = text.trim()
-        .removePrefix("建议")
-        .removePrefix("可以")
-        .removePrefix("尽量")
-        .removePrefix("如果")
-        .replace("尽量减少", "少")
-        .replace("下一餐选择", "下餐选")
-        .replace("清淡饮食", "清淡餐")
-        .replace("蒸煮类食物", "蒸煮")
-        .replace("建议下一餐", "下餐")
-        .replace("增加一份", "加")
-        .replace("以补充", "补")
-        .replace("以降低", "降")
-        .trim('，', '。', '、', ' ')
-    return if (clean.length <= 16) clean else clean.take(16)
-}
-
-private fun summaryForCard(text: String): String {
-    val clean = text.trim()
-    val endsCleanly = clean.lastOrNull() in setOf('。', '！', '？', '.', '!', '?')
-    if (clean.length <= 48) return if (endsCleanly) clean else "$clean..."
-    return clean.take(48).trimEnd('，', '、', ' ') + "..."
-}
-
 private fun adviceStyle(advice: String, level: String?): AdviceStyle = when {
     advice.hasAny("尝", "严格") || level == "poor" -> AdviceStyle(RedSoft, RedPrimary, "食用建议")
     advice.hasAny("适量多吃") || level == "good" -> AdviceStyle(GreenSoft, GreenDeep, "食用建议")
@@ -428,17 +441,6 @@ private fun overallScore(advice: String, level: String?): Int = when {
 private fun starText(score: Int): String {
     val safeScore = score.coerceIn(1, 5)
     return "★".repeat(safeScore) + "☆".repeat(5 - safeScore)
-}
-
-private fun compactMealName(name: String): String {
-    val clean = name.trim()
-    val withoutDetail = clean
-        .substringBefore("（")
-        .substringBefore("(")
-        .trim()
-    return withoutDetail.ifBlank { clean }.let {
-        if (it.length <= 10) it else it.take(10)
-    }
 }
 
 private fun ingredientGroups(ingredients: List<Ingredient>): List<IngredientGroup> {

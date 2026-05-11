@@ -194,7 +194,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         SectionTitle(Icons.Rounded.SettingsSuggest, "饮食目标")
                         Text(
-                            "先选一个常见目标，再按自己的情况微调。",
+                            "先选一个常见目标，也可以按自己的情况自定义。",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
                             lineHeight = 18.sp,
@@ -204,7 +204,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                 GoalPresetChip(
                                     preset = preset,
                                     selected = state.userGoal.trim() == preset.prompt,
-                                    onClick = { viewModel.updateUserGoal(preset.prompt) },
+                                    onClick = { viewModel.selectUserGoalPreset(preset.prompt) },
                                 )
                             }
                         }
@@ -218,7 +218,11 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Text(
-                            "分析结果以定性建议为主，不展示卡路里或重量估算。",
+                            if (state.isSavingGoal) {
+                                "正在保存饮食目标..."
+                            } else {
+                                "选择或编辑后会自动保存。分析结果以定性建议为主，不展示卡路里或重量估算。"
+                            },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
                             lineHeight = 18.sp,

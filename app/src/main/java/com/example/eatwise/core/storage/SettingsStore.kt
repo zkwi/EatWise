@@ -27,7 +27,13 @@ class SettingsStore(
             preferences[Keys.baseUrl] = settings.baseUrl.trim()
             preferences[Keys.modelName] = normalizeSingleLine(settings.modelName)
             preferences[Keys.apiKey] = settings.apiKey.trim()
-            preferences[Keys.userGoal] = settings.userGoal.trim()
+            preferences[Keys.userGoal] = normalizedUserGoal(settings.userGoal)
+        }
+    }
+
+    suspend fun saveUserGoal(userGoal: String) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[Keys.userGoal] = normalizedUserGoal(userGoal)
         }
     }
 
@@ -37,6 +43,9 @@ class SettingsStore(
             .map { it.trim() }
             .firstOrNull { it.isNotBlank() }
             .orEmpty()
+
+    private fun normalizedUserGoal(value: String): String =
+        value.trim().ifBlank { AppSettings.DEFAULT_USER_GOAL }
 
     private object Keys {
         val baseUrl = stringPreferencesKey("base_url")
