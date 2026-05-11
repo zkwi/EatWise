@@ -19,6 +19,7 @@
 - 发布前运行 `.\gradlew.bat lintDebug test assembleRelease`。
 - 生成 APK 后使用 `apksigner verify --verbose --print-certs` 验证签名，并为上传的 APK 生成 SHA-256 校验文件。
 - 只在 GitHub Release 上传已签名 APK 和校验文件，不上传 keystore、`local.properties` 或任何包含密码的文件。
+- README、Release notes、截图说明等面向用户的发布说明必须同时包含中文和英文版本，不要只有中文或只有英文。
 - release keystore 丢失后无法再用同一签名升级旧安装包，务必离线备份。
 
 ## 模型维护
