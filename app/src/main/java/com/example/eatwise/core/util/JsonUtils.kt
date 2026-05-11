@@ -17,7 +17,7 @@ object JsonUtils {
         return try {
             json.decodeFromString(MealAnalysisResult.serializer(), content)
         } catch (error: SerializationException) {
-            throw IllegalArgumentException("AI 返回格式异常，请重新分析。", error)
+            throw IllegalArgumentException("结果格式异常，请重新分析。", error)
         }
     }
 

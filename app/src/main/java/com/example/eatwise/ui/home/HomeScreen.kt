@@ -60,11 +60,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.example.eatwise.R
+import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.MealRecord
 import com.example.eatwise.domain.usecase.AnalysisTaskState
 import com.example.eatwise.ui.components.GoalBadge
 import com.example.eatwise.ui.components.TagChip
+import com.example.eatwise.ui.i18n.LocalAppLanguage
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenPale
 import com.example.eatwise.ui.theme.GreenPrimary
@@ -82,9 +85,10 @@ fun HomeScreen(
     onOpenDetail: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
     val snackbarHostState = remember { SnackbarHostState() }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) viewModel.importImage(uri, onAnalyze)
+        if (uri != null) viewModel.importImage(uri, strings.imageReadFailed, onAnalyze)
     }
 
     LaunchedEffect(state.errorMessage) {
@@ -110,11 +114,11 @@ fun HomeScreen(
                 ) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         Text(
-                            "今天这餐怎么样？",
+                            strings.homeTitle,
                             style = MaterialTheme.typography.displaySmall.copy(fontSize = 23.sp, lineHeight = 27.sp),
                         )
                         Text(
-                            "记录每一餐，了解你的饮食习惯。",
+                            strings.homeSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
                             lineHeight = 18.sp,
@@ -126,7 +130,7 @@ fun HomeScreen(
                             .size(40.dp)
                             .background(Color.White, CircleShape),
                     ) {
-                        Icon(Icons.Rounded.Settings, contentDescription = "设置", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Rounded.Settings, contentDescription = strings.settings, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -147,9 +151,13 @@ fun HomeScreen(
             if (state.recentRecords.isEmpty()) {
                 item {
                     SampleMealsSection(
-                        samples = sampleMeals,
+                        samples = strings.sampleMeals.mapNotNull { meal ->
+                            sampleImageRes[meal.key]?.let { imageRes ->
+                                SampleMeal(meal.key, meal.title, meal.label, imageRes)
+                            }
+                        },
                         onSampleClick = { sample ->
-                            viewModel.importSampleImage(sample.imageRes, sample.key, onAnalyze)
+                            viewModel.importSampleImage(sample.imageRes, sample.key, strings.sampleImageReadFailed, onAnalyze)
                         },
                     )
                 }
@@ -157,10 +165,10 @@ fun HomeScreen(
 
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("最近分析", fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 23.sp)
+                    Text(strings.recentAnalysis, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 23.sp)
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = onOpenHistory) {
-                        Text("查看全部", color = GreenDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(strings.viewAll, color = GreenDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     }
                 }
@@ -168,7 +176,7 @@ fun HomeScreen(
 
             if (state.recentRecords.isEmpty()) {
                 item {
-                    EmptyCard("还没有记录。分析成功后会自动保存到这里。")
+                    EmptyCard(strings.emptyHome)
                 }
             } else {
                 items(state.recentRecords.take(4)) { record ->
@@ -186,12 +194,12 @@ fun HomeScreen(
     }
 }
 
-private val sampleMeals = listOf(
-    SampleMeal("spicy_shrimp", "辣味虾拼饭", "重口味", R.drawable.sample_spicy_shrimp),
-    SampleMeal("corn_dessert", "玉米甜品冰", "甜品", R.drawable.sample_corn_dessert),
-    SampleMeal("dumpling_set", "煎饺滑蛋套餐", "复合餐", R.drawable.sample_dumpling_set),
-    SampleMeal("shared_feast", "多人聚餐", "多菜品", R.drawable.sample_shared_feast),
-    SampleMeal("burger", "双层汉堡", "快餐", R.drawable.sample_burger),
+private val sampleImageRes = mapOf(
+    "spicy_shrimp" to R.drawable.sample_spicy_shrimp,
+    "corn_dessert" to R.drawable.sample_corn_dessert,
+    "dumpling_set" to R.drawable.sample_dumpling_set,
+    "shared_feast" to R.drawable.sample_shared_feast,
+    "burger" to R.drawable.sample_burger,
 )
 
 private data class SampleMeal(
@@ -203,9 +211,10 @@ private data class SampleMeal(
 
 @Composable
 private fun SampleMealsSection(samples: List<SampleMeal>, onSampleClick: (SampleMeal) -> Unit) {
+    val strings = LocalAppStrings.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("没有照片时先试试", fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 23.sp)
-        Text("用内置图片体验完整分析流程。", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+        Text(strings.sampleTitle, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 23.sp)
+        Text(strings.sampleSubtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             items(samples) { sample ->
                 SampleMealCard(sample, onClick = { onSampleClick(sample) })
@@ -243,6 +252,7 @@ private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
 
 @Composable
 private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
+    val strings = LocalAppStrings.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -270,9 +280,9 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.fillMaxWidth()) {
-                Text("记录一餐", fontSize = 20.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
+                Text(strings.startMealTitle, fontSize = 20.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
                 Text(
-                    "拍清主食、配菜和饮料，结果会更稳定。",
+                    strings.startMealSubtitle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
@@ -287,7 +297,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                     ) {
                         Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                         Spacer(Modifier.size(6.dp))
-                        Text("拍照分析", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                        Text(strings.cameraAnalyze, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
                     }
                     OutlinedButton(
                         onClick = onPickImage,
@@ -298,7 +308,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                     ) {
                         Icon(Icons.Rounded.Image, contentDescription = null, tint = GreenPrimary)
                         Spacer(Modifier.size(6.dp))
-                        Text("导入照片", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = GreenPrimary, maxLines = 1)
+                        Text(strings.importPhoto, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = GreenPrimary, maxLines = 1)
                     }
                 }
             }
@@ -308,18 +318,20 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
 
 @Composable
 private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit) {
-    val saveFailed = task.saveMessage?.contains("失败") == true
+    val strings = LocalAppStrings.current
+    val language = LocalAppLanguage.current
+    val saveFailed = task.saveMessage?.let(MealLanguageText::isSaveFailure) == true
     val hasError = task.errorMessage != null || saveFailed
     val title = when {
-        task.isSaving -> "分析完成，正在保存"
-        hasError -> "后台分析未完成"
-        else -> "后台分析中"
+        task.isSaving -> strings.backgroundSavingTitle
+        hasError -> strings.backgroundFailedTitle
+        else -> strings.backgroundAnalyzingTitle
     }
     val detail = when {
-        task.isSaving -> task.saveMessage ?: "正在保存到记录..."
+        task.isSaving -> task.saveMessage ?: MealLanguageText.savingRecord(language)
         task.errorMessage != null -> task.errorMessage
         saveFailed -> task.saveMessage.orEmpty()
-        else -> "${task.analysisStage.title}：${task.analysisStage.detail}"
+        else -> "${MealLanguageText.analysisStageTitle(task.analysisStage.ordinal, language)}：${MealLanguageText.analysisStageDetail(task.analysisStage.ordinal, language)}"
     }
 
     Card(
@@ -357,7 +369,7 @@ private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit)
 }
 
 private fun AnalysisTaskState.shouldShowOnHome(): Boolean =
-    isAnalyzing || isSaving || errorMessage != null || saveMessage?.contains("失败") == true
+    isAnalyzing || isSaving || errorMessage != null || saveMessage?.let(MealLanguageText::isSaveFailure) == true
 
 @Composable
 private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {

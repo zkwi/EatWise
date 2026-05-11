@@ -45,6 +45,7 @@ import com.example.eatwise.domain.model.MealAnalysisResult
 import com.example.eatwise.ui.components.AppTopBar
 import com.example.eatwise.ui.components.ErrorCard
 import com.example.eatwise.ui.components.MealResultCard
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.LineSoft
 import java.io.File
@@ -56,6 +57,7 @@ fun MealDetailScreen(
     onDeleted: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -63,11 +65,10 @@ fun MealDetailScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        AppTopBar("记录详情", onBack)
+        AppTopBar(strings.detailTitle, onBack)
         val record = state.record
-        val errorMessage = state.errorMessage
-        if (errorMessage != null) {
-            ErrorCard(errorMessage, Modifier.padding(20.dp))
+        if (state.recordMissing) {
+            ErrorCard(strings.recordNotFound, Modifier.padding(20.dp))
         } else if (record != null) {
             LazyColumn(
                 modifier = Modifier
@@ -119,12 +120,12 @@ fun MealDetailScreen(
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     ) {
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("当时的饮食目标", fontWeight = FontWeight.Bold)
+                            Text(strings.goalDuringAnalysis, fontWeight = FontWeight.Bold)
                             Text(
-                                record.userGoalSnapshot.ifBlank { "当时未填写具体目标。" },
+                                record.userGoalSnapshot.ifBlank { strings.noGoalAtAnalysis },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            Text("记录时间：${DateTimeUtils.formatFull(record.createdAt)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${strings.recordTime}${DateTimeUtils.formatFull(record.createdAt)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -137,7 +138,7 @@ fun MealDetailScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         ) {
                             Icon(if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = null)
-                            Text(if (record.isFavorite) "取消收藏" else "收藏这餐")
+                            Text(if (record.isFavorite) strings.unfavorite else strings.favoriteMeal)
                         }
                         Button(
                             onClick = { showDeleteDialog = true },
@@ -146,11 +147,11 @@ fun MealDetailScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                         ) {
                             Icon(Icons.Rounded.Delete, contentDescription = null)
-                            Text("删除记录")
+                            Text(strings.deleteRecord)
                         }
                     }
                 }
-                item { Spacer(Modifier.height(8.dp)) }
+                item { Spacer(Modifier.height(28.dp)) }
             }
         }
     }
@@ -158,8 +159,8 @@ fun MealDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("删除这条记录？") },
-            text = { Text("这条分析记录会从历史中移除。") },
+            title = { Text(strings.deleteRecordTitle) },
+            text = { Text(strings.deleteRecordText) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -168,12 +169,12 @@ fun MealDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 ) {
-                    Text("删除")
+                    Text(strings.delete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("取消")
+                    Text(strings.cancel)
                 }
             },
         )

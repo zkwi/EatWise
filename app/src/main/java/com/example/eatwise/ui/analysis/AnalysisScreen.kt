@@ -40,10 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.ui.components.AppTopBar
 import com.example.eatwise.ui.components.ErrorCard
 import com.example.eatwise.ui.components.LoadingOverlay
 import com.example.eatwise.ui.components.MealResultCard
+import com.example.eatwise.ui.i18n.LocalAppLanguage
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.LineSoft
 import java.io.File
@@ -55,13 +58,15 @@ fun AnalysisScreen(
     onSaved: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
+    val language = LocalAppLanguage.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        AppTopBar(if (state.isAnalyzing) "正在分析" else "分析结果", onBack)
+        AppTopBar(if (state.isAnalyzing) strings.analyzing else strings.analysisResult, onBack)
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -78,7 +83,7 @@ fun AnalysisScreen(
                 ) {
                     AsyncImage(
                         model = File(state.imagePath),
-                        contentDescription = "待分析的餐食图片",
+                        contentDescription = strings.imageToAnalyze,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -90,8 +95,8 @@ fun AnalysisScreen(
             if (state.isAnalyzing) {
                 item {
                     LoadingOverlay(
-                        text = "第 ${state.analysisStage.ordinal + 1}/4 步 · ${state.analysisStage.title}",
-                        detail = state.analysisStage.detail,
+                        text = MealLanguageText.analysisStepText(state.analysisStage.ordinal, language),
+                        detail = MealLanguageText.analysisStageDetail(state.analysisStage.ordinal, language),
                         progress = (state.analysisStage.ordinal + 1) / 4f,
                         promptPreview = state.promptPreview,
                         modelOutput = state.modelOutput,
@@ -104,7 +109,7 @@ fun AnalysisScreen(
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = viewModel::analyze, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Rounded.Refresh, contentDescription = null)
-                        Text("再试一次")
+                        Text(strings.retry)
                     }
                 }
             }
@@ -112,7 +117,7 @@ fun AnalysisScreen(
                 item { MealResultCard(result) }
                 state.saveMessage?.let { message ->
                     item {
-                        val saveFailed = message.contains("失败")
+                        val saveFailed = MealLanguageText.isSaveFailure(message)
                         val saveDone = state.savedRecordId != null
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -154,7 +159,7 @@ fun AnalysisScreen(
                             Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                if (state.isSaving) "保存中" else "查看记录",
+                                if (state.isSaving) strings.savingShort else strings.viewDetail,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 maxLines = 1,
@@ -171,7 +176,7 @@ fun AnalysisScreen(
                             Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                "重新分析",
+                                strings.reanalyze,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 maxLines = 1,

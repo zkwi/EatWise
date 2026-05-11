@@ -50,6 +50,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.eatwise.core.storage.ImageStorage
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenPrimary
 
 @Composable
@@ -59,6 +60,7 @@ fun CameraScreen(
     onImageReady: (String) -> Unit,
 ) {
     val context = LocalContext.current
+    val strings = LocalAppStrings.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var hasPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
@@ -68,7 +70,7 @@ fun CameraScreen(
     var isCapturing by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasPermission = granted
-        if (!granted) errorMessage = "需要相机权限才能拍照分析。"
+        if (!granted) errorMessage = strings.cameraPermissionNeeded
     }
 
     LaunchedEffect(Unit) {
@@ -113,10 +115,10 @@ fun CameraScreen(
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "返回", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = strings.back, tint = Color.White)
                 }
                 Spacer(Modifier.weight(1f))
-                Text("拍一张餐食照", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                Text(strings.cameraTitle, color = Color.White, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.weight(1f))
                 Spacer(Modifier.size(48.dp))
             }
@@ -130,8 +132,8 @@ fun CameraScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("把整餐放进框内", color = Color.White, style = MaterialTheme.typography.headlineSmall)
-                    Text("主食、配菜和饮料都拍到，结果更准确", color = Color.White.copy(alpha = 0.78f))
+                    Text(strings.cameraFrameTitle, color = Color.White, style = MaterialTheme.typography.headlineSmall)
+                    Text(strings.cameraFrameSubtitle, color = Color.White.copy(alpha = 0.78f))
                 }
             }
 
@@ -144,7 +146,7 @@ fun CameraScreen(
                         onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                     ) {
-                        Text("开启相机权限", fontWeight = FontWeight.Bold)
+                        Text(strings.cameraPermissionButton, fontWeight = FontWeight.Bold)
                     }
                 } else {
                     Button(
@@ -164,7 +166,7 @@ fun CameraScreen(
 
                                     override fun onError(exception: ImageCaptureException) {
                                         isCapturing = false
-                                        errorMessage = "拍照失败，请再试一次。"
+                                        errorMessage = strings.cameraFailed
                                     }
                                 },
                             )
@@ -176,7 +178,7 @@ fun CameraScreen(
                         if (isCapturing) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(30.dp))
                         } else {
-                            Icon(Icons.Rounded.Camera, contentDescription = "拍照", modifier = Modifier.size(34.dp))
+                            Icon(Icons.Rounded.Camera, contentDescription = strings.cameraAnalyze, modifier = Modifier.size(34.dp))
                         }
                     }
                 }

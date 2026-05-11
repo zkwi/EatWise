@@ -12,7 +12,7 @@ data class MealAnalysisResult(
     val ingredients: List<Ingredient> = emptyList(),
     val suggestions: List<String> = emptyList(),
     val tags: List<String> = emptyList(),
-    val disclaimer: String = "以上是基于图片的定性判断，仅供饮食记录参考。",
+    val disclaimer: String = "以上仅基于图片做饮食参考，不替代专业建议。",
 )
 
 @Serializable

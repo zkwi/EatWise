@@ -2,11 +2,15 @@ package com.example.eatwise.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.eatwise.core.i18n.AppLanguage
+import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.core.network.ApiException
 import com.example.eatwise.core.network.LlmConfig
 import com.example.eatwise.core.network.OpenAiCompatibleClient
 import com.example.eatwise.data.repository.SettingsRepository
 import com.example.eatwise.domain.model.AppSettings
+import com.example.eatwise.ui.i18n.AppStrings
+import com.example.eatwise.ui.i18n.allPresetPrompts
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -21,6 +25,7 @@ data class SettingsUiState(
     val modelName: String = "",
     val apiKey: String = "",
     val userGoal: String = AppSettings.DEFAULT_USER_GOAL,
+    val language: AppLanguage = AppLanguage.default,
     val isSaving: Boolean = false,
     val isSavingGoal: Boolean = false,
     val isTesting: Boolean = false,
@@ -46,6 +51,7 @@ class SettingsViewModel(
                         modelName = if (keepLocalConfig) it.modelName else settings.modelName,
                         apiKey = if (keepLocalConfig) it.apiKey else settings.apiKey,
                         userGoal = if (keepLocalUserGoal) it.userGoal else settings.userGoal,
+                        language = settings.language,
                     )
                 }
             }
@@ -79,20 +85,39 @@ class SettingsViewModel(
         scheduleUserGoalSave(value, notify = true, delayMillis = 0)
     }
 
+    fun selectLanguage(language: AppLanguage) {
+        val current = uiState.value
+        val shouldReplaceGoal = current.userGoal.trim() in allPresetPrompts()
+        val nextGoal = if (shouldReplaceGoal) MealLanguageText.defaultUserGoal(language) else current.userGoal
+        keepLocalUserGoal = false
+        _uiState.update { it.copy(language = language, userGoal = nextGoal, message = null) }
+        viewModelScope.launch {
+            try {
+                settingsRepository.saveLanguage(language, if (shouldReplaceGoal) nextGoal else null)
+                _uiState.update { it.copy(message = AppStrings.of(language).settingsMessages.languageSaved) }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                _uiState.update { it.copy(message = AppStrings.of(language).settingsMessages.saveFailed) }
+            }
+        }
+    }
+
     fun testConnection() {
         val state = uiState.value
         val modelName = normalizeSingleLine(state.modelName)
+        val messages = AppStrings.of(state.language).settingsMessages
         when {
             state.apiKey.isBlank() -> {
-                _uiState.update { it.copy(message = "请先填写 API Key。") }
+                _uiState.update { it.copy(message = messages.missingApiKey) }
                 return
             }
             modelName.isBlank() -> {
-                _uiState.update { it.copy(message = "请先填写模型名称。") }
+                _uiState.update { it.copy(message = messages.missingModel) }
                 return
             }
             state.baseUrl.isBlank() -> {
-                _uiState.update { it.copy(message = "请先填写 API Base URL。") }
+                _uiState.update { it.copy(message = messages.missingBaseUrl) }
                 return
             }
         }
@@ -106,15 +131,16 @@ class SettingsViewModel(
                         modelName = modelName,
                         apiKey = state.apiKey.trim(),
                     ),
+                    state.language,
                 )
-                _uiState.update { it.copy(isTesting = false, modelName = modelName, message = "连接正常，模型支持图片输入。") }
+                _uiState.update { it.copy(isTesting = false, modelName = modelName, message = messages.testOk) }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 _uiState.update {
                     it.copy(
                         isTesting = false,
-                        message = (error as? ApiException)?.message ?: "连接失败，请检查网络或 API 配置。",
+                        message = (error as? ApiException)?.message ?: messages.testFailed,
                     )
                 }
             }
@@ -127,22 +153,25 @@ class SettingsViewModel(
             _uiState.update { it.copy(isSaving = true, isSavingGoal = false) }
             try {
                 val state = uiState.value
-                val userGoal = normalizedUserGoal(state.userGoal)
+                val messages = AppStrings.of(state.language).settingsMessages
+                val userGoal = normalizedUserGoal(state.userGoal, state.language)
                 settingsRepository.save(
                     AppSettings(
                         baseUrl = state.baseUrl.trim(),
                         modelName = normalizeSingleLine(state.modelName),
                         apiKey = state.apiKey.trim(),
                         userGoal = userGoal,
+                        language = state.language,
                     ),
                 )
                 keepLocalConfig = false
                 keepLocalUserGoal = false
-                _uiState.update { it.copy(isSaving = false, isSavingGoal = false, userGoal = userGoal, message = "设置已保存。") }
+                _uiState.update { it.copy(isSaving = false, isSavingGoal = false, userGoal = userGoal, message = messages.saveOk) }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                _uiState.update { it.copy(isSaving = false, isSavingGoal = false, message = "保存失败，请重试。") }
+                val messages = AppStrings.of(uiState.value.language).settingsMessages
+                _uiState.update { it.copy(isSaving = false, isSavingGoal = false, message = messages.saveFailed) }
             }
         }
     }
@@ -157,23 +186,25 @@ class SettingsViewModel(
         userGoalSaveJob?.cancel()
         userGoalSaveJob = viewModelScope.launch {
             if (delayMillis > 0) delay(delayMillis)
-            val userGoal = normalizedUserGoal(value)
+            val language = uiState.value.language
+            val messages = AppStrings.of(language).settingsMessages
+            val userGoal = normalizedUserGoal(value, language)
             _uiState.update { it.copy(isSavingGoal = true) }
             try {
                 settingsRepository.saveUserGoal(userGoal)
-                val isCurrentGoal = normalizedUserGoal(uiState.value.userGoal) == userGoal
+                val isCurrentGoal = normalizedUserGoal(uiState.value.userGoal, language) == userGoal
                 if (isCurrentGoal) keepLocalUserGoal = false
                 _uiState.update {
                     it.copy(
                         userGoal = if (isCurrentGoal) userGoal else it.userGoal,
                         isSavingGoal = false,
-                        message = if (notify) "饮食目标已保存。" else it.message,
+                        message = if (notify) messages.goalSaved else it.message,
                     )
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                _uiState.update { it.copy(isSavingGoal = false, message = "饮食目标保存失败，请重试。") }
+                _uiState.update { it.copy(isSavingGoal = false, message = messages.goalSaveFailed) }
             }
         }
     }
@@ -185,6 +216,6 @@ class SettingsViewModel(
             .firstOrNull { it.isNotBlank() }
             .orEmpty()
 
-    private fun normalizedUserGoal(value: String): String =
-        value.trim().ifBlank { AppSettings.DEFAULT_USER_GOAL }
+    private fun normalizedUserGoal(value: String, language: AppLanguage): String =
+        value.trim().ifBlank { MealLanguageText.defaultUserGoal(language) }
 }

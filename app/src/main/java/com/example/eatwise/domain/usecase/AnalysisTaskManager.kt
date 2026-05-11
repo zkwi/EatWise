@@ -1,5 +1,6 @@
 package com.example.eatwise.domain.usecase
 
+import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.core.util.AppResult
 import com.example.eatwise.domain.model.MealAnalysisResult
 import kotlinx.coroutines.CancellationException
@@ -112,17 +113,17 @@ class AnalysisTaskManager(
         state: MutableStateFlow<AnalysisTaskState>,
         output: AnalysisOutput,
     ) {
-        updateState(state) { it.copy(isSaving = true, saveMessage = "正在保存到记录...") }
+        updateState(state) { it.copy(isSaving = true, saveMessage = MealLanguageText.savingRecord(output.language)) }
         try {
             val id = saveMealRecordUseCase(output)
             updateState(state) {
-                it.copy(isSaving = false, savedRecordId = id, saveMessage = "已保存到饮食记录")
+                it.copy(isSaving = false, savedRecordId = id, saveMessage = MealLanguageText.savedRecord(output.language))
             }
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
             updateState(state) {
-                it.copy(isSaving = false, saveMessage = "保存失败，可以再分析一次。")
+                it.copy(isSaving = false, saveMessage = MealLanguageText.saveFailed(output.language))
             }
         }
     }

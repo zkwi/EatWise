@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 data class DetailUiState(
     val record: MealRecord? = null,
     val isLoading: Boolean = true,
-    val errorMessage: String? = null,
+    val recordMissing: Boolean = false,
 )
 
 class MealDetailViewModel(
@@ -27,7 +27,7 @@ class MealDetailViewModel(
         viewModelScope.launch {
             mealRepository.observeById(recordId).collect { record ->
                 _uiState.update {
-                    it.copy(record = record, isLoading = false, errorMessage = if (record == null) "记录不存在或已删除。" else null)
+                    it.copy(record = record, isLoading = false, recordMissing = record == null)
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.example.eatwise.core.network
 
 import android.util.Base64
+import com.example.eatwise.core.i18n.AppLanguage
+import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.core.util.JsonUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,11 +35,12 @@ class OpenAiCompatibleClient(
     suspend fun analyzeMeal(
         config: LlmConfig,
         userGoal: String,
+        language: AppLanguage,
         imageFile: File,
         onContentChanged: (String) -> Unit = {},
     ): String = withContext(Dispatchers.IO) {
         val base64 = Base64.encodeToString(imageFile.readBytes(), Base64.NO_WRAP)
-        val body = buildRequestBody(config.modelName, userGoal, base64, stream = true)
+        val body = buildRequestBody(config.modelName, userGoal, language, base64, stream = true)
         val url = buildEndpoint(config.baseUrl)
         val requestBuilder = Request.Builder()
             .url(url)
@@ -55,14 +58,14 @@ class OpenAiCompatibleClient(
         okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
             if (!response.isSuccessful) {
                 val responseBody = response.body.string()
-                throw ApiException(response.code, mapStatusMessage(response.code, responseBody))
+                throw ApiException(response.code, mapStatusMessage(response.code, responseBody, language))
             }
 
-            readCompletionContent(response.body, onContentChanged)
+            readCompletionContent(response.body, language, onContentChanged)
         }
     }
 
-    suspend fun testConnection(config: LlmConfig): Unit = withContext(Dispatchers.IO) {
+    suspend fun testConnection(config: LlmConfig, language: AppLanguage = AppLanguage.default): Unit = withContext(Dispatchers.IO) {
         val body = buildVisionTestBody(config.modelName)
         val requestBuilder = Request.Builder()
             .url(buildEndpoint(config.baseUrl))
@@ -79,24 +82,24 @@ class OpenAiCompatibleClient(
         okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
             val responseBody = response.body.string()
             if (!response.isSuccessful) {
-                throw ApiException(response.code, mapStatusMessage(response.code, responseBody))
+                throw ApiException(response.code, mapStatusMessage(response.code, responseBody, language))
             }
             val content = json.decodeFromString(ChatCompletionResponse.serializer(), responseBody)
                 .choices
                 .firstOrNull()
                 ?.message
                 ?.content
-            if (content.isNullOrBlank()) throw ApiException(null, "模型返回内容为空。")
+            if (content.isNullOrBlank()) throw ApiException(null, emptyModelMessage(language))
             runCatching {
                 json.decodeFromString(JsonObject.serializer(), JsonUtils.extractJson(content))
             }
-                .getOrElse { throw ApiException(null, "模型连接正常，但多模态测试返回格式异常。") }
+                .getOrElse { throw ApiException(null, testFormatMessage(language)) }
                 .also { result ->
                     val visionConfirmed = result["vision"]?.jsonPrimitive?.booleanOrNull == true
                     val color = result["color"]?.jsonPrimitive?.contentOrNull.orEmpty()
                     val imageRecognized = color.contains("绿", ignoreCase = true) || color.contains("green", ignoreCase = true)
                     if (!visionConfirmed || !imageRecognized) {
-                        throw ApiException(null, "模型未正确识别测试图片，请更换支持视觉输入的模型。")
+                        throw ApiException(null, imageUnsupportedMessage(language))
                     }
                 }
             Unit
@@ -106,6 +109,7 @@ class OpenAiCompatibleClient(
     private fun buildRequestBody(
         modelName: String,
         userGoal: String,
+        language: AppLanguage,
         base64: String,
         stream: Boolean = false,
     ): JsonObject = buildJsonObject {
@@ -114,14 +118,14 @@ class OpenAiCompatibleClient(
         put("max_tokens", 2000)
         if (stream) put("stream", true)
         putJsonArray("messages") {
-            add(message("system", JsonPrimitive(systemPrompt)))
+            add(message("system", JsonPrimitive(systemPrompt(language))))
             add(
                 message(
                     "user",
                     buildJsonArray {
                         add(buildJsonObject {
                             put("type", "text")
-                            put("text", userPrompt(userGoal))
+                            put("text", userPrompt(userGoal, language))
                         })
                         add(buildJsonObject {
                             put("type", "image_url")
@@ -137,6 +141,7 @@ class OpenAiCompatibleClient(
 
     private fun readCompletionContent(
         responseBody: ResponseBody,
+        language: AppLanguage,
         onContentChanged: (String) -> Unit,
     ): String {
         val streamContent = StringBuilder()
@@ -167,7 +172,7 @@ class OpenAiCompatibleClient(
         } else {
             ""
         }
-        if (content.isBlank()) throw ApiException(null, "AI 返回为空，请重试。")
+        if (content.isBlank()) throw ApiException(null, emptyModelMessage(language))
         onContentChanged(content)
         return content
     }
@@ -239,66 +244,102 @@ class OpenAiCompatibleClient(
         }
     }
 
-    private fun userPrompt(userGoal: String) = """
-        用户目标：
+    private fun userPrompt(userGoal: String, language: AppLanguage) = """
+        ${MealLanguageText.languageInstruction(language)}
+
+        User goal:
         $userGoal
 
-        请分析这张餐食图片。
+        Analyze this meal photo.
 
-        必须只返回一个 JSON 对象，字段名必须使用下面的英文 key，不要使用中文 key：
+        Return exactly one JSON object. Field names must stay as the English keys below:
         {
-          "meal_name": "餐食名称",
-          "summary": "简短摘要",
-          "eating_advice": "只能尝一小口|需要严格控量|可以适量吃|可以适量多吃",
+          "meal_name": "localized meal name",
+          "summary": "localized short summary",
+          "eating_advice": "${MealLanguageText.eatingAdviceOptions(language)}",
           "goal_match": {
             "level": "good|partial|poor|unknown",
-            "reason": "原因"
+            "reason": "localized reason"
           },
           "ingredients": [
             {
-              "dish": "所属菜品",
-              "name": "食材名"
+              "dish": "localized dish name",
+              "name": "localized visible ingredient"
             }
           ],
-          "suggestions": ["建议1", "建议2"],
-          "tags": ["标签1"],
-          "disclaimer": "以上是基于图片的定性判断，仅供饮食记录参考。"
+          "suggestions": ["localized actionable tip 1", "localized actionable tip 2"],
+          "tags": ["localized tag 1"],
+          "disclaimer": "${MealLanguageText.disclaimer(language)}"
         }
 
-        约束：
-        - 如果图片里有多个菜品，meal_name 用整体名称，例如“多菜品拼餐”或“米饭配三菜”。
-        - ingredients 必须覆盖主要菜品和关键可见食材；多个菜品混合时，用 dish 标明所属菜品。
-        - 复合菜品只拆主要构成和明显风险点，不拆不可见细节、零散调料或低价值细项；每个菜品保留 1 到 3 条即可。
-        - 不要估算每个食材的克数、重量或“约150g”这类分量；ingredients 不包含分量字段。
-        - 不要输出任何具体卡路里、热量数值、克数或宏量营养素数值。
-        - 不要使用“约xx kcal、约xx克、蛋白质xx克”这类表达。
-        - eating_advice 必须且只能从四个固定值中选一个：只能尝一小口、需要严格控量、可以适量吃、可以适量多吃。
-        - 红油、酱料、调料、肥肉、油炸食物不要标为“轻负担”，应按油脂、重口味或油炸风险处理。
-        - goal_match.level 只能是 good、partial、poor、unknown。
-        - suggestions 返回 1 到 3 条，每条不超过 18 个中文字符，必须具体可执行。
-        - suggestions 必须符合普通用户真实场景，优先给“只能尝一小口、需要严格控量、酱料少放、加一份蔬菜、下餐清淡”等可做到的小调整。
-        - 不要给极端方案，例如完全禁食、只吃单一食物、严格称重、复杂食谱或药物建议。
-        - tags 返回 2 到 4 个短标签，每个不超过 6 个中文字符，只保留对用户决策有帮助的结论。
-        - tags 优先使用生活化标签，例如：油脂高、油炸、重口味、糖偏高、钠偏高、蔬菜少、蛋白足、有蔬菜、轻负担、控脂谨慎。
-        - tags 不要返回“常规食材、常规分量、常规份量、普通、一般、粗估、蛋白来源、油脂调味”等低信息量或食材角色标签。
-        - tags 不要把同一事实同时写成正向和负向，例如“红油调料”不能同时是“轻负担”和“油脂调味”。
-        - tags 不要返回长句、重复标签、医学诊断词或“健康/不健康”这类空泛判断。
-        - summary 和 goal_match.reason 都要简短，避免长段落。
-        - 数字字段不确定时可返回 null。
-        - 不要 Markdown，不要代码块，不要额外解释。
+        Constraints:
+        - If there are multiple dishes, use an overall meal name.
+        - ingredients must cover the main dishes and key visible ingredients. For mixed meals, use dish to show which dish an ingredient belongs to.
+        - For compound dishes, list only major parts and visible risk points. Do not list invisible details, scattered seasonings, or low-value tiny items.
+        - Do not estimate grams, weight, calories, macro nutrients, or phrases like "about 150g" or "about xx kcal".
+        - eating_advice must be exactly one localized option from: ${MealLanguageText.eatingAdviceOptions(language)}.
+        - Red oil, sauces, fatty meat, and fried food must not be labeled as light burden. Treat them as oil, heavy seasoning, or fried risk when relevant.
+        - goal_match.level must be only good, partial, poor, or unknown.
+        - suggestions must return 1 to 3 short, concrete, doable actions. Examples in the target language: ${MealLanguageText.suggestionExamples(language)}.
+        - Do not write abstract reminders such as "control it", "keep balanced", or "control frequency" unless you also say the exact action.
+        - If this meal fits the goal well, still give one maintenance tip.
+        - Do not give extreme plans, fasting advice, single-food diets, strict weighing, complex recipes, medical diagnosis, medicine, or treatment advice.
+        - tags must return 2 to 4 short localized labels with decision value. Examples: ${MealLanguageText.tagExamples(language)}.
+        - Do not return low-value tags such as: ${MealLanguageText.lowValueTagExamples(language)}.
+        - Do not express the same fact as both positive and negative.
+        - Do not return long tags, repeated tags, diagnosis terms, or vague "healthy/unhealthy" labels.
+        - summary should state the 1 to 2 most important features of this meal, short enough for a mobile card.
+        - goal_match.reason should briefly explain why this meal fits or does not fit the current goal.
+        - Return null for uncertain numeric fields, but avoid numeric nutrition estimates.
+        - No Markdown, no code fences, no extra explanation.
     """.trimIndent()
 
-    private fun mapStatusMessage(statusCode: Int, responseBody: String): String {
+    private fun mapStatusMessage(statusCode: Int, responseBody: String, language: AppLanguage): String {
         val apiMessage = extractApiErrorMessage(responseBody)
         return when (statusCode) {
             400 -> if (apiMessage.contains("image", true) || apiMessage.contains("vision", true)) {
-                "当前模型可能不支持图片分析，请更换支持视觉输入的模型。"
+                imageUnsupportedMessage(language)
             } else {
-                "请求参数可能不兼容，请检查模型是否支持图片输入。"
+                incompatibleRequestMessage(language)
             }
-            401 -> "API Key 可能无效，请检查设置。"
-            else -> "网络请求失败，请检查网络或 API 配置。"
+            401 -> invalidKeyMessage(language)
+            else -> MealLanguageText.requestFailed(language)
         }
+    }
+
+    private fun emptyModelMessage(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "模型没有返回内容，请重试。"
+        AppLanguage.ZhHant -> "模型沒有返回內容，請重試。"
+        AppLanguage.En -> "The model returned no content. Please try again."
+        AppLanguage.Ja -> "モデルが内容を返しませんでした。もう一度お試しください。"
+    }
+
+    private fun testFormatMessage(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "连接成功，但测试结果格式不对，请换一个支持图片的模型或重试。"
+        AppLanguage.ZhHant -> "連接成功，但測試結果格式不對，請換一個支援圖片的模型或重試。"
+        AppLanguage.En -> "Connection worked, but the test result format was invalid. Use an image-capable model or try again."
+        AppLanguage.Ja -> "接続は成功しましたが、テスト結果の形式が不正です。画像対応モデルに変更するか再試行してください。"
+    }
+
+    private fun imageUnsupportedMessage(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "这个模型可能看不了图片，请换一个支持图片输入的模型。"
+        AppLanguage.ZhHant -> "這個模型可能看不了圖片，請換一個支援圖片輸入的模型。"
+        AppLanguage.En -> "This model may not read images. Please use a model that supports image input."
+        AppLanguage.Ja -> "このモデルは画像を読めない可能性があります。画像入力対応モデルに変更してください。"
+    }
+
+    private fun incompatibleRequestMessage(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "请求参数不兼容，请检查 Base URL 和模型名称。"
+        AppLanguage.ZhHant -> "請求參數不相容，請檢查 Base URL 和模型名稱。"
+        AppLanguage.En -> "Request parameters are incompatible. Check the Base URL and model name."
+        AppLanguage.Ja -> "リクエストパラメータに互換性がありません。Base URL とモデル名を確認してください。"
+    }
+
+    private fun invalidKeyMessage(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "API Key 可能无效，请检查设置。"
+        AppLanguage.ZhHant -> "API Key 可能無效，請檢查設定。"
+        AppLanguage.En -> "The API key may be invalid. Please check Settings."
+        AppLanguage.Ja -> "API Key が無効な可能性があります。設定を確認してください。"
     }
 
     private fun extractApiErrorMessage(responseBody: String): String =
@@ -307,25 +348,40 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 6
+        const val promptVersion = 9
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 
-        private val systemPrompt = """
-            你是一个个人饮食记录和营养分析助手。
-            用户会上传一张餐食图片，并提供自己的健康管理目标。
-            你的任务是：
-            1. 识别图片中的主要食物；
-            2. 如有多个菜品或复合菜品，拆分主要菜品和可见食材；
-            3. 不估算食物重量、卡路里数值或宏量营养素数值；
-            4. 根据食物类型、烹饪方式和用户目标，做定性健康判断；
-            5. 给出“怎么吃”的短建议，例如只能尝一小口、需要严格控量、可以适量吃、可以适量多吃；
-            6. 标签和建议必须短，适合手机卡片展示，标签只表达有用结论，不输出常规、普通、估算类标签；
-            7. 不要做医学诊断；
-            8. 不要替代医生、营养师或药物治疗建议；
-            9. 如果不确定，请明确说明这是估算；
-            10. 必须只返回 JSON，不要 Markdown，不要代码块，不要额外解释。
-        """.trimIndent()
+        private fun systemPrompt(language: AppLanguage) = when (language) {
+            AppLanguage.ZhHans -> """
+                你是一个个人饮食记录和营养分析助手。
+                用户会上传餐食图片，并提供自己的饮食目标。请用简体中文输出所有用户可见内容。
+                识别主要食物；多菜品时拆分主要菜品和可见食材；不估算重量、卡路里或宏量营养素。
+                根据食物类型、烹饪方式和用户目标判断这餐是否适合，给出普通人当场能做的小动作。
+                不做医学诊断，不替代医生、营养师或药物治疗建议。必须只返回 JSON。
+            """.trimIndent()
+            AppLanguage.ZhHant -> """
+                你是一個個人飲食記錄和營養分析助手。
+                使用者會上傳餐食圖片，並提供自己的飲食目標。請用繁體中文輸出所有使用者可見內容。
+                識別主要食物；多菜品時拆分主要菜品和可見食材；不估算重量、卡路里或宏量營養素。
+                根據食物類型、烹飪方式和使用者目標判斷這餐是否適合，給出普通人當場能做的小動作。
+                不做醫學診斷，不替代醫生、營養師或藥物治療建議。必須只返回 JSON。
+            """.trimIndent()
+            AppLanguage.En -> """
+                You are a personal meal logging and nutrition guidance assistant.
+                The user uploads a meal photo and a meal goal. Write every user-visible value in English.
+                Identify main foods; split visible dishes and ingredients when there are multiple dishes; do not estimate weight, calories, or macros.
+                Judge whether the meal fits the goal based on food type and cooking style, then give actions a normal person can do immediately.
+                Do not diagnose, prescribe medicine, or replace professional medical or nutrition advice. Return JSON only.
+            """.trimIndent()
+            AppLanguage.Ja -> """
+                あなたは個人向けの食事記録と栄養アドバイスのアシスタントです。
+                ユーザーは食事写真と食事目標を提供します。ユーザーに見える値はすべて日本語で書いてください。
+                主な食べ物を識別し、複数料理の場合は見える料理と食材を分けてください。重量、カロリー、三大栄養素は推定しません。
+                食材や調理方法、目標に照らしてこの食事が合うかを判断し、すぐ実行できる小さな行動を提案してください。
+                医学的診断、薬の助言、治療提案はしません。必ず JSON のみを返してください。
+            """.trimIndent()
+        }
     }
 }
 

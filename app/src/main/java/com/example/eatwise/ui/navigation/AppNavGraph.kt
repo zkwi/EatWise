@@ -52,6 +52,7 @@ import com.example.eatwise.ui.history.HistoryScreen
 import com.example.eatwise.ui.history.HistoryViewModel
 import com.example.eatwise.ui.home.HomeScreen
 import com.example.eatwise.ui.home.HomeViewModel
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.settings.SettingsScreen
 import com.example.eatwise.ui.settings.SettingsViewModel
 import com.example.eatwise.ui.util.simpleFactory
@@ -59,6 +60,7 @@ import com.example.eatwise.ui.util.simpleFactory
 @Composable
 fun AppNavGraph(container: AppContainer) {
     val navController = rememberNavController()
+    val strings = LocalAppStrings.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute in setOf(Routes.Home, Routes.History, Routes.Settings)
@@ -80,9 +82,9 @@ fun AppNavGraph(container: AppContainer) {
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     listOf(
-                        BottomItem(Routes.Home, "首页", Icons.Rounded.Home),
-                        BottomItem(Routes.History, "记录", Icons.Rounded.History),
-                        BottomItem(Routes.Settings, "设置", Icons.Rounded.Settings),
+                        BottomItem(Routes.Home, strings.home, Icons.Rounded.Home),
+                        BottomItem(Routes.History, strings.history, Icons.Rounded.History),
+                        BottomItem(Routes.Settings, strings.settings, Icons.Rounded.Settings),
                     ).forEach { item ->
                         val selected = navBackStackEntry?.destination?.hierarchy?.any { it.route == item.route } == true
                         BottomNavItem(

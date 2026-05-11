@@ -53,7 +53,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.eatwise.domain.model.AppSettings
+import com.example.eatwise.core.i18n.AppLanguage
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenPale
 import com.example.eatwise.ui.theme.GreenPrimary
@@ -61,10 +61,13 @@ import com.example.eatwise.ui.theme.GreenSoft
 import com.example.eatwise.ui.theme.LineSoft
 import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
+import com.example.eatwise.ui.i18n.GoalPresetText
+import com.example.eatwise.ui.i18n.LocalAppStrings
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
     val snackbarHostState = remember { SnackbarHostState() }
     var showKey by remember { mutableStateOf(false) }
     val fieldColors = OutlinedTextFieldDefaults.colors(
@@ -101,9 +104,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text("设置", style = MaterialTheme.typography.displaySmall.copy(fontSize = 24.sp, lineHeight = 29.sp))
+                        Text(strings.settingsTitle, style = MaterialTheme.typography.displaySmall.copy(fontSize = 24.sp, lineHeight = 29.sp))
                         Text(
-                            "连接模型，选择你的饮食目标。",
+                            strings.settingsSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
                             lineHeight = 18.sp,
@@ -133,11 +136,40 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 ) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                        SectionTitle(Icons.Rounded.Key, "模型连接")
+                        SectionTitle(Icons.Rounded.Info, strings.language)
+                        Text(
+                            strings.languageSubtitle,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                        )
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            AppLanguage.values().forEach { language ->
+                                LanguageChip(
+                                    language = language,
+                                    selected = state.language == language,
+                                    onClick = { viewModel.selectLanguage(language) },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                ) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                        SectionTitle(Icons.Rounded.Key, strings.modelConnection)
                         OutlinedTextField(
                             value = state.baseUrl,
                             onValueChange = viewModel::updateBaseUrl,
-                            label = { Text("Base URL") },
+                            label = { Text(strings.baseUrl) },
                             placeholder = { Text("https://openrouter.ai/api/v1") },
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
@@ -148,13 +180,13 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             value = state.apiKey,
                             onValueChange = viewModel::updateApiKey,
                             label = { Text("API Key") },
-                            placeholder = { Text("只保存在本机") },
+                            placeholder = { Text(strings.apiKeyLocalOnly) },
                             visualTransformation = if (showKey) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { showKey = !showKey }) {
                                     Icon(
                                         if (showKey) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                                        contentDescription = "显示或隐藏 API Key",
+                                        contentDescription = "API Key",
                                     )
                                 }
                             },
@@ -166,8 +198,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         OutlinedTextField(
                             value = state.modelName,
                             onValueChange = viewModel::updateModelName,
-                            label = { Text("模型名称") },
-                            placeholder = { Text("例如 google/gemini-3.1-flash-lite") },
+                            label = { Text(strings.modelName) },
+                            placeholder = { Text(strings.modelPlaceholder) },
                             singleLine = true,
                             shape = RoundedCornerShape(14.dp),
                             colors = fieldColors,
@@ -176,6 +208,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         SettingsActionButtons(
                             isSaving = state.isSaving,
                             isTesting = state.isTesting,
+                            strings = strings,
                             onSave = viewModel::save,
                             onTestConnection = viewModel::testConnection,
                         )
@@ -192,15 +225,15 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 ) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                        SectionTitle(Icons.Rounded.SettingsSuggest, "饮食目标")
+                        SectionTitle(Icons.Rounded.SettingsSuggest, strings.mealGoal)
                         Text(
-                            "先选一个常见目标，也可以按自己的情况自定义。",
+                            strings.mealGoalSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
                             lineHeight = 18.sp,
                         )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            goalPresets.forEach { preset ->
+                            strings.goalPresets.forEach { preset ->
                                 GoalPresetChip(
                                     preset = preset,
                                     selected = state.userGoal.trim() == preset.prompt,
@@ -211,7 +244,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         OutlinedTextField(
                             value = state.userGoal,
                             onValueChange = viewModel::updateUserGoal,
-                            label = { Text("我的饮食目标") },
+                            label = { Text(strings.mealGoal) },
                             minLines = 3,
                             shape = RoundedCornerShape(14.dp),
                             colors = fieldColors,
@@ -219,9 +252,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                         )
                         Text(
                             if (state.isSavingGoal) {
-                                "正在保存饮食目标..."
+                                strings.goalSaving
                             } else {
-                                "选择或编辑后会自动保存。分析结果以定性建议为主，不展示卡路里或重量估算。"
+                                strings.goalAutoSaveHint
                             },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp,
@@ -247,6 +280,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 private fun SettingsActionButtons(
     isSaving: Boolean,
     isTesting: Boolean,
+    strings: com.example.eatwise.ui.i18n.AppStrings,
     onSave: () -> Unit,
     onTestConnection: () -> Unit,
     modifier: Modifier = Modifier,
@@ -262,7 +296,7 @@ private fun SettingsActionButtons(
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
         ) {
-            Text(if (isSaving) "保存中..." else "保存配置", fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+            Text(if (isSaving) strings.saving else strings.saveConnection, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
         }
         OutlinedButton(
             onClick = onTestConnection,
@@ -272,7 +306,7 @@ private fun SettingsActionButtons(
             border = BorderStroke(1.5.dp, GreenPrimary),
         ) {
             Text(
-                if (isTesting) "测试中..." else "测试连接",
+                if (isTesting) strings.testing else strings.testConnection,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = GreenPrimary,
@@ -281,47 +315,8 @@ private fun SettingsActionButtons(
     }
 }
 
-private val goalPresets = listOf(
-    GoalPreset(
-        title = "均衡饮食",
-        detail = "日常均衡",
-        prompt = AppSettings.DEFAULT_USER_GOAL,
-    ),
-    GoalPreset(
-        title = "减脂管理",
-        detail = "少油少糖",
-        prompt = "我正在减脂，希望优先选择高蛋白、少油、少糖、饱腹感强的食物，但不极端节食。",
-    ),
-    GoalPreset(
-        title = "控糖稳糖",
-        detail = "稳血糖",
-        prompt = "我想控制血糖波动，尽量减少含糖饮料、甜品和精制碳水，优先选择蔬菜、优质蛋白和低负担主食。",
-    ),
-    GoalPreset(
-        title = "控脂护心",
-        detail = "控胆固醇",
-        prompt = "我想控制血脂和胆固醇，少吃油炸、高脂肪和重油食物，优先选择清淡烹饪、鱼类、豆制品和蔬菜。",
-    ),
-    GoalPreset(
-        title = "控盐清淡",
-        detail = "少钠",
-        prompt = "我想控制盐分摄入，尽量避免过咸、重口味、腌制和汤底过浓的食物，优先选择清淡搭配。",
-    ),
-    GoalPreset(
-        title = "增肌高蛋白",
-        detail = "补蛋白",
-        prompt = "我想增肌或保持肌肉量，希望每餐有足够蛋白质，同时控制过多油脂和高负担食物。",
-    ),
-)
-
-private data class GoalPreset(
-    val title: String,
-    val detail: String,
-    val prompt: String,
-)
-
 @Composable
-private fun GoalPresetChip(preset: GoalPreset, selected: Boolean, onClick: () -> Unit) {
+private fun GoalPresetChip(preset: GoalPresetText, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
@@ -348,7 +343,27 @@ private fun GoalPresetChip(preset: GoalPreset, selected: Boolean, onClick: () ->
 }
 
 @Composable
+private fun LanguageChip(language: AppLanguage, selected: Boolean, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF5F6F7)),
+        border = BorderStroke(1.dp, if (selected) GreenPrimary.copy(alpha = 0.24f) else Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 1.dp else 0.dp),
+    ) {
+        Text(
+            language.displayName,
+            color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        )
+    }
+}
+
+@Composable
 private fun AiConfigHero(isConfigured: Boolean) {
+    val strings = LocalAppStrings.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -372,9 +387,9 @@ private fun AiConfigHero(isConfigured: Boolean) {
                 Icon(Icons.Rounded.Cloud, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("AI 服务配置", fontSize = 16.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
+                Text(strings.modelConnection, fontSize = 16.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
                 Text(
-                    if (isConfigured) "已配置，可以开始识别。" else "填写 Key 和模型名称后即可分析。",
+                    if (isConfigured) strings.aiConfigured else strings.aiUnconfigured,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
@@ -383,7 +398,7 @@ private fun AiConfigHero(isConfigured: Boolean) {
                 )
             }
             Text(
-                if (isConfigured) "可用" else "待配置",
+                if (isConfigured) strings.aiAvailable else strings.aiIncomplete,
                 color = if (isConfigured) GreenDeep else RedPrimary,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,

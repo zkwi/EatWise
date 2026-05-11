@@ -58,6 +58,7 @@ import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.MealRecord
 import com.example.eatwise.ui.components.GoalBadge
 import com.example.eatwise.ui.components.TagChip
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenSoft
 import com.example.eatwise.ui.theme.LineSoft
@@ -68,6 +69,7 @@ import kotlin.math.roundToInt
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val strings = LocalAppStrings.current
     var pendingDelete by remember { mutableStateOf<MealRecord?>(null) }
 
     LazyColumn(
@@ -86,13 +88,13 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "饮食记录",
+                        strings.historyTitle,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.displaySmall.copy(fontSize = 23.sp, lineHeight = 27.sp),
                     )
                 }
                 Text(
-                    "回看每一餐，找到更适合自己的调整方向。",
+                    strings.historySubtitle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
@@ -101,10 +103,10 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterPill("全部", !state.favoriteFirst, onClick = {
+                FilterPill(strings.all, !state.favoriteFirst, onClick = {
                     if (state.favoriteFirst) viewModel.toggleFavoriteFirst()
                 })
-                FilterPill("收藏优先", state.favoriteFirst, onClick = {
+                FilterPill(strings.favoriteFirst, state.favoriteFirst, onClick = {
                     if (!state.favoriteFirst) viewModel.toggleFavoriteFirst()
                 })
             }
@@ -118,7 +120,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                 ) {
                     Text(
-                        "暂无历史记录。完成一次分析后，这里会自动保存结果。",
+                        strings.emptyHistory,
                         modifier = Modifier.padding(24.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -135,7 +137,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
             }
             item {
                 Text(
-                    "已显示全部记录",
+                    strings.allRecordsShown,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp,
@@ -148,8 +150,8 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
     pendingDelete?.let { record ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("删除这条记录？") },
-            text = { Text("这条分析记录会从历史中移除。") },
+            title = { Text(strings.deleteRecordTitle) },
+            text = { Text(strings.deleteRecordText) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -158,12 +160,12 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 ) {
-                    Text("删除")
+                    Text(strings.delete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) {
-                    Text("取消")
+                    Text(strings.cancel)
                 }
             },
         )
@@ -196,6 +198,7 @@ private fun HistoryRecordCard(
     onFavorite: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val strings = LocalAppStrings.current
     val actionWidth = 104.dp
     val actionWidthPx = with(LocalDensity.current) { actionWidth.toPx() }
     var targetOffset by remember(record.id) { mutableStateOf(0f) }
@@ -211,7 +214,7 @@ private fun HistoryRecordCard(
             horizontalArrangement = Arrangement.End,
         ) {
             SwipeAction(
-                label = if (record.isFavorite) "取消" else "收藏",
+                label = if (record.isFavorite) strings.unfavorite else strings.favorite,
                 icon = if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                 container = GreenDeep,
                 onClick = {
@@ -220,7 +223,7 @@ private fun HistoryRecordCard(
                 },
             )
             SwipeAction(
-                label = "删除",
+                label = strings.delete,
                 icon = Icons.Rounded.Delete,
                 container = MaterialTheme.colorScheme.error,
                 onClick = {
@@ -302,7 +305,7 @@ private fun HistoryRecordCard(
                     if (record.isFavorite) {
                         Icon(
                             Icons.Rounded.Favorite,
-                            contentDescription = "已收藏",
+                            contentDescription = strings.favorited,
                             tint = RedPrimary,
                             modifier = Modifier.size(15.dp),
                         )

@@ -18,10 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.SurfaceWarm
 
 @Composable
 fun AppTopBar(title: String, onBack: (() -> Unit)? = null) {
+    val strings = LocalAppStrings.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -39,7 +41,7 @@ fun AppTopBar(title: String, onBack: (() -> Unit)? = null) {
                         .size(32.dp)
                         .background(MaterialTheme.colorScheme.surface, CircleShape),
                 ) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "返回")
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = strings.back)
                 }
             }
         }

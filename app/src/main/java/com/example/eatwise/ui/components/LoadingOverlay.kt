@@ -38,33 +38,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.eatwise.ui.theme.GreenSoft
 import com.example.eatwise.ui.theme.LineSoft
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import kotlinx.coroutines.delay
-
-private val loadingTips = listOf(
-    "正在保留图片细节，只压缩到适合上传的尺寸。",
-    "AI 识别菜品和建议通常是最久的一步。",
-    "你可以先回首页，分析会在后台继续进行。",
-    "结果完成后会自动保存到饮食记录。",
-)
 
 @Composable
 fun LoadingOverlay(
     text: String,
     modifier: Modifier = Modifier,
-    detail: String = "正在识别食材、判断健康度和匹配目标",
-    tips: List<String> = loadingTips,
+    detail: String = "",
+    tips: List<String>? = null,
     progress: Float? = null,
     promptPreview: String = "",
     modelOutput: String = "",
 ) {
-    var tipIndex by remember(tips) { mutableStateOf(0) }
+    val strings = LocalAppStrings.current
+    val displayTips = tips ?: strings.loadingTips
+    var tipIndex by remember(displayTips) { mutableStateOf(0) }
 
-    LaunchedEffect(tips) {
-        if (tips.isEmpty()) return@LaunchedEffect
+    LaunchedEffect(displayTips) {
+        if (displayTips.isEmpty()) return@LaunchedEffect
         tipIndex = 0
-        while (tips.size > 1) {
+        while (displayTips.size > 1) {
             delay(3200)
-            tipIndex = (tipIndex + 1) % tips.size
+            tipIndex = (tipIndex + 1) % displayTips.size
         }
     }
 
@@ -133,7 +129,7 @@ fun LoadingOverlay(
                 )
             }
             Text(
-                "可先返回首页，完成后会自动保存到记录。",
+                strings.loadingBackHint,
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 12.sp,
@@ -147,9 +143,9 @@ fun LoadingOverlay(
                     modelOutput = modelOutput,
                 )
             }
-            tips.getOrNull(tipIndex)?.let { tip ->
+            displayTips.getOrNull(tipIndex)?.let { tip ->
                 Text(
-                    "小提示：$tip",
+                    "${strings.tipPrefix}$tip",
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
@@ -166,6 +162,7 @@ private fun GenerationPreviewPanel(
     promptPreview: String,
     modelOutput: String,
 ) {
+    val strings = LocalAppStrings.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,13 +173,13 @@ private fun GenerationPreviewPanel(
         verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         PreviewBlock(
-            title = "提问摘要",
-            text = promptPreview.ifBlank { "正在整理图片和饮食目标..." },
+            title = strings.promptPreviewTitle,
+            text = promptPreview.ifBlank { strings.promptPreviewPlaceholder },
             maxLines = 2,
         )
         Box(Modifier.fillMaxWidth().height(1.dp).background(LineSoft.copy(alpha = 0.5f)))
         PreviewBlock(
-            title = "模型输出 · 实时",
+            title = strings.modelOutputTitle,
             text = modelOutput.toStreamingPreview(),
             maxLines = 7,
             monospace = true,
@@ -199,6 +196,7 @@ private fun PreviewBlock(
     monospace: Boolean = false,
     showLiveBadge: Boolean = false,
 ) {
+    val strings = LocalAppStrings.current
     Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -211,7 +209,7 @@ private fun PreviewBlock(
             if (showLiveBadge) {
                 Box(Modifier.width(6.dp))
                 Text(
-                    "生成中",
+                    strings.analyzingBadge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 10.sp,
                     lineHeight = 12.sp,
@@ -232,8 +230,10 @@ private fun PreviewBlock(
     }
 }
 
+@Composable
 private fun String.toStreamingPreview(): String {
+    val strings = LocalAppStrings.current
     val normalized = lines().joinToString("\n") { it.trimEnd() }.trim()
-    if (normalized.isBlank()) return "模型还在看图，输出会在这里实时出现..."
+    if (normalized.isBlank()) return strings.streamingPlaceholder
     return if (normalized.length > 560) "...${normalized.takeLast(560)}" else normalized
 }

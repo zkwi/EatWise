@@ -19,11 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
 
 @Composable
 fun ErrorCard(message: String, modifier: Modifier = Modifier) {
+    val strings = LocalAppStrings.current
     Card(
         modifier = modifier.fillMaxWidth(),
         border = BorderStroke(1.dp, RedPrimary.copy(alpha = 0.16f)),
@@ -41,7 +43,7 @@ fun ErrorCard(message: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.size(22.dp),
             )
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("需要处理一下", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                Text(strings.errorTitle, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 Text(text = message, color = MaterialTheme.colorScheme.error)
             }
         }

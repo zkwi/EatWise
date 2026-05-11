@@ -1,5 +1,6 @@
 package com.example.eatwise
 
+import com.example.eatwise.core.i18n.AppLanguage
 import com.example.eatwise.core.util.JsonUtils
 import com.example.eatwise.core.util.MealAnalysisPolisher
 import com.example.eatwise.domain.model.GoalMatch
@@ -21,7 +22,7 @@ class JsonUtilsTest {
     fun extractJsonFromMarkdownBlock() {
         val raw = "```json\n$sampleJson\n```"
         val result = JsonUtils.parseMealAnalysis(raw)
-        assertEquals("以上是基于图片的定性判断，仅供饮食记录参考。", result.disclaimer)
+        assertEquals("以上仅基于图片做饮食参考，不替代专业建议。", result.disclaimer)
     }
 
     @Test
@@ -50,7 +51,7 @@ class JsonUtilsTest {
             ),
         )
 
-        assertEquals(listOf("蛋白足", "负担高", "油脂高", "控脂谨慎"), result.tags)
+        assertEquals(listOf("蛋白足", "负担高", "油脂高", "少油控脂"), result.tags)
         assertEquals(listOf("烧烤少吃半份", "汤汁少喝几口", "少吃高油食物"), result.suggestions)
     }
 
@@ -67,8 +68,45 @@ class JsonUtilsTest {
             ),
         )
 
-        assertEquals(listOf("重口味", "控脂谨慎", "油脂高"), result.tags)
+        assertEquals(listOf("重口味", "少油控脂", "油脂高"), result.tags)
         assertEquals("需要严格控量", result.eatingAdvice)
+    }
+
+    @Test
+    fun polishSuggestionsIntoActionableChecklist() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "聚餐拼盘",
+                suggestions = listOf(
+                    "需要注意控制频率。",
+                    "建议先吃蔬菜和蛋白。",
+                    "含糖饮料不要叠加。",
+                ),
+                tags = listOf("高脂注意", "需要控量", "油盐偏高"),
+            ),
+        )
+
+        assertEquals(listOf("这类少安排", "先吃蔬菜蛋白", "甜饮别叠加"), result.suggestions)
+        assertEquals(listOf("控量", "油盐高"), result.tags)
+    }
+
+    @Test
+    fun polishEnglishResultKeepsLocalizedTagsReadable() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "Shared dinner",
+                eatingAdvice = "Needs portion control",
+                goalMatch = GoalMatch(level = "partial", reason = "Heavy sauces need smaller portions."),
+                suggestions = listOf("Eat vegetables and protein first.", "Use less sauce."),
+                tags = listOf("High oil", "Portion control", "Has vegetables"),
+                disclaimer = "",
+            ),
+            AppLanguage.En,
+        )
+
+        assertEquals("Needs portion control", result.eatingAdvice)
+        assertEquals(listOf("High oil", "Portion control", "Has vegetables"), result.tags)
+        assertEquals("This is image-based dietary guidance only and does not replace professional advice.", result.disclaimer)
     }
 
     private val sampleJson = """
@@ -91,7 +129,7 @@ class JsonUtilsTest {
             "建议少喝汤底，减少额外油盐摄入。"
           ],
           "tags": ["高蛋白", "热量偏高", "油脂偏高"],
-          "disclaimer": "以上是基于图片的定性判断，仅供饮食记录参考。"
+          "disclaimer": "以上仅基于图片做饮食参考，不替代专业建议。"
         }
     """.trimIndent()
 }

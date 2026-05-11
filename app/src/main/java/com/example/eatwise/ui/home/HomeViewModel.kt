@@ -43,26 +43,26 @@ class HomeViewModel(
         }
     }
 
-    fun importImage(uri: Uri, onReady: (String) -> Unit) {
+    fun importImage(uri: Uri, errorMessage: String, onReady: (String) -> Unit) {
         viewModelScope.launch {
             try {
                 onReady(imageStorage.copyToPrivateStorage(uri).absolutePath)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update { it.copy(errorMessage = error.message ?: "图片读取失败，请换一张图片。") }
+                _uiState.update { it.copy(errorMessage = errorMessage) }
             }
         }
     }
 
-    fun importSampleImage(resourceId: Int, name: String, onReady: (String) -> Unit) {
+    fun importSampleImage(resourceId: Int, name: String, errorMessage: String, onReady: (String) -> Unit) {
         viewModelScope.launch {
             try {
                 onReady(imageStorage.copyResourceToPrivateStorage(resourceId, name).absolutePath)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                _uiState.update { it.copy(errorMessage = error.message ?: "示例图片读取失败，请重试。") }
+                _uiState.update { it.copy(errorMessage = errorMessage) }
             }
         }
     }
