@@ -404,7 +404,7 @@ private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
                 ) {
                     TagChip(record.eatingAdvice, compact = true)
                     GoalBadge(record.goalMatchLevel, compact = true)
-                    record.tags.take(2).forEach { TagChip(it, compact = true) }
+                    record.tags.take(3).forEach { TagChip(it, compact = true) }
                 }
             }
         }

@@ -93,6 +93,8 @@ fun AnalysisScreen(
                         text = "第 ${state.analysisStage.ordinal + 1}/4 步 · ${state.analysisStage.title}",
                         detail = state.analysisStage.detail,
                         progress = (state.analysisStage.ordinal + 1) / 4f,
+                        promptPreview = state.promptPreview,
+                        modelOutput = state.modelOutput,
                     )
                 }
             }

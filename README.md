@@ -11,7 +11,7 @@
 - 压缩图片后以 base64 data URL 发送给用户配置的模型
 - 展示餐食名称、1~5 星食用建议、健康判断、调整建议、菜品建议和短标签
 - 支持多个菜品或复合食材的分析结果展示，按菜品给出 2~3 个标签和简短建议
-- 分析等待页展示阶段进度、滚动提示，并允许返回首页后台继续分析
+- 分析等待页展示阶段进度、提问摘要、模型实时输出预览和滚动提示，并允许返回首页后台继续分析
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
 - 历史记录使用紧凑移动端卡片，左滑可收藏或删除
 - API Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
@@ -83,7 +83,7 @@ POST {baseUrl}/chat/completions
 - AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 6`。
 - AI 约束、输出 schema、标签语义和隐私边界见 [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md)。
 - 结果 JSON 以当前 schema 为准，避免为废弃字段保留兼容分支。
-- 提交代码前运行 `.\gradlew.bat test assembleDebug`。
+- 提交代码前运行 `.\gradlew.bat test assembleDebug`，UI 改动需补充真机或模拟器截图验收。
 - 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
 - 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 - 协作行为准则见 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。

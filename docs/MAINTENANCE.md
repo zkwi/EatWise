@@ -25,7 +25,7 @@
 
 - 模型名称由用户在设置页填写。
 - 模型必须支持图片输入。
-- 当前实现不依赖 `response_format` 或流式输出，使用 prompt 约束模型只返回 JSON。
+- 当前实现不依赖 `response_format`，使用 prompt 约束模型只返回 JSON；分析请求使用流式输出提升等待体验，最终仍按完整 JSON 解析。
 - 如果模型返回不稳定，优先调整 prompt、降低 temperature 或更换模型，不要先引入复杂兼容层。
 - AI 约束治理细则见 `docs/AI_GOVERNANCE.md`，这里仅保留维护入口和版本信息。
 
@@ -67,6 +67,7 @@
 - 每次代码提交前至少运行 `.\gradlew.bat test assembleDebug`；只改文档时可说明未运行构建。
 - 发布正式包前运行 `.\gradlew.bat lintDebug test assembleRelease` 并验证 APK 签名。
 - 修复 UI 时必须用模拟器或真机截图复核，重点看文字是否截断、标签是否换行、按钮是否被系统导航栏遮挡。
+- 等待页改动必须复核空输出、生成中和后台分析三种状态，避免进度提示占用过多首屏空间。
 - 对外协作入口以根目录文档为准：贡献流程见 `CONTRIBUTING.md`，安全策略见 `SECURITY.md`，变更记录见 `CHANGELOG.md`，许可证见 `LICENSE`。
 
 ## 数据库维护

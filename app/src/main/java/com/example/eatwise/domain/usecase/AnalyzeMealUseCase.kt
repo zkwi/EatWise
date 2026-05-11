@@ -20,12 +20,15 @@ class AnalyzeMealUseCase(
     suspend operator fun invoke(
         originalImage: File,
         onStageChanged: (AnalysisStage) -> Unit = {},
+        onPromptReady: (String) -> Unit = {},
+        onModelOutputChanged: (String) -> Unit = {},
     ): AppResult<AnalysisOutput> {
         onStageChanged(AnalysisStage.CheckingSettings)
         val settings = settingsRepository.current()
         if (settings.apiKey.isBlank()) return AppResult.Failure("请先在设置中配置 API Key。")
         val modelName = normalizeModelName(settings.modelName)
         if (modelName.isBlank()) return AppResult.Failure("请先在设置中填写模型名称。")
+        onPromptReady(buildPromptPreview(settings.userGoal))
 
         onStageChanged(AnalysisStage.PreparingImage)
         val compressed = try {
@@ -39,7 +42,7 @@ class AnalyzeMealUseCase(
         onStageChanged(AnalysisStage.RequestingAi)
         val config = LlmConfig(settings.baseUrl, modelName, settings.apiKey)
         val rawContent = try {
-            client.analyzeMeal(config, settings.userGoal, compressed)
+            client.analyzeMeal(config, settings.userGoal, compressed, onModelOutputChanged)
         } catch (error: ApiException) {
             return AppResult.Failure(error.message, error)
         } catch (error: CancellationException) {
@@ -75,6 +78,15 @@ class AnalyzeMealUseCase(
             .map { it.trim() }
             .firstOrNull { it.isNotBlank() }
             .orEmpty()
+
+    private fun buildPromptPreview(userGoal: String): String {
+        val goal = userGoal
+            .trim()
+            .replace(Regex("\\s+"), " ")
+            .ifBlank { "日常均衡饮食" }
+            .take(46)
+        return "图片餐食 + 目标「$goal」：识别主要菜品，判断是否适合，并返回短标签和可执行建议。"
+    }
 }
 
 enum class AnalysisStage(val title: String, val detail: String) {

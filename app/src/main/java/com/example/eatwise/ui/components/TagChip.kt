@@ -28,9 +28,9 @@ fun TagChip(text: String, modifier: Modifier = Modifier, compact: Boolean = fals
     val label = compactLabel(text)
     val style = tagStyle(text)
     val fontSize = if (compact) 10.sp else 11.sp
-    val minHeight = if (compact) 22.dp else 24.dp
-    val maxWidth = if (compact) 74.dp else 82.dp
-    val horizontalPadding = if (compact) 7.dp else 8.dp
+    val minHeight = if (compact) 20.dp else 23.dp
+    val maxWidth = if (compact) 70.dp else 88.dp
+    val horizontalPadding = if (compact) 6.dp else 8.dp
     Text(
         text = label,
         color = style.content,
@@ -43,7 +43,7 @@ fun TagChip(text: String, modifier: Modifier = Modifier, compact: Boolean = fals
             .widthIn(max = maxWidth)
             .clip(RoundedCornerShape(50))
             .background(style.container)
-            .padding(horizontal = horizontalPadding, vertical = 3.dp),
+            .padding(horizontal = horizontalPadding, vertical = if (compact) 2.dp else 3.dp),
     )
 }
 
@@ -66,10 +66,14 @@ private fun tagStyle(text: String): TagStyle {
 private fun compactLabel(text: String): String {
     val clean = text.trim().replace(Regex("\\s+"), "")
     val semanticShortLabel = when (clean) {
-        "需要严格控量" -> "严控量"
+        "需要严格控量" -> "控量"
+        "严控量" -> "控量"
         "只能尝一小口", "只能尝一两口解馋" -> "浅尝"
         "可以适量多吃" -> "可多吃"
         "可以常吃" -> "推荐"
+        "不太适合" -> "不适合"
+        "控脂谨慎" -> "控脂"
+        "主食碳水" -> "碳水"
         else -> null
     }
     if (semanticShortLabel != null) return semanticShortLabel
@@ -103,8 +107,8 @@ fun GoalBadge(level: String?, modifier: Modifier = Modifier, compact: Boolean = 
         }
     }
     val fontSize = if (compact) 10.sp else 11.sp
-    val minHeight = if (compact) 22.dp else 24.dp
-    val horizontalPadding = if (compact) 7.dp else 8.dp
+    val minHeight = if (compact) 20.dp else 23.dp
+    val horizontalPadding = if (compact) 6.dp else 8.dp
     Text(
         text = label,
         color = content,
@@ -116,6 +120,6 @@ fun GoalBadge(level: String?, modifier: Modifier = Modifier, compact: Boolean = 
             .heightIn(min = minHeight)
             .clip(RoundedCornerShape(50))
             .background(container)
-            .padding(horizontal = horizontalPadding, vertical = 3.dp),
+            .padding(horizontal = horizontalPadding, vertical = if (compact) 2.dp else 3.dp),
     )
 }

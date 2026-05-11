@@ -11,6 +11,8 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -19,6 +21,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody
 import java.io.File
 
 class OpenAiCompatibleClient(
@@ -31,15 +34,17 @@ class OpenAiCompatibleClient(
         config: LlmConfig,
         userGoal: String,
         imageFile: File,
+        onContentChanged: (String) -> Unit = {},
     ): String = withContext(Dispatchers.IO) {
         val base64 = Base64.encodeToString(imageFile.readBytes(), Base64.NO_WRAP)
-        val body = buildRequestBody(config.modelName, userGoal, base64)
+        val body = buildRequestBody(config.modelName, userGoal, base64, stream = true)
         val url = buildEndpoint(config.baseUrl)
         val requestBuilder = Request.Builder()
             .url(url)
             .post(json.encodeToString(JsonObject.serializer(), body).toRequestBody(mediaType))
             .addHeader("Authorization", "Bearer ${config.apiKey}")
             .addHeader("Content-Type", "application/json")
+            .addHeader("Accept", "text/event-stream")
 
         if (config.baseUrl.contains("openrouter.ai", ignoreCase = true)) {
             requestBuilder
@@ -48,14 +53,12 @@ class OpenAiCompatibleClient(
         }
 
         okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
-            val responseBody = response.body.string()
             if (!response.isSuccessful) {
+                val responseBody = response.body.string()
                 throw ApiException(response.code, mapStatusMessage(response.code, responseBody))
             }
 
-            val completion = json.decodeFromString(ChatCompletionResponse.serializer(), responseBody)
-            completion.choices.firstOrNull()?.message?.content
-                ?: throw ApiException(null, "AI 返回为空，请重试。")
+            readCompletionContent(response.body, onContentChanged)
         }
     }
 
@@ -104,10 +107,12 @@ class OpenAiCompatibleClient(
         modelName: String,
         userGoal: String,
         base64: String,
+        stream: Boolean = false,
     ): JsonObject = buildJsonObject {
         put("model", modelName)
         put("temperature", 0.2)
         put("max_tokens", 2000)
+        if (stream) put("stream", true)
         putJsonArray("messages") {
             add(message("system", JsonPrimitive(systemPrompt)))
             add(
@@ -129,6 +134,64 @@ class OpenAiCompatibleClient(
             )
         }
     }
+
+    private fun readCompletionContent(
+        responseBody: ResponseBody,
+        onContentChanged: (String) -> Unit,
+    ): String {
+        val streamContent = StringBuilder()
+        val fallbackBody = StringBuilder()
+
+        responseBody.charStream().useLines { lines ->
+            for (line in lines) {
+                val trimmed = line.trim()
+                if (trimmed.startsWith("data:", ignoreCase = true)) {
+                    val data = trimmed.substringAfter(":").trim()
+                    if (data == "[DONE]") break
+                    val delta = extractStreamDelta(data)
+                    if (delta.isNotEmpty()) {
+                        streamContent.append(delta)
+                        onContentChanged(streamContent.toString())
+                    }
+                } else if (trimmed.isNotBlank()) {
+                    fallbackBody.appendLine(line)
+                }
+            }
+        }
+
+        val content = if (streamContent.isNotBlank()) {
+            streamContent.toString()
+        } else if (fallbackBody.isNotBlank()) {
+            val completion = json.decodeFromString(ChatCompletionResponse.serializer(), fallbackBody.toString())
+            completion.choices.firstOrNull()?.message?.content.orEmpty()
+        } else {
+            ""
+        }
+        if (content.isBlank()) throw ApiException(null, "AI 返回为空，请重试。")
+        onContentChanged(content)
+        return content
+    }
+
+    private fun extractStreamDelta(data: String): String =
+        runCatching {
+            val choice = json.decodeFromString(JsonObject.serializer(), data)["choices"]
+                ?.jsonArray
+                ?.firstOrNull()
+                ?.jsonObject
+            choice
+                ?.get("delta")
+                ?.jsonObject
+                ?.get("content")
+                ?.jsonPrimitive
+                ?.contentOrNull
+                ?: choice
+                    ?.get("message")
+                    ?.jsonObject
+                    ?.get("content")
+                    ?.jsonPrimitive
+                    ?.contentOrNull
+                ?: ""
+        }.getOrDefault("")
 
     private fun buildVisionTestBody(modelName: String): JsonObject = buildJsonObject {
         put("model", modelName)

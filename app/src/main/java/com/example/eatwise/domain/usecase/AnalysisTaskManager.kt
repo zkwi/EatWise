@@ -19,6 +19,8 @@ data class AnalysisTaskState(
     val imagePath: String = "",
     val isAnalyzing: Boolean = false,
     val analysisStage: AnalysisStage = AnalysisStage.CheckingSettings,
+    val promptPreview: String = "",
+    val modelOutput: String = "",
     val result: MealAnalysisResult? = null,
     val errorMessage: String? = null,
     val isSaving: Boolean = false,
@@ -63,6 +65,8 @@ class AnalysisTaskManager(
                     imagePath = imagePath,
                     isAnalyzing = true,
                     analysisStage = AnalysisStage.CheckingSettings,
+                    promptPreview = "",
+                    modelOutput = "",
                     result = null,
                     errorMessage = null,
                     isSaving = false,
@@ -71,9 +75,20 @@ class AnalysisTaskManager(
                 )
             }
 
-            when (val result = analyzeMealUseCase(File(imagePath)) { stage ->
-                updateState(state) { it.copy(analysisStage = stage) }
-            }) {
+            when (
+                val result = analyzeMealUseCase(
+                    originalImage = File(imagePath),
+                    onStageChanged = { stage ->
+                        updateState(state) { it.copy(analysisStage = stage) }
+                    },
+                    onPromptReady = { prompt ->
+                        updateState(state) { it.copy(promptPreview = prompt) }
+                    },
+                    onModelOutputChanged = { output ->
+                        updateState(state) { it.copy(modelOutput = output) }
+                    },
+                )
+            ) {
                 is AppResult.Success -> {
                     updateState(state) {
                         it.copy(isAnalyzing = false, result = result.value.result, errorMessage = null)

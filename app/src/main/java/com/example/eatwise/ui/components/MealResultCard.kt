@@ -52,6 +52,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
     val displayMealName = compactMealName(result.mealName)
     val adviceStyle = adviceStyle(result.eatingAdvice, result.goalMatch.level)
     val overallScore = overallScore(result.eatingAdvice, result.goalMatch.level)
+    val primaryTags = result.tags.take(4)
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Card(
@@ -65,7 +66,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.76f), adviceStyle.container)))
-                    .padding(10.dp),
+                    .padding(9.dp),
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -81,15 +82,15 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                         modifier = Modifier.size(23.dp),
                     )
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         EatingAdviceChip(adviceStyle)
                         OverallRatingChip(overallScore, adviceStyle)
                     }
                     Text(
                         result.eatingAdvice,
-                        fontSize = 20.sp,
-                        lineHeight = 24.sp,
+                        fontSize = 19.sp,
+                        lineHeight = 23.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = adviceStyle.content,
                         maxLines = 1,
@@ -103,12 +104,20 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    if (primaryTags.isNotEmpty()) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            primaryTags.forEach { TagChip(it, compact = true) }
+                        }
+                    }
                     Text(
                         summaryForCard(result.summary),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         lineHeight = 16.sp,
-                        maxLines = 3,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -171,11 +180,11 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
             }
         }
 
-        if (result.tags.isNotEmpty()) {
+        if (result.tags.size > primaryTags.size) {
             SoftCard {
                 Text("重点提示", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, lineHeight = 20.sp)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    result.tags.take(5).forEach { TagChip(it) }
+                    result.tags.drop(primaryTags.size).take(5).forEach { TagChip(it) }
                 }
             }
         }
@@ -451,7 +460,7 @@ private fun SoftCard(content: @Composable ColumnScope.() -> Unit) {
         border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
-        Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(5.dp), content = content)
+        Column(Modifier.padding(9.dp), verticalArrangement = Arrangement.spacedBy(5.dp), content = content)
     }
 }
 
