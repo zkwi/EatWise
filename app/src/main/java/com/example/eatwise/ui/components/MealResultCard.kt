@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -205,7 +207,7 @@ private fun SuggestionRow(text: String, goalLevel: String) {
             .background(Color(0xFFFAFBFA))
             .padding(horizontal = 9.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = suggestionRowVerticalAlignment(),
     ) {
         SuggestionActionChip(action)
         ExpandableText(
@@ -220,26 +222,35 @@ private fun SuggestionRow(text: String, goalLevel: String) {
 
 @Composable
 private fun DishAdviceRow(dish: DishAdvice) {
+    val language = LocalAppLanguage.current
     Column(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp),
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        FlowRow(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
                 text = dish.title,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
-                lineHeight = 18.sp,
+                lineHeight = 20.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.width(dishTitleColumnWidth(language, dish.title)),
             )
-            dish.hints.forEach { hint -> IngredientHintChip(hint) }
+            FlowRow(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                dish.hints.forEach { hint -> IngredientHintChip(hint) }
+            }
         }
         ExpandableText(
             text = dish.advice,
@@ -331,15 +342,18 @@ private fun EatingAdviceChip(style: AdviceStyle) {
 
 @Composable
 private fun SuggestionActionChip(action: SuggestionAction) {
+    val language = LocalAppLanguage.current
     Text(
         text = action.label,
         color = action.content,
         fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
+        textAlign = TextAlign.Center,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .widthIn(max = 88.dp)
+            .width(suggestionActionChipWidth(language))
+            .heightIn(min = 28.dp)
             .clip(RoundedCornerShape(50))
             .background(action.container)
             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -355,10 +369,11 @@ private fun IngredientHintChip(hint: IngredientHint) {
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
+        textAlign = TextAlign.Center,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .heightIn(min = 20.dp)
-            .widthIn(max = 92.dp)
+            .heightIn(min = 22.dp)
+            .widthIn(min = ingredientHintMinWidth(language), max = ingredientHintMaxWidth(language))
             .clip(RoundedCornerShape(50))
             .background(hint.container)
             .padding(horizontal = 6.dp, vertical = 2.dp),
@@ -645,6 +660,33 @@ private fun dishAdviceText(hints: List<IngredientHint>, language: AppLanguage): 
 
 private fun List<IngredientHint>.hasRiskHint(): Boolean =
     any { it.label in setOf("油炸", "油脂高", "重口味", "糖偏高") }
+
+internal fun suggestionActionChipWidth(language: AppLanguage) = when (language) {
+    AppLanguage.En -> 76.dp
+    AppLanguage.Ja -> 80.dp
+    else -> 62.dp
+}
+
+internal fun suggestionRowVerticalAlignment(): Alignment.Vertical = Alignment.CenterVertically
+
+internal fun dishTitleColumnWidth(language: AppLanguage, title: String = "") = when {
+    title.hasLatinText() || language == AppLanguage.En -> 122.dp
+    language == AppLanguage.Ja -> 96.dp
+    else -> 82.dp
+}
+
+internal fun ingredientHintMinWidth(language: AppLanguage) = when (language) {
+    AppLanguage.En, AppLanguage.Ja -> 70.dp
+    else -> 52.dp
+}
+
+private fun ingredientHintMaxWidth(language: AppLanguage) = when (language) {
+    AppLanguage.En -> 106.dp
+    AppLanguage.Ja -> 96.dp
+    else -> 92.dp
+}
+
+private fun String.hasLatinText(): Boolean = any { it in 'A'..'Z' || it in 'a'..'z' }
 
 private fun String.hasAny(vararg keywords: String): Boolean = keywords.any { contains(it, ignoreCase = true) }
 
