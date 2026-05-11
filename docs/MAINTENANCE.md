@@ -140,8 +140,10 @@ app/build/outputs/apk/debug/app-debug.apk
 Release APK 输出位置：
 
 ```text
-app/build/outputs/apk/release/app-release.apk
+app/build/outputs/apk/release/EatWise-Android-v<versionName>.apk
 ```
+
+发布附件使用正式文件名，例如 `EatWise-Android-v1.0.7.apk`，不要使用 `app-release.apk` 这类默认临时命名。
 
 ## Debug 调试流程
 

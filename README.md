@@ -24,15 +24,15 @@
 
 ### 界面预览
 
-以下截图使用内置测试图片和合成分析记录生成，不包含真实用户照片、API Key 或个人饮食目标。
+以下中文截图使用内置测试图片和合成分析记录生成，不包含真实用户照片、API Key 或个人饮食目标。
 
 | 首页 | 详情页 |
 |---|---|
-| <img src="docs/screenshots/home.png" alt="首页" width="210" /> | <img src="docs/screenshots/detail.png" alt="详情页" width="210" /> |
+| <img src="docs/screenshots/zh/home.png" alt="首页" width="210" /> | <img src="docs/screenshots/zh/detail.png" alt="详情页" width="210" /> |
 
 | 记录页 | 设置页 |
 |---|---|
-| <img src="docs/screenshots/history.png" alt="记录页" width="210" /> | <img src="docs/screenshots/settings.png" alt="设置页" width="210" /> |
+| <img src="docs/screenshots/zh/history.png" alt="记录页" width="210" /> | <img src="docs/screenshots/zh/settings.png" alt="设置页" width="210" /> |
 
 ### 技术栈
 
@@ -140,15 +140,15 @@ EatWise is a personal experimental Android app for photo-based meal analysis. It
 
 ### Screenshots
 
-These screenshots use built-in test images and synthetic analysis records. They do not contain real user photos, API keys, or personal meal goals.
+These English screenshots use built-in test images and synthetic analysis records. They do not contain real user photos, API keys, or personal meal goals.
 
 | Home | Detail |
 |---|---|
-| <img src="docs/screenshots/home.png" alt="Home" width="210" /> | <img src="docs/screenshots/detail.png" alt="Detail" width="210" /> |
+| <img src="docs/screenshots/en/home.png" alt="Home" width="210" /> | <img src="docs/screenshots/en/detail.png" alt="Detail" width="210" /> |
 
 | History | Settings |
 |---|---|
-| <img src="docs/screenshots/history.png" alt="History" width="210" /> | <img src="docs/screenshots/settings.png" alt="Settings" width="210" /> |
+| <img src="docs/screenshots/en/history.png" alt="History" width="210" /> | <img src="docs/screenshots/en/settings.png" alt="Settings" width="210" /> |
 
 ### Tech Stack
 
