@@ -1,6 +1,7 @@
 package com.example.eatwise
 
 import com.example.eatwise.core.i18n.AppLanguage
+import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.core.util.JsonUtils
 import com.example.eatwise.core.util.MealAnalysisPolisher
 import com.example.eatwise.domain.model.GoalMatch
@@ -8,6 +9,7 @@ import com.example.eatwise.domain.model.Ingredient
 import com.example.eatwise.domain.model.MealAnalysisResult
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.Locale
 
 class JsonUtilsTest {
     @Test
@@ -105,8 +107,55 @@ class JsonUtilsTest {
         )
 
         assertEquals("Needs portion control", result.eatingAdvice)
-        assertEquals(listOf("High oil", "Portion control", "Has vegetables"), result.tags)
+        assertEquals(listOf("High oil", "Portion control", "Vegetables"), result.tags)
         assertEquals("This is image-based dietary guidance only and does not replace professional advice.", result.disclaimer)
+    }
+
+    @Test
+    fun systemLocaleMapsToSupportedInitialLanguage() {
+        assertEquals(AppLanguage.ZhHans, AppLanguage.fromLocale(Locale.forLanguageTag("zh-Hans-CN")))
+        assertEquals(AppLanguage.ZhHant, AppLanguage.fromLocale(Locale.forLanguageTag("zh-Hant-TW")))
+        assertEquals(AppLanguage.ZhHant, AppLanguage.fromLocale(Locale.forLanguageTag("zh-HK")))
+        assertEquals(AppLanguage.En, AppLanguage.fromLocale(Locale.US))
+        assertEquals(AppLanguage.Ja, AppLanguage.fromLocale(Locale.JAPAN))
+    }
+
+    @Test
+    fun tagAliasesCoverCommonModelOutputs() {
+        assertEquals("Heavy flavor", MealLanguageText.displayTag("Heavy seasoning", AppLanguage.En))
+        assertEquals("High oil", MealLanguageText.displayTag("oily", AppLanguage.En))
+        assertEquals("Vegetables", MealLanguageText.displayTag("Has vegetables", AppLanguage.En))
+        assertEquals("塩分控えめ", MealLanguageText.displayTag("Low sodium", AppLanguage.Ja))
+        assertEquals("Lower sodium", MealLanguageText.displayTag("low-sodium", AppLanguage.En))
+        assertEquals("High sugar", MealLanguageText.displayTag("糖質高め", AppLanguage.En))
+        assertEquals("High sugar", MealLanguageText.displayTag("high-sugar", AppLanguage.En))
+    }
+
+    @Test
+    fun localizedSuggestionsAreActionableWhenModelUsesLooseWording() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "Fried meal",
+                suggestions = listOf("Control frequency.", "Use less sauce.", "Add more vegetables."),
+                tags = listOf("Light burden", "Low sodium"),
+            ),
+            AppLanguage.En,
+        )
+
+        assertEquals(listOf("Have this less often", "Use less sauce", "Add a serving of vegetables"), result.suggestions)
+        assertEquals(listOf("Light choice", "Lower sodium"), result.tags)
+    }
+
+    @Test
+    fun localizedPolishUsesCurrentLanguageForFallbackText() {
+        val result = MealAnalysisPolisher.polish(MealAnalysisResult(), AppLanguage.En)
+
+        assertEquals("Meal analysis", result.mealName)
+        assertEquals("Moderate amount is fine", result.eatingAdvice)
+        assertEquals(
+            "This is image-based dietary guidance only and does not replace professional advice.",
+            result.disclaimer,
+        )
     }
 
     private val sampleJson = """

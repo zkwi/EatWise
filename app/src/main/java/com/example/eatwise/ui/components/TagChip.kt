@@ -136,6 +136,7 @@ fun GoalBadge(level: String?, modifier: Modifier = Modifier, compact: Boolean = 
         overflow = TextOverflow.Ellipsis,
         modifier = modifier
             .heightIn(min = minHeight)
+            .widthIn(max = if (compact) 74.dp else 104.dp)
             .clip(RoundedCornerShape(50))
             .background(container)
             .padding(horizontal = horizontalPadding, vertical = if (compact) 2.dp else 3.dp),

@@ -61,6 +61,7 @@ import com.example.eatwise.ui.theme.GreenSoft
 import com.example.eatwise.ui.theme.LineSoft
 import com.example.eatwise.ui.theme.RedPrimary
 import com.example.eatwise.ui.theme.RedSoft
+import com.example.eatwise.ui.i18n.AppStrings
 import com.example.eatwise.ui.i18n.GoalPresetText
 import com.example.eatwise.ui.i18n.LocalAppStrings
 
@@ -280,7 +281,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 private fun SettingsActionButtons(
     isSaving: Boolean,
     isTesting: Boolean,
-    strings: com.example.eatwise.ui.i18n.AppStrings,
+    strings: AppStrings,
     onSave: () -> Unit,
     onTestConnection: () -> Unit,
     modifier: Modifier = Modifier,
@@ -296,7 +297,13 @@ private fun SettingsActionButtons(
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
         ) {
-            Text(if (isSaving) strings.saving else strings.saveConnection, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+            Text(
+                if (isSaving) strings.saving else strings.saveConnection,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
         OutlinedButton(
             onClick = onTestConnection,
@@ -307,9 +314,11 @@ private fun SettingsActionButtons(
         ) {
             Text(
                 if (isTesting) strings.testing else strings.testConnection,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = GreenPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -330,6 +339,8 @@ private fun GoalPresetChip(preset: GoalPresetText, selected: Boolean, onClick: (
                 color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 preset.detail,
@@ -393,7 +404,7 @@ private fun AiConfigHero(isConfigured: Boolean) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 16.sp,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

@@ -297,7 +297,14 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                     ) {
                         Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                         Spacer(Modifier.size(6.dp))
-                        Text(strings.cameraAnalyze, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                        Text(
+                            strings.cameraAnalyze,
+                            modifier = Modifier.weight(1f, fill = false),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                     OutlinedButton(
                         onClick = onPickImage,
@@ -308,7 +315,15 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                     ) {
                         Icon(Icons.Rounded.Image, contentDescription = null, tint = GreenPrimary)
                         Spacer(Modifier.size(6.dp))
-                        Text(strings.importPhoto, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = GreenPrimary, maxLines = 1)
+                        Text(
+                            strings.importPhoto,
+                            modifier = Modifier.weight(1f, fill = false),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = GreenPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
             }

@@ -16,12 +16,13 @@ class SettingsStore(
     private val context: Context,
 ) {
     val settings: Flow<AppSettings> = context.settingsDataStore.data.map { preferences ->
+        val language = AppLanguage.fromCodeOrNull(preferences[Keys.language]) ?: systemLanguage()
         AppSettings(
             baseUrl = preferences[Keys.baseUrl] ?: AppSettings.DEFAULT_BASE_URL,
             modelName = normalizeSingleLine(preferences[Keys.modelName] ?: ""),
             apiKey = preferences[Keys.apiKey] ?: "",
-            language = AppLanguage.fromCode(preferences[Keys.language]),
-            userGoal = preferences[Keys.userGoal] ?: MealLanguageText.defaultUserGoal(AppLanguage.fromCode(preferences[Keys.language])),
+            language = language,
+            userGoal = preferences[Keys.userGoal] ?: MealLanguageText.defaultUserGoal(language),
         )
     }
 
@@ -37,7 +38,10 @@ class SettingsStore(
 
     suspend fun saveUserGoal(userGoal: String) {
         context.settingsDataStore.edit { preferences ->
-            preferences[Keys.userGoal] = normalizedUserGoal(userGoal, AppLanguage.fromCode(preferences[Keys.language]))
+            preferences[Keys.userGoal] = normalizedUserGoal(
+                userGoal,
+                AppLanguage.fromCodeOrNull(preferences[Keys.language]) ?: systemLanguage(),
+            )
         }
     }
 
@@ -59,6 +63,9 @@ class SettingsStore(
 
     private fun normalizedUserGoal(value: String, language: AppLanguage): String =
         value.trim().ifBlank { MealLanguageText.defaultUserGoal(language) }
+
+    private fun systemLanguage(): AppLanguage =
+        AppLanguage.fromLocale(context.resources.configuration.locales[0])
 
     private object Keys {
         val baseUrl = stringPreferencesKey("base_url")

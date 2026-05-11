@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -201,7 +202,7 @@ private fun HistoryRecordCard(
     val strings = LocalAppStrings.current
     val actionWidth = 104.dp
     val actionWidthPx = with(LocalDensity.current) { actionWidth.toPx() }
-    var targetOffset by remember(record.id) { mutableStateOf(0f) }
+    var targetOffset by remember(record.id) { mutableFloatStateOf(0f) }
     val offsetX by animateFloatAsState(targetValue = targetOffset, label = "historyRecordOffset")
 
     Box(Modifier.fillMaxWidth()) {

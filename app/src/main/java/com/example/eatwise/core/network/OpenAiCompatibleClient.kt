@@ -66,7 +66,7 @@ class OpenAiCompatibleClient(
     }
 
     suspend fun testConnection(config: LlmConfig, language: AppLanguage = AppLanguage.default): Unit = withContext(Dispatchers.IO) {
-        val body = buildVisionTestBody(config.modelName)
+        val body = buildVisionTestBody(config.modelName, language)
         val requestBuilder = Request.Builder()
             .url(buildEndpoint(config.baseUrl))
             .post(json.encodeToString(JsonObject.serializer(), body).toRequestBody(mediaType))
@@ -97,7 +97,10 @@ class OpenAiCompatibleClient(
                 .also { result ->
                     val visionConfirmed = result["vision"]?.jsonPrimitive?.booleanOrNull == true
                     val color = result["color"]?.jsonPrimitive?.contentOrNull.orEmpty()
-                    val imageRecognized = color.contains("绿", ignoreCase = true) || color.contains("green", ignoreCase = true)
+                    val imageRecognized = color.contains("绿", ignoreCase = true) ||
+                        color.contains("綠", ignoreCase = true) ||
+                        color.contains("緑", ignoreCase = true) ||
+                        color.contains("green", ignoreCase = true)
                     if (!visionConfirmed || !imageRecognized) {
                         throw ApiException(null, imageUnsupportedMessage(language))
                     }
@@ -198,7 +201,7 @@ class OpenAiCompatibleClient(
                 ?: ""
         }.getOrDefault("")
 
-    private fun buildVisionTestBody(modelName: String): JsonObject = buildJsonObject {
+    private fun buildVisionTestBody(modelName: String, language: AppLanguage): JsonObject = buildJsonObject {
         put("model", modelName)
         put("temperature", 0.0)
         put("max_tokens", 80)
@@ -211,11 +214,7 @@ class OpenAiCompatibleClient(
                             put("type", "text")
                             put(
                                 "text",
-                                """
-                                    请观察随附图片，验证你是否能读取图片内容。
-                                    必须只返回 JSON：{"ok":true,"vision":true,"color":"主色"}
-                                    如果看不到图片，返回：{"ok":false,"vision":false,"color":""}
-                                """.trimIndent(),
+                                visionTestPrompt(language),
                             )
                         })
                         add(buildJsonObject {
@@ -242,6 +241,29 @@ class OpenAiCompatibleClient(
         } else {
             "$base/chat/completions"
         }
+    }
+
+    private fun visionTestPrompt(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> """
+            请观察随附图片，验证你是否能读取图片内容。
+            必须只返回 JSON：{"ok":true,"vision":true,"color":"主色"}
+            如果看不到图片，返回：{"ok":false,"vision":false,"color":""}
+        """.trimIndent()
+        AppLanguage.ZhHant -> """
+            請觀察隨附圖片，驗證你是否能讀取圖片內容。
+            必須只返回 JSON：{"ok":true,"vision":true,"color":"主色"}
+            如果看不到圖片，返回：{"ok":false,"vision":false,"color":""}
+        """.trimIndent()
+        AppLanguage.En -> """
+            Look at the attached image and verify whether you can read image content.
+            Return JSON only: {"ok":true,"vision":true,"color":"main color"}
+            If you cannot see the image, return: {"ok":false,"vision":false,"color":""}
+        """.trimIndent()
+        AppLanguage.Ja -> """
+            添付画像を見て、画像内容を読み取れるか確認してください。
+            JSON のみを返してください：{"ok":true,"vision":true,"color":"主な色"}
+            画像が見えない場合は返してください：{"ok":false,"vision":false,"color":""}
+        """.trimIndent()
     }
 
     private fun userPrompt(userGoal: String, language: AppLanguage) = """
@@ -278,7 +300,7 @@ class OpenAiCompatibleClient(
         - For compound dishes, list only major parts and visible risk points. Do not list invisible details, scattered seasonings, or low-value tiny items.
         - Do not estimate grams, weight, calories, macro nutrients, or phrases like "about 150g" or "about xx kcal".
         - eating_advice must be exactly one localized option from: ${MealLanguageText.eatingAdviceOptions(language)}.
-        - Red oil, sauces, fatty meat, and fried food must not be labeled as light burden. Treat them as oil, heavy seasoning, or fried risk when relevant.
+        - Red oil, sauces, fatty meat, and fried food must not be labeled as a light choice. Treat them as oil, heavy flavor, or fried risk when relevant.
         - goal_match.level must be only good, partial, poor, or unknown.
         - suggestions must return 1 to 3 short, concrete, doable actions. Examples in the target language: ${MealLanguageText.suggestionExamples(language)}.
         - Do not write abstract reminders such as "control it", "keep balanced", or "control frequency" unless you also say the exact action.
@@ -316,7 +338,7 @@ class OpenAiCompatibleClient(
 
     private fun testFormatMessage(language: AppLanguage): String = when (language) {
         AppLanguage.ZhHans -> "连接成功，但测试结果格式不对，请换一个支持图片的模型或重试。"
-        AppLanguage.ZhHant -> "連接成功，但測試結果格式不對，請換一個支援圖片的模型或重試。"
+        AppLanguage.ZhHant -> "連線成功，但測試結果格式不對，請換一個支援圖片的模型或重試。"
         AppLanguage.En -> "Connection worked, but the test result format was invalid. Use an image-capable model or try again."
         AppLanguage.Ja -> "接続は成功しましたが、テスト結果の形式が不正です。画像対応モデルに変更するか再試行してください。"
     }
@@ -348,7 +370,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 9
+        const val promptVersion = 11
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 

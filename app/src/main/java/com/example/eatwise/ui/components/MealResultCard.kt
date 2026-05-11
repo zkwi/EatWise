@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -317,6 +318,7 @@ private fun EatingAdviceChip(style: AdviceStyle) {
         fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(Color.White.copy(alpha = 0.78f))
@@ -332,7 +334,9 @@ private fun SuggestionActionChip(action: SuggestionAction) {
         fontSize = 12.sp,
         fontWeight = FontWeight.Bold,
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier
+            .widthIn(max = 88.dp)
             .clip(RoundedCornerShape(50))
             .background(action.container)
             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -350,6 +354,7 @@ private fun IngredientHintChip(hint: IngredientHint) {
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
+            .widthIn(max = 104.dp)
             .clip(RoundedCornerShape(50))
             .background(hint.container)
             .padding(horizontal = 7.dp, vertical = 3.dp),
@@ -378,27 +383,164 @@ private fun dishHints(group: IngredientGroup): List<IngredientHint> {
         }
     }
     return buildList {
-        if (text.hasAny("油炸", "炸物", "煎炸", "炸")) {
+        if (text.hasAny("油炸", "炸物", "煎炸", "炸", "fried", "deep-fried", "揚げ物", "フライ", "天ぷら")) {
             add(IngredientHint("油炸", RedSoft, RedPrimary))
         }
-        if (text.hasAny("红油", "重油", "肥肉", "五花", "黄油", "奶油", "芝麻酱", "沙拉酱") ||
+        if (text.hasAny(
+                "红油",
+                "重油",
+                "肥肉",
+                "五花",
+                "黄油",
+                "奶油",
+                "芝麻酱",
+                "沙拉酱",
+                "greasy",
+                "oily",
+                "fatty",
+                "butter",
+                "cream",
+                "mayo",
+                "油多め",
+                "脂身",
+                "バター",
+                "クリーム",
+                "マヨ",
+            ) ||
             text.hasAny("油", "酱") && !text.hasAny("油麦菜")
         ) {
             add(IngredientHint("油脂高", YellowSoft, YellowPrimary))
         }
-        if (text.hasAny("重口味", "麻辣", "重辣", "红油", "花椒", "辣椒", "腌", "卤", "咸")) {
+        if (text.hasAny(
+                "重口味",
+                "麻辣",
+                "重辣",
+                "红油",
+                "花椒",
+                "辣椒",
+                "腌",
+                "卤",
+                "咸",
+                "heavy flavor",
+                "strong flavor",
+                "spicy",
+                "salty",
+                "sauce",
+                "味濃い",
+                "辛い",
+                "塩分",
+                "ソース",
+                "たれ",
+            )
+        ) {
             add(IngredientHint("重口味", RedSoft, RedPrimary))
         }
-        if (text.hasAny("糖", "甜", "蜜", "奶茶", "饮料")) {
+        if (text.hasAny(
+                "糖",
+                "甜",
+                "蜜",
+                "奶茶",
+                "饮料",
+                "sugar",
+                "sweet",
+                "dessert",
+                "honey",
+                "soda",
+                "cake",
+                "ice cream",
+                "甘い",
+                "デザート",
+                "ケーキ",
+                "アイス",
+            )
+        ) {
             add(IngredientHint("糖偏高", RedSoft, RedPrimary))
         }
-        if (text.hasAny("米", "饭", "面", "粉", "饼", "馒头", "面包", "薯", "土豆")) {
+        if (text.hasAny(
+                "米",
+                "饭",
+                "面",
+                "粉",
+                "饼",
+                "馒头",
+                "面包",
+                "薯",
+                "土豆",
+                "rice",
+                "noodle",
+                "pasta",
+                "bread",
+                "potato",
+                "dumpling",
+                "ご飯",
+                "麺",
+                "パン",
+                "いも",
+                "じゃがいも",
+            )
+        ) {
             add(IngredientHint("主食", YellowSoft, YellowPrimary))
         }
-        if (text.hasAny("鸡", "牛", "猪", "鱼", "虾", "蛋", "豆腐", "豆", "肉", "奶")) {
+        if (text.hasAny(
+                "鸡",
+                "牛",
+                "猪",
+                "鱼",
+                "虾",
+                "蛋",
+                "豆腐",
+                "豆",
+                "肉",
+                "奶",
+                "chicken",
+                "beef",
+                "pork",
+                "fish",
+                "shrimp",
+                "egg",
+                "tofu",
+                "bean",
+                "meat",
+                "milk",
+                "protein",
+                "鶏",
+                "牛",
+                "豚",
+                "魚",
+                "えび",
+                "卵",
+                "肉",
+                "たんぱく",
+            )
+        ) {
             add(IngredientHint("有蛋白", GreenSoft, GreenDeep))
         }
-        if (text.hasAny("菜", "青", "叶", "瓜", "番茄", "西红柿", "菌", "菇", "萝卜", "椒", "海带")) {
+        if (text.hasAny(
+                "菜",
+                "青",
+                "叶",
+                "瓜",
+                "番茄",
+                "西红柿",
+                "菌",
+                "菇",
+                "萝卜",
+                "椒",
+                "海带",
+                "vegetable",
+                "salad",
+                "tomato",
+                "mushroom",
+                "broccoli",
+                "leafy",
+                "fiber",
+                "野菜",
+                "サラダ",
+                "トマト",
+                "きのこ",
+                "葉物",
+            )
+        ) {
             add(IngredientHint("有蔬菜", GreenSoft, GreenDeep))
         }
     }

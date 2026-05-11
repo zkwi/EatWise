@@ -23,7 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,7 +53,7 @@ fun LoadingOverlay(
 ) {
     val strings = LocalAppStrings.current
     val displayTips = tips ?: strings.loadingTips
-    var tipIndex by remember(displayTips) { mutableStateOf(0) }
+    var tipIndex by remember(displayTips) { mutableIntStateOf(0) }
 
     LaunchedEffect(displayTips) {
         if (displayTips.isEmpty()) return@LaunchedEffect

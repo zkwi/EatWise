@@ -3,6 +3,7 @@ package com.example.eatwise.core.util
 import com.example.eatwise.core.i18n.AppLanguage
 import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.domain.model.MealAnalysisResult
+import java.util.Locale
 
 object MealAnalysisPolisher {
     fun polish(result: MealAnalysisResult, language: AppLanguage = AppLanguage.ZhHans): MealAnalysisResult {
@@ -17,6 +18,7 @@ object MealAnalysisPolisher {
             .ifEmpty { fallbackSuggestions(result) }
 
         return result.copy(
+            mealName = localizedMealName(result.mealName, language),
             summary = compactSentence(result.summary, 42),
             goalMatch = result.goalMatch.copy(
                 reason = compactSentence(result.goalMatch.reason, 36),
@@ -24,8 +26,19 @@ object MealAnalysisPolisher {
             eatingAdvice = normalizeEatingAdvice(result.eatingAdvice, result.goalMatch.level, analysisText(result)),
             suggestions = suggestions,
             tags = normalizedTags(result),
-            disclaimer = result.disclaimer.ifBlank { MealLanguageText.disclaimer(language) },
+            disclaimer = MealLanguageText.disclaimer(language),
         )
+    }
+
+    private fun localizedMealName(value: String, language: AppLanguage): String {
+        val clean = value.trim()
+        if (clean.isNotBlank() && clean !in setOf("未命名餐食", "Unnamed meal")) return clean
+        return when (language) {
+            AppLanguage.ZhHans -> "餐食分析"
+            AppLanguage.ZhHant -> "餐食分析"
+            AppLanguage.En -> "Meal analysis"
+            AppLanguage.Ja -> "食事分析"
+        }
     }
 
     private fun defaultLocalizedSuggestion(language: AppLanguage): String = when (language) {
@@ -37,10 +50,15 @@ object MealAnalysisPolisher {
 
     private fun polishLocalized(result: MealAnalysisResult, language: AppLanguage): MealAnalysisResult {
         val suggestions = result.suggestions
-            .map { compactSentence(it.trim(), if (language == AppLanguage.En) 90 else 42) }
+            .map {
+                localizedSuggestionByKeyword(it, language)
+                    .ifBlank { compactSentence(it.trim(), if (language == AppLanguage.En) 90 else 42) }
+            }
             .filter { it.isNotBlank() }
+            .filterNot { it.isMeaninglessSuggestion() }
             .distinct()
             .take(3)
+            .ifEmpty { listOf(defaultLocalizedSuggestion(language)) }
 
         val tags = result.tags
             .map { MealLanguageText.compactTag(it, language) }
@@ -48,8 +66,10 @@ object MealAnalysisPolisher {
             .filterNot { it.isMeaninglessTag() }
             .distinct()
             .take(4)
+            .ifEmpty { listOf(MealLanguageText.displayTag("适量吃", language)) }
 
         return result.copy(
+            mealName = localizedMealName(result.mealName, language),
             summary = compactSentence(result.summary, if (language == AppLanguage.En) 96 else 42),
             goalMatch = result.goalMatch.copy(
                 reason = compactSentence(result.goalMatch.reason, if (language == AppLanguage.En) 88 else 36),
@@ -57,7 +77,7 @@ object MealAnalysisPolisher {
             eatingAdvice = MealLanguageText.displayAdvice(result.eatingAdvice.ifBlank { MealLanguageText.displayAdvice("可以适量吃", language) }, language),
             suggestions = suggestions,
             tags = tags,
-            disclaimer = result.disclaimer.ifBlank { MealLanguageText.disclaimer(language) },
+            disclaimer = MealLanguageText.disclaimer(language),
         )
     }
 
@@ -195,6 +215,52 @@ object MealAnalysisPolisher {
         ).take(3).ifEmpty { listOf("吃到七八分饱") }
     }
 
+    private fun localizedSuggestionByKeyword(text: String, language: AppLanguage): String {
+        val raw = text.trim()
+        return when {
+            raw.hasAny("蔬菜", "蛋白", "vegetable", "protein", "野菜", "たんぱく") &&
+                raw.hasAny("先", "first", "先に") ->
+                localizedSuggestion(language, "先吃蔬菜蛋白", "先吃蔬菜蛋白", "Eat vegetables and protein first", "野菜とたんぱく質を先に")
+            raw.hasAny("蔬菜", "vegetable", "fiber", "野菜") &&
+                raw.hasAny("增加", "加", "补充", "補充", "add", "more", "足す", "追加") ->
+                localizedSuggestion(language, "加一份蔬菜", "加一份蔬菜", "Add a serving of vegetables", "野菜を一品追加")
+            raw.hasAny("蛋白", "protein", "たんぱく") &&
+                raw.hasAny("增加", "加", "补充", "補充", "add", "more", "足す", "追加", "不足") ->
+                localizedSuggestion(language, "加点蛋白质", "加點蛋白質", "Add some protein", "たんぱく質を少し追加")
+            raw.hasAny("汤", "湯", "汤底", "汤汁", "soup", "broth", "汁") ->
+                localizedSuggestion(language, "汤汁少喝几口", "湯汁少喝幾口", "Drink less broth", "汁は控えめに")
+            raw.hasAny("酱", "醬", "蘸料", "sauce", "dressing", "ソース", "たれ") ->
+                localizedSuggestion(language, "酱料少放", "醬料少放", "Use less sauce", "ソースは少なめに")
+            raw.hasAny("米饭", "米飯", "面条", "麵", "主食", "碳水", "staple", "rice", "noodle", "carb", "主食", "炭水化物") &&
+                raw.hasAny("减少", "減少", "控制", "少", "半", "reduce", "less", "smaller", "控え") ->
+                localizedSuggestion(language, "主食少吃几口", "主食少吃幾口", "Take fewer staple bites", "主食を少し減らす")
+            raw.hasAny("油炸", "炸物", "煎炸", "fried", "揚げ物") ->
+                localizedSuggestion(language, "油炸少吃几口", "油炸少吃幾口", "Keep fried food to a few bites", "揚げ物は数口まで")
+            raw.hasAny("重油", "油腻", "油膩", "greasy", "high oil", "油多め") ->
+                localizedSuggestion(language, "重油菜少吃几口", "重油菜少吃幾口", "Eat less oily dishes", "油多めの料理は控えめに")
+            raw.hasAny("甜饮", "甜飲", "含糖饮料", "含糖飲料", "奶茶", "sugary drink", "sweet drink", "甘い飲み物") ->
+                localizedSuggestion(language, "甜饮别叠加", "甜飲別疊加", "Skip sugary drinks", "甘い飲み物は足さない")
+            raw.hasAny("甜", "糖", "dessert", "sweet", "デザート", "甘い") ->
+                localizedSuggestion(language, "甜饮甜品少点", "甜飲甜品少點", "Keep sweets small", "甘い物は少なめに")
+            raw.hasAny("下餐", "下一餐", "next meal", "次の食事") && raw.hasAny("清淡", "lighter", "軽め") ->
+                localizedSuggestion(language, "下餐清淡一点", "下餐清淡一點", "Keep the next meal lighter", "次の食事は軽めに")
+            raw.hasAny("频率", "頻率", "常吃", "经常", "frequency", "often", "頻度") ->
+                localizedSuggestion(language, "这类少安排", "這類少安排", "Have this less often", "このタイプは頻度を控える")
+            raw.hasAny("分量", "份量", "portion", "amount", "量") &&
+                raw.hasAny("减少", "減少", "控制", "少", "reduce", "control", "控え") ->
+                localizedSuggestion(language, "这餐少吃几口", "這餐少吃幾口", "Eat a few bites less", "数口少なめに")
+            else -> ""
+        }
+    }
+
+    private fun localizedSuggestion(language: AppLanguage, zhHans: String, zhHant: String, en: String, ja: String): String =
+        when (language) {
+            AppLanguage.ZhHans -> zhHans
+            AppLanguage.ZhHant -> zhHant
+            AppLanguage.En -> en
+            AppLanguage.Ja -> ja
+        }
+
     private fun analysisText(result: MealAnalysisResult): String =
         buildString {
             append(result.mealName)
@@ -212,9 +278,20 @@ object MealAnalysisPolisher {
 
     private fun String.isMeaninglessTag(): Boolean {
         val clean = trim().replace(Regex("\\s+"), "")
+        val lower = trim().lowercase(Locale.ROOT)
         if (clean.isBlank()) return true
         if (clean.contains("常规") || clean.contains("普通") || clean.contains("一般")) return true
-        return clean in setOf("食材", "分量", "份量", "估算", "粗估", "粗略估算", "记录参考", "常见")
+        if (clean.contains("常規") || clean.contains("ふつう") || clean.contains("一般的")) return true
+        if (lower.contains("regular") || lower.contains("ordinary") || lower.contains("rough estimate")) return true
+        return clean in setOf("食材", "分量", "份量", "估算", "粗估", "粗略估算", "记录参考", "常见", "常見", "普通量", "概算")
+    }
+
+    private fun String.isMeaninglessSuggestion(): Boolean {
+        val clean = trim()
+        val lower = clean.lowercase(Locale.ROOT)
+        if (clean.isBlank()) return true
+        return lower in setOf("keep balanced", "eat healthy", "be mindful", "control frequency") ||
+            clean in setOf("保持均衡", "注意频率", "注意頻率", "バランスを保つ", "頻度に注意")
     }
 
     private fun String.hasAny(vararg keywords: String): Boolean =
