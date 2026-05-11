@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.HourglassEmpty
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.RestaurantMenu
 import androidx.compose.material.icons.rounded.Refresh
@@ -87,8 +88,8 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val strings = LocalAppStrings.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) viewModel.importImage(uri, strings.imageReadFailed, onAnalyze)
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+        if (uris.isNotEmpty()) viewModel.importImages(uris, strings.imageReadFailed, onAnalyze)
     }
 
     LaunchedEffect(state.errorMessage) {
@@ -142,9 +143,13 @@ fun HomeScreen(
                 )
             }
 
-            state.backgroundAnalysis?.takeIf { it.shouldShowOnHome() }?.let { task ->
-                item {
-                    BackgroundAnalysisCard(task, onClick = { onAnalyze(task.imagePath) })
+            if (state.backgroundAnalyses.isNotEmpty()) {
+                items(state.backgroundAnalyses, key = { it.imagePath }) { task ->
+                    BackgroundAnalysisCard(
+                        task = task,
+                        onClick = { onAnalyze(task.imagePath) },
+                        onRetry = { viewModel.retryAnalysis(task.imagePath) },
+                    )
                 }
             }
 
@@ -332,17 +337,19 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
 }
 
 @Composable
-private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit) {
+private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit, onRetry: () -> Unit) {
     val strings = LocalAppStrings.current
     val language = LocalAppLanguage.current
     val saveFailed = task.saveMessage?.let(MealLanguageText::isSaveFailure) == true
     val hasError = task.errorMessage != null || saveFailed
     val title = when {
+        task.isQueued -> strings.backgroundQueuedTitle
         task.isSaving -> strings.backgroundSavingTitle
         hasError -> strings.backgroundFailedTitle
         else -> strings.backgroundAnalyzingTitle
     }
     val detail = when {
+        task.isQueued -> strings.backgroundQueuedDetail
         task.isSaving -> task.saveMessage ?: MealLanguageText.savingRecord(language)
         task.errorMessage != null -> task.errorMessage
         saveFailed -> task.saveMessage.orEmpty()
@@ -364,6 +371,8 @@ private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit)
         ) {
             if (hasError) {
                 Icon(Icons.Rounded.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(24.dp))
+            } else if (task.isQueued) {
+                Icon(Icons.Rounded.HourglassEmpty, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
             } else {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.5.dp, trackColor = GreenSoft)
             }
@@ -378,13 +387,16 @@ private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit)
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            if (hasError) {
+                TextButton(onClick = onRetry) {
+                    Text(strings.retry, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+            } else {
+                Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }
-
-private fun AnalysisTaskState.shouldShowOnHome(): Boolean =
-    isAnalyzing || isSaving || errorMessage != null || saveMessage?.let(MealLanguageText::isSaveFailure) == true
 
 @Composable
 private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {

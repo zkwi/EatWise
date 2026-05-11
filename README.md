@@ -12,7 +12,8 @@
 - 支持简体中文、繁体中文、英语和日语，界面、新分析结果、AI prompt、建议和标签会随语言切换
 - 首次启动按系统默认语言选择初始语言，用户也可以在设置页手动切换
 - 设置页内置常见饮食目标预设，如均衡饮食、减脂、少糖、少油、少盐和增肌，并支持自定义目标自动保存
-- 导入相册餐食图片或使用 CameraX 拍照
+- 导入相册餐食图片或使用 CameraX 拍照，相册支持一次选择多张图片
+- 多张图片会按顺序排队分析，新任务不会中断当前任务；失败任务可从首页或详情页重试
 - 首次使用且暂无历史记录时提供示例图片，可直接点击体验分析链路
 - 压缩图片后发送给用户配置的模型
 - 展示餐食名称、怎么吃、1~5 星参考、是否适合目标、怎么调整、按菜看建议和短标签
@@ -128,7 +129,8 @@ EatWise is a personal experimental Android app for photo-based meal analysis. It
 - Supports Simplified Chinese, Traditional Chinese, English, and Japanese for the interface, new analysis results, AI prompts, suggestions, and tags
 - Uses the system language on first launch, while still allowing manual language selection in Settings
 - Built-in meal goal presets such as balanced eating, fat loss, less sugar, less oil, less salt, and high protein; custom goals save automatically
-- Import meal photos from the gallery or take photos with CameraX
+- Import meal photos from the gallery or take photos with CameraX; gallery import supports selecting multiple photos at once
+- Multiple photos are analyzed in order, new tasks do not interrupt the current task, and failed tasks can be retried from Home or the analysis screen
 - Shows sample photos on first use when there is no history, so the analysis flow can be previewed quickly
 - Compresses images before sending them to the user-configured model
 - Shows meal name, eating advice, 1-5 star reference, goal fit, adjustment tips, dish-level advice, and short tags

@@ -68,7 +68,7 @@ fun AnalysisScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        AppTopBar(if (state.isAnalyzing) strings.analyzing else strings.analysisResult, onBack)
+        AppTopBar(if (state.isAnalyzing || state.isQueued) strings.analyzing else strings.analysisResult, onBack)
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -91,6 +91,16 @@ fun AnalysisScreen(
                             .fillMaxWidth()
                             .aspectRatio(2.85f)
                             .clip(RoundedCornerShape(20.dp)),
+                    )
+                }
+            }
+            if (state.isQueued) {
+                item {
+                    LoadingOverlay(
+                        text = strings.backgroundQueuedTitle,
+                        detail = strings.backgroundQueuedDetail,
+                        progress = 0f,
+                        tips = emptyList(),
                     )
                 }
             }

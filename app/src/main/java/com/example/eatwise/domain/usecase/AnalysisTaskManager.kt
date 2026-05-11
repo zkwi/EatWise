@@ -18,6 +18,8 @@ import java.io.File
 
 data class AnalysisTaskState(
     val imagePath: String = "",
+    val isQueued: Boolean = false,
+    val queuePosition: Int? = null,
     val isAnalyzing: Boolean = false,
     val analysisStage: AnalysisStage = AnalysisStage.CheckingSettings,
     val promptPreview: String = "",
@@ -37,23 +39,65 @@ class AnalysisTaskManager(
     private val lock = Any()
     private val taskStates = mutableMapOf<String, MutableStateFlow<AnalysisTaskState>>()
     private val jobs = mutableMapOf<String, Job>()
+    private val pendingQueue = ArrayDeque<String>()
+    private var activeImagePath: String? = null
+    private val _tasks = MutableStateFlow<List<AnalysisTaskState>>(emptyList())
     private val _latestTask = MutableStateFlow<AnalysisTaskState?>(null)
+    val tasks: StateFlow<List<AnalysisTaskState>> = _tasks.asStateFlow()
     val latestTask: StateFlow<AnalysisTaskState?> = _latestTask.asStateFlow()
 
-    fun observe(imagePath: String): StateFlow<AnalysisTaskState> = stateFor(imagePath).asStateFlow()
+    fun observe(imagePath: String): StateFlow<AnalysisTaskState> =
+        synchronized(lock) { stateForLocked(imagePath).asStateFlow() }
 
     fun start(imagePath: String, restart: Boolean = false) {
-        val state = stateFor(imagePath)
+        if (imagePath.isBlank()) return
         synchronized(lock) {
+            val state = stateForLocked(imagePath)
             val current = state.value
             val currentJob = jobs[imagePath]
-            if (!restart && (currentJob?.isActive == true || current.result != null || current.errorMessage != null)) {
-                updateLatest(current)
+            if (
+                !restart &&
+                (
+                    currentJob?.isActive == true ||
+                        current.isQueued ||
+                        current.result != null ||
+                        current.errorMessage != null ||
+                        current.saveMessage?.let(MealLanguageText::isSaveFailure) == true
+                    )
+            ) {
+                updateLatestLocked(current)
+                emitTasksLocked()
                 return
             }
-            currentJob?.cancel()
-            jobs[imagePath] = scope.launch { runAnalysis(imagePath, state) }
+
+            if (restart) {
+                pendingQueue.remove(imagePath)
+                if (currentJob?.isActive == true) {
+                    currentJob.cancel()
+                }
+                state.value = AnalysisTaskState(imagePath = imagePath)
+            }
+
+            enqueueLocked(imagePath)
         }
+    }
+
+    private fun enqueueLocked(imagePath: String) {
+        if (activeImagePath == null) {
+            startJobLocked(imagePath)
+        } else if (!pendingQueue.contains(imagePath)) {
+            pendingQueue.addLast(imagePath)
+            refreshQueuePositionsLocked()
+        }
+    }
+
+    private fun startJobLocked(imagePath: String) {
+        val state = stateForLocked(imagePath)
+        activeImagePath = imagePath
+        jobs[imagePath] = scope.launch { runAnalysis(imagePath, state) }
+        state.value = state.value.copy(isQueued = false, queuePosition = null)
+        updateLatestLocked(state.value)
+        emitTasksLocked()
     }
 
     private suspend fun runAnalysis(
@@ -64,6 +108,8 @@ class AnalysisTaskManager(
             updateState(state) {
                 it.copy(
                     imagePath = imagePath,
+                    isQueued = false,
+                    queuePosition = null,
                     isAnalyzing = true,
                     analysisStage = AnalysisStage.CheckingSettings,
                     promptPreview = "",
@@ -105,6 +151,8 @@ class AnalysisTaskManager(
             val finishedJob = currentCoroutineContext()[Job]
             synchronized(lock) {
                 if (jobs[imagePath] == finishedJob) jobs.remove(imagePath)
+                if (activeImagePath == imagePath) activeImagePath = null
+                startNextQueuedLocked()
             }
         }
     }
@@ -128,22 +176,49 @@ class AnalysisTaskManager(
         }
     }
 
-    private fun stateFor(imagePath: String): MutableStateFlow<AnalysisTaskState> =
-        synchronized(lock) {
-            taskStates.getOrPut(imagePath) {
-                MutableStateFlow(AnalysisTaskState(imagePath = imagePath))
+    private fun startNextQueuedLocked() {
+        val next = if (pendingQueue.isNotEmpty()) pendingQueue.removeFirst() else null
+        refreshQueuePositionsLocked()
+        if (next != null) startJobLocked(next)
+    }
+
+    private fun refreshQueuePositionsLocked() {
+        pendingQueue.forEachIndexed { index, imagePath ->
+            taskStates[imagePath]?.let { state ->
+                state.value = state.value.copy(
+                    isQueued = true,
+                    queuePosition = index + 1,
+                    isAnalyzing = false,
+                    errorMessage = null,
+                    saveMessage = null,
+                )
+                updateLatestLocked(state.value)
             }
+        }
+        emitTasksLocked()
+    }
+
+    private fun stateForLocked(imagePath: String): MutableStateFlow<AnalysisTaskState> =
+        taskStates.getOrPut(imagePath) {
+            MutableStateFlow(AnalysisTaskState(imagePath = imagePath))
         }
 
     private fun updateState(
         state: MutableStateFlow<AnalysisTaskState>,
         block: (AnalysisTaskState) -> AnalysisTaskState,
     ) {
-        state.update(block)
-        updateLatest(state.value)
+        synchronized(lock) {
+            state.update(block)
+            updateLatestLocked(state.value)
+            emitTasksLocked()
+        }
     }
 
-    private fun updateLatest(state: AnalysisTaskState) {
+    private fun updateLatestLocked(state: AnalysisTaskState) {
         _latestTask.value = state
+    }
+
+    private fun emitTasksLocked() {
+        _tasks.value = taskStates.values.map { it.value }.filter { it.imagePath.isNotBlank() }
     }
 }

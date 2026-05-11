@@ -2,6 +2,22 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.8 - 2026-05-11
+
+中文：
+
+- 相册导入支持一次选择多张餐食图片。
+- 多张图片按顺序排队分析，新任务不会中断当前正在进行的分析。
+- 失败或保存失败的分析任务可从首页或分析详情页重试。
+- 首页会展示多个后台任务的分析中、等待分析和失败状态。
+
+English:
+
+- Gallery import now supports selecting multiple meal photos at once.
+- Multiple photos are analyzed in order, and new tasks no longer interrupt the current analysis.
+- Failed or save-failed analysis tasks can be retried from Home or the analysis screen.
+- Home now shows multiple background tasks across analyzing, queued, and failed states.
+
 ## 1.0.7 - 2026-05-11
 
 - README 截图更新为最新版 App 界面，并拆分为中文和英文两套截图。
