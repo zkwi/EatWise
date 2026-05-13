@@ -91,14 +91,14 @@ fun HistoryScreen(viewModel: HistoryViewModel, onOpenDetail: (String) -> Unit) {
                     Text(
                         strings.historyTitle,
                         modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 23.sp, lineHeight = 27.sp),
+                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 22.sp, lineHeight = 26.sp),
                     )
                 }
                 Text(
                     strings.historySubtitle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
                 )
             }
         }
@@ -186,8 +186,8 @@ private fun FilterPill(text: String, selected: Boolean, onClick: () -> Unit) {
             text = text,
             color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 11.dp, vertical = 5.dp),
         )
     }
 }
@@ -200,7 +200,7 @@ private fun HistoryRecordCard(
     onDelete: () -> Unit,
 ) {
     val strings = LocalAppStrings.current
-    val actionWidth = 104.dp
+    val actionWidth = 96.dp
     val actionWidthPx = with(LocalDensity.current) { actionWidth.toPx() }
     var targetOffset by remember(record.id) { mutableFloatStateOf(0f) }
     val offsetX by animateFloatAsState(targetValue = targetOffset, label = "historyRecordOffset")
@@ -210,8 +210,8 @@ private fun HistoryRecordCard(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxWidth()
-                .height(94.dp)
-                .clip(RoundedCornerShape(18.dp)),
+                .height(86.dp)
+                .clip(RoundedCornerShape(16.dp)),
             horizontalArrangement = Arrangement.End,
         ) {
             SwipeAction(
@@ -250,7 +250,7 @@ private fun HistoryRecordCard(
                         onDragCancel = { targetOffset = 0f },
                     )
                 },
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -262,8 +262,8 @@ private fun HistoryRecordCard(
                         contentDescription = record.mealName,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(width = 78.dp, height = 78.dp)
-                            .clip(RoundedCornerShape(13.dp)),
+                            .size(width = 72.dp, height = 72.dp)
+                            .clip(RoundedCornerShape(12.dp)),
                     )
                     Column(
                         modifier = Modifier
@@ -275,8 +275,8 @@ private fun HistoryRecordCard(
                             record.mealName,
                             modifier = Modifier.fillMaxWidth().padding(end = if (record.isFavorite) 76.dp else 50.dp),
                             fontWeight = FontWeight.ExtraBold,
-                            fontSize = 15.sp,
-                            lineHeight = 19.sp,
+                            fontSize = 14.sp,
+                            lineHeight = 18.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -287,7 +287,7 @@ private fun HistoryRecordCard(
                         ) {
                             TagChip(record.eatingAdvice, compact = true)
                             GoalBadge(record.goalMatchLevel, compact = true)
-                            record.tags.take(3).forEach { TagChip(it, compact = true) }
+                            record.tags.take(2).forEach { TagChip(it, compact = true) }
                         }
                     }
                 }
@@ -299,8 +299,8 @@ private fun HistoryRecordCard(
                     Text(
                         DateTimeUtils.formatListTime(record.createdAt),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
                         maxLines = 1,
                     )
                     if (record.isFavorite) {
@@ -326,7 +326,7 @@ private fun SwipeAction(
 ) {
     Column(
         modifier = Modifier
-            .width(52.dp)
+            .width(48.dp)
             .fillMaxHeight()
             .background(container)
             .clickable(onClick = onClick),

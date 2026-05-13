@@ -73,7 +73,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = adviceStyle.container),
             border = BorderStroke(1.dp, adviceStyle.content.copy(alpha = 0.18f)),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -82,7 +82,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.76f), adviceStyle.container)))
-                    .padding(9.dp),
+                    .padding(10.dp),
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -203,7 +203,7 @@ private fun SuggestionRow(text: String, goalLevel: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFFFAFBFA))
             .padding(horizontal = 9.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -787,10 +787,10 @@ private fun ingredientGroups(ingredients: List<Ingredient>, otherLabel: String):
 private fun SoftCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
     }

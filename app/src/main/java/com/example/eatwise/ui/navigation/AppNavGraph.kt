@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -74,11 +75,11 @@ fun AppNavGraph(container: AppContainer) {
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                         .fillMaxWidth()
-                        .height(64.dp)
-                        .shadow(8.dp, RoundedCornerShape(26.dp), ambientColor = Color(0x181A1F2A), spotColor = Color(0x201A1F2A))
-                        .clip(RoundedCornerShape(26.dp))
+                        .height(58.dp)
+                        .shadow(6.dp, RoundedCornerShape(22.dp), ambientColor = Color(0x141A1F2A), spotColor = Color(0x181A1F2A))
+                        .clip(RoundedCornerShape(22.dp))
                         .background(Color.White)
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
@@ -104,7 +105,8 @@ fun AppNavGraph(container: AppContainer) {
             }
         },
     ) { padding ->
-        NavHost(navController = navController, startDestination = Routes.Home, modifier = Modifier.padding(padding)) {
+        val contentPadding = if (currentRoute == Routes.Camera) PaddingValues(0.dp) else padding
+        NavHost(navController = navController, startDestination = Routes.Home, modifier = Modifier.padding(contentPadding)) {
             composable(Routes.Home) {
                 val vm: HomeViewModel = viewModel(
                     factory = simpleFactory {
@@ -156,7 +158,6 @@ fun AppNavGraph(container: AppContainer) {
                             launchSingleTop = true
                         }
                     },
-                    onSaved = { navController.navigate(Routes.detail(it)) },
                 )
             }
             composable(Routes.Detail) { entry ->
@@ -192,8 +193,8 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
         Box(
             modifier = Modifier
                 .width(58.dp)
-                .height(28.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .height(26.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .background(if (selected) GreenSoft else Color.Transparent),
             contentAlignment = Alignment.Center,
         ) {
@@ -201,14 +202,14 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
                 item.icon,
                 contentDescription = item.label,
                 tint = if (selected) GreenDeep else inactiveColor,
-                modifier = Modifier.size(if (selected) 22.dp else 21.dp),
+                modifier = Modifier.size(if (selected) 21.dp else 20.dp),
             )
         }
         Text(
             item.label,
             color = if (selected) activeColor else inactiveColor,
-            fontSize = 11.sp,
-            lineHeight = 13.sp,
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

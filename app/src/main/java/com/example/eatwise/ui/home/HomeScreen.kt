@@ -116,13 +116,13 @@ fun HomeScreen(
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         Text(
                             strings.homeTitle,
-                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 23.sp, lineHeight = 27.sp),
+                            style = MaterialTheme.typography.displaySmall.copy(fontSize = 22.sp, lineHeight = 26.sp),
                         )
                         Text(
                             strings.homeSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
                         )
                     }
                     IconButton(
@@ -170,7 +170,7 @@ fun HomeScreen(
 
             item {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(strings.recentAnalysis, fontWeight = FontWeight.ExtraBold, fontSize = 19.sp, lineHeight = 23.sp)
+                    Text(strings.recentAnalysis, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, lineHeight = 22.sp)
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = onOpenHistory) {
                         Text(strings.viewAll, color = GreenDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -189,7 +189,7 @@ fun HomeScreen(
                 }
             }
 
-            item { Spacer(Modifier.height(12.dp)) }
+            item { Spacer(Modifier.height(24.dp)) }
         }
 
         SnackbarHost(
@@ -233,7 +233,7 @@ private fun SampleMealCard(sample: SampleMeal, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.width(150.dp),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.58f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
@@ -274,28 +274,28 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .size(48.dp)
+                    .size(44.dp)
                     .background(Color.White.copy(alpha = 0.68f), CircleShape),
             ) {
                 Icon(
                     Icons.Rounded.RestaurantMenu,
                     contentDescription = null,
                     tint = GreenPrimary.copy(alpha = 0.34f),
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.fillMaxWidth()) {
-                Text(strings.startMealTitle, fontSize = 20.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
+                Text(strings.startMealTitle, fontSize = 19.sp, lineHeight = 23.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
                 Text(
                     strings.startMealSubtitle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = onOpenCamera,
-                        modifier = Modifier.weight(1f).height(40.dp),
+                        modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
@@ -305,7 +305,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                         Text(
                             strings.cameraAnalyze,
                             modifier = Modifier.weight(1f, fill = false),
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -313,7 +313,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                     }
                     OutlinedButton(
                         onClick = onPickImage,
-                        modifier = Modifier.weight(1f).height(40.dp),
+                        modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.5.dp, GreenPrimary),
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
@@ -323,7 +323,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                         Text(
                             strings.importPhoto,
                             modifier = Modifier.weight(1f, fill = false),
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = GreenPrimary,
                             maxLines = 1,
@@ -403,37 +403,37 @@ private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
     ) {
-        Row(Modifier.padding(9.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
                 model = File(record.thumbnailPath ?: record.imagePath),
                 contentDescription = record.mealName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(width = 94.dp, height = 70.dp)
+                    .size(width = 86.dp, height = 64.dp)
                     .aspectRatio(1.35f)
                     .clip(RoundedCornerShape(14.dp)),
             )
-            Column(Modifier.weight(1f).padding(start = 9.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Column(Modifier.weight(1f).padding(start = 9.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         record.mealName,
                         modifier = Modifier.weight(1f),
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = 16.sp,
-                        lineHeight = 20.sp,
+                        fontSize = 15.sp,
+                        lineHeight = 19.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         DateTimeUtils.formatListTime(record.createdAt),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 13.sp,
-                        lineHeight = 17.sp,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
                         maxLines = 1,
                     )
                 }
@@ -443,7 +443,7 @@ private fun RecentRecordCard(record: MealRecord, onClick: () -> Unit) {
                 ) {
                     TagChip(record.eatingAdvice, compact = true)
                     GoalBadge(record.goalMatchLevel, compact = true)
-                    record.tags.take(3).forEach { TagChip(it, compact = true) }
+                    record.tags.take(2).forEach { TagChip(it, compact = true) }
                 }
             }
         }

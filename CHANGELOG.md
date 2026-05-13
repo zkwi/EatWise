@@ -2,6 +2,22 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.9 - 2026-05-13
+
+中文：
+
+- 餐食图片支持点击放大，预览中可长按或点击保存到系统相册。
+- 拍照或导入后的分析完成页移除冗余“查看详情”入口，结果直接由首页和历史记录承接。
+- 精修首页、历史、设置、详情、分析和拍照页的字号、间距、卡片密度和底部导航体验。
+- 拍照页改为更完整的全屏取景体验，并在真机复查主要页面与图片预览保存入口。
+
+English:
+
+- Meal photos can now be tapped to preview, then saved to the system gallery by long-pressing or tapping the save action.
+- The redundant post-analysis "view detail" step after camera or gallery import has been removed, with results handled directly from Home and History.
+- Refined typography, spacing, card density, and bottom navigation across Home, History, Settings, Detail, Analysis, and Camera screens.
+- Camera capture now uses a cleaner full-screen view, with the main screens and photo preview save entry rechecked on a real device.
+
 ## 1.0.8 - 2026-05-11
 
 中文：

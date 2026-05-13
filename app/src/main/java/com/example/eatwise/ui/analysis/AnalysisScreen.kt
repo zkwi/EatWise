@@ -1,12 +1,10 @@
 package com.example.eatwise.ui.analysis
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,13 +15,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -32,32 +28,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.ui.components.AppTopBar
 import com.example.eatwise.ui.components.ErrorCard
 import com.example.eatwise.ui.components.LoadingOverlay
+import com.example.eatwise.ui.components.MealImageCard
 import com.example.eatwise.ui.components.MealResultCard
 import com.example.eatwise.ui.i18n.LocalAppLanguage
 import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenPrimary
-import com.example.eatwise.ui.theme.LineSoft
-import java.io.File
 
 @Composable
 fun AnalysisScreen(
     viewModel: AnalysisViewModel,
     onBack: () -> Unit,
     onOpenSettings: () -> Unit,
-    onSaved: (String) -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val strings = LocalAppStrings.current
@@ -76,23 +66,10 @@ fun AnalysisScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                ) {
-                    AsyncImage(
-                        model = File(state.imagePath),
-                        contentDescription = strings.imageToAnalyze,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(2.85f)
-                            .clip(RoundedCornerShape(20.dp)),
-                    )
-                }
+                MealImageCard(
+                    imagePath = state.imagePath,
+                    contentDescription = strings.imageToAnalyze,
+                )
             }
             if (state.isQueued) {
                 item {
@@ -188,15 +165,14 @@ fun AnalysisScreen(
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
-                            onClick = { state.savedRecordId?.let(onSaved) },
-                            enabled = state.savedRecordId != null && !state.isSaving,
+                            onClick = onBack,
                             modifier = Modifier.weight(1f).height(44.dp),
                             shape = RoundedCornerShape(16.dp),
                         ) {
-                            Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.Home, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                if (state.isSaving) strings.savingShort else strings.viewDetail,
+                                strings.home,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 maxLines = 1,

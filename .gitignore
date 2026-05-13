@@ -40,3 +40,4 @@ release-signing.properties
 /.idea/deploymentTargetSelector.xml
 /.idea/deviceManager.xml
 /.idea/vcs.xml
+/.idea/markdown.xml

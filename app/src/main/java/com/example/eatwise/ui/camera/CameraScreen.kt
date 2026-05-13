@@ -1,6 +1,7 @@
 package com.example.eatwise.ui.camera
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -34,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,10 +47,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.example.eatwise.core.storage.ImageStorage
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.eatwise.ui.i18n.LocalAppStrings
@@ -60,6 +65,7 @@ fun CameraScreen(
     onImageReady: (String) -> Unit,
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val strings = LocalAppStrings.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var hasPermission by remember {
@@ -75,6 +81,17 @@ fun CameraScreen(
 
     LaunchedEffect(Unit) {
         if (!hasPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.isAppearanceLightStatusBars = false
+        controller?.isAppearanceLightNavigationBars = false
+        onDispose {
+            controller?.isAppearanceLightStatusBars = true
+            controller?.isAppearanceLightNavigationBars = true
+        }
     }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
@@ -110,7 +127,8 @@ fun CameraScreen(
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .systemBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -127,8 +145,8 @@ fun CameraScreen(
                 Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(vertical = 56.dp)
-                    .border(2.dp, GreenPrimary.copy(alpha = 0.92f), RoundedCornerShape(28.dp)),
+                    .padding(vertical = 44.dp)
+                    .border(2.dp, GreenPrimary.copy(alpha = 0.92f), RoundedCornerShape(24.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -172,7 +190,7 @@ fun CameraScreen(
                             )
                         },
                         enabled = imageCapture != null && !isCapturing,
-                        modifier = Modifier.size(84.dp).clip(CircleShape),
+                        modifier = Modifier.size(78.dp).clip(CircleShape),
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                     ) {
                         if (isCapturing) {

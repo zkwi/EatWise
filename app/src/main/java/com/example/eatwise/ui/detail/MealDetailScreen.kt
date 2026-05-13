@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,23 +31,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.GoalMatch
 import com.example.eatwise.domain.model.MealAnalysisResult
 import com.example.eatwise.ui.components.AppTopBar
 import com.example.eatwise.ui.components.ErrorCard
+import com.example.eatwise.ui.components.MealImageCard
 import com.example.eatwise.ui.components.MealResultCard
 import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.LineSoft
-import java.io.File
 
 @Composable
 fun MealDetailScreen(
@@ -77,23 +73,10 @@ fun MealDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    ) {
-                        AsyncImage(
-                            model = File(record.imagePath),
-                            contentDescription = record.mealName,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(2.85f)
-                                .clip(RoundedCornerShape(20.dp)),
-                        )
-                    }
+                    MealImageCard(
+                        imagePath = record.imagePath,
+                        contentDescription = record.mealName,
+                    )
                 }
                 item {
                     MealResultCard(

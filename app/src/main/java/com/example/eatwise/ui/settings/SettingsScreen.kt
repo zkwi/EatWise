@@ -95,7 +95,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
                 Row(
@@ -105,18 +105,18 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text(strings.settingsTitle, style = MaterialTheme.typography.displaySmall.copy(fontSize = 24.sp, lineHeight = 29.sp))
+                        Text(strings.settingsTitle, style = MaterialTheme.typography.displaySmall.copy(fontSize = 22.sp, lineHeight = 26.sp))
                         Text(
                             strings.settingsSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
                         )
                     }
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(38.dp)
                             .background(Color.White, CircleShape),
                     ) {
                         Icon(Icons.Rounded.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -131,18 +131,18 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle(Icons.Rounded.Info, strings.language)
                         Text(
                             strings.languageSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
                         )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             AppLanguage.values().forEach { language ->
@@ -160,12 +160,12 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle(Icons.Rounded.Key, strings.modelConnection)
                         OutlinedTextField(
                             value = state.baseUrl,
@@ -173,7 +173,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             label = { Text(strings.baseUrl) },
                             placeholder = { Text("https://openrouter.ai/api/v1") },
                             singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -192,7 +192,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                 }
                             },
                             singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -202,7 +202,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             label = { Text(strings.modelName) },
                             placeholder = { Text(strings.modelPlaceholder) },
                             singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -220,18 +220,18 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         SectionTitle(Icons.Rounded.SettingsSuggest, strings.mealGoal)
                         Text(
                             strings.mealGoalSubtitle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
                         )
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             strings.goalPresets.forEach { preset ->
@@ -247,7 +247,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                             onValueChange = viewModel::updateUserGoal,
                             label = { Text(strings.mealGoal) },
                             minLines = 3,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = fieldColors,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -258,14 +258,14 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                                 strings.goalAutoSaveHint
                             },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
                         )
                     }
                 }
             }
 
-            item { Spacer(Modifier.height(32.dp)) }
+            item { Spacer(Modifier.height(76.dp)) }
         }
 
         SnackbarHost(
@@ -293,13 +293,13 @@ private fun SettingsActionButtons(
         Button(
             onClick = onSave,
             enabled = !isSaving && !isTesting,
-            modifier = Modifier.weight(1f).height(44.dp),
-            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.weight(1f).height(42.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
         ) {
             Text(
                 if (isSaving) strings.saving else strings.saveConnection,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.ExtraBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -308,13 +308,13 @@ private fun SettingsActionButtons(
         OutlinedButton(
             onClick = onTestConnection,
             enabled = !isSaving && !isTesting,
-            modifier = Modifier.weight(1f).height(44.dp),
-            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.weight(1f).height(42.dp),
+            shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.5.dp, GreenPrimary),
         ) {
             Text(
                 if (isTesting) strings.testing else strings.testConnection,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = GreenPrimary,
                 maxLines = 1,
@@ -328,17 +328,17 @@ private fun SettingsActionButtons(
 private fun GoalPresetChip(preset: GoalPresetText, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF5F6F7)),
         border = BorderStroke(1.dp, if (selected) GreenPrimary.copy(alpha = 0.24f) else Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 1.dp else 0.dp),
     ) {
-        Column(Modifier.padding(horizontal = 11.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(
                 preset.title,
                 color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -357,7 +357,7 @@ private fun GoalPresetChip(preset: GoalPresetText, selected: Boolean, onClick: (
 private fun LanguageChip(language: AppLanguage, selected: Boolean, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = if (selected) GreenSoft else Color(0xFFF5F6F7)),
         border = BorderStroke(1.dp, if (selected) GreenPrimary.copy(alpha = 0.24f) else Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 1.dp else 0.dp),
@@ -366,8 +366,8 @@ private fun LanguageChip(language: AppLanguage, selected: Boolean, onClick: () -
             language.displayName,
             color = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            fontSize = 13.sp,
+            modifier = Modifier.padding(horizontal = 11.dp, vertical = 7.dp),
         )
     }
 }
@@ -377,7 +377,7 @@ private fun AiConfigHero(isConfigured: Boolean) {
     val strings = LocalAppStrings.current
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = GreenPale),
         border = BorderStroke(1.dp, Color(0xFFDDEBD8)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -392,13 +392,13 @@ private fun AiConfigHero(isConfigured: Boolean) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(36.dp)
                     .background(Color.White.copy(alpha = 0.72f), CircleShape),
             ) {
                 Icon(Icons.Rounded.Cloud, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(strings.modelConnection, fontSize = 16.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
+                Text(strings.modelConnection, fontSize = 15.sp, lineHeight = 19.sp, fontWeight = FontWeight.ExtraBold, color = GreenDeep)
                 Text(
                     if (isConfigured) strings.aiConfigured else strings.aiUnconfigured,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -427,6 +427,6 @@ private fun AiConfigHero(isConfigured: Boolean) {
 private fun SectionTitle(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-        Text(title, fontWeight = FontWeight.Bold, fontSize = 17.sp, lineHeight = 21.sp)
+        Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, lineHeight = 20.sp)
     }
 }
