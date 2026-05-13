@@ -45,13 +45,15 @@ class JsonUtilsTest {
 
     @Test
     fun polishTagsAndSuggestionsForMobileCards() {
+        val parsed = JsonUtils.parseMealAnalysis(sampleJson)
         val result = MealAnalysisPolisher.polish(
-            JsonUtils.parseMealAnalysis(sampleJson).copy(
+            parsed.copy(
                 suggestions = listOf(
                     "如果目标是减重，可以减少一半烧烤肉类。",
                     "建议少喝汤底，减少额外油盐摄入。",
                     "完全避免任何高脂食物。",
                 ),
+                ingredients = parsed.ingredients + Ingredient(dish = "番茄鸡蛋面", name = "汤底"),
                 tags = listOf("蛋白质充足", "热量偏高", "油脂偏高", "高胆固醇风险"),
             ),
         )
@@ -91,8 +93,64 @@ class JsonUtilsTest {
             ),
         )
 
-        assertEquals(listOf("这类少安排", "先吃蔬菜蛋白", "甜饮别叠加"), result.suggestions)
+        assertEquals(listOf("这类少安排", "先吃蔬菜蛋白"), result.suggestions)
         assertEquals(listOf("控量", "油盐高"), result.tags)
+    }
+
+    @Test
+    fun polishDropsSuggestionsForFoodsNotPresentInMeal() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "家常清淡多菜餐",
+                summary = "包含蒸粗粮、乌鸡、花菜和木耳，整体清淡。",
+                eatingAdvice = "可以适量吃",
+                goalMatch = GoalMatch(level = "good", reason = "蔬菜和蛋白较多，主食适量即可。"),
+                ingredients = listOf(
+                    Ingredient(dish = "蒸笼", name = "玉米"),
+                    Ingredient(dish = "乌鸡", name = "鸡肉"),
+                    Ingredient(dish = "花菜", name = "花菜"),
+                    Ingredient(dish = "木耳", name = "木耳"),
+                ),
+                suggestions = listOf("甜饮甜品少点", "主食少吃几口", "汤汁少喝几口"),
+                tags = listOf("有蔬菜", "主食", "轻负担"),
+            ),
+        )
+
+        assertEquals(listOf("主食少吃几口"), result.suggestions)
+    }
+
+    @Test
+    fun polishKeepsSweetDrinkSuggestionWhenVisible() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "炸物配奶茶",
+                summary = "有炸物和奶茶，甜饮会增加负担。",
+                ingredients = listOf(
+                    Ingredient(dish = "饮品", name = "奶茶"),
+                    Ingredient(dish = "炸物", name = "炸鸡"),
+                ),
+                suggestions = listOf("甜饮别叠加"),
+            ),
+        )
+
+        assertEquals(listOf("甜饮别叠加"), result.suggestions)
+    }
+
+    @Test
+    fun polishDropsStapleOrFriedAdviceWhenNotVisible() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "清炒花菜木耳",
+                summary = "花菜和木耳为主，整体清淡。",
+                ingredients = listOf(
+                    Ingredient(dish = "花菜", name = "花菜"),
+                    Ingredient(dish = "木耳", name = "木耳"),
+                ),
+                suggestions = listOf("主食少吃几口", "油炸少吃几口", "下餐清淡一点"),
+            ),
+        )
+
+        assertEquals(listOf("下餐清淡一点"), result.suggestions)
     }
 
     @Test
@@ -192,6 +250,7 @@ class JsonUtilsTest {
         val result = MealAnalysisPolisher.polish(
             MealAnalysisResult(
                 mealName = "Fried meal",
+                ingredients = listOf(Ingredient(dish = "Fried chicken", name = "sauce")),
                 suggestions = listOf("Control frequency.", "Use less sauce.", "Add more vegetables."),
                 tags = listOf("Light burden", "Low sodium"),
             ),
@@ -215,8 +274,8 @@ class JsonUtilsTest {
     }
 
     @Test
-    fun promptVersionTracksOverallMealPromptUpdate() {
-        assertEquals(13, OpenAiCompatibleClient.promptVersion)
+    fun promptVersionTracksVisibleSuggestionPromptUpdate() {
+        assertEquals(15, OpenAiCompatibleClient.promptVersion)
     }
 
     @Test
@@ -230,6 +289,10 @@ class JsonUtilsTest {
         assertTrue(prompt.contains("Do not base the overall advice or 1-5 score on only one single dish"))
         assertTrue(prompt.contains("which healthier dishes the user can eat more or eat first"))
         assertTrue(prompt.contains("Keep ingredients grouped by dish"))
+        assertTrue(prompt.contains("Every food-specific suggestion must point to a dish or ingredient already in that array"))
+        assertTrue(prompt.contains("Avoid generic category advice when a specific dish name is available"))
+        assertTrue(prompt.contains("Do not mention desserts, sweet drinks, soup, broth, sauce"))
+        assertTrue(prompt.contains("do not say to reduce desserts or sweet drinks when no dessert or drink is visible"))
     }
 
     private val sampleJson = """

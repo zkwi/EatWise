@@ -2,6 +2,24 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.11 - 2026-05-14
+
+中文：
+
+- 优化 prompt 到 v15，要求每条食物相关建议都能回指到图片中可见且 `ingredients` 已列出的菜品或食材。
+- 收紧建议生成规则，避免模型照抄示例或输出图片中不存在的甜品、甜饮、汤汁、酱料、主食、油炸等泛化提醒。
+- 精修建议示例，移除容易诱导模型误报的甜饮、汤汁类示例。
+- 增强本地结果清洗兜底，过滤缺少可见证据的甜饮、汤汁、酱料、主食和油炸建议。
+- 补充单元测试和手动测试清单，覆盖不存在食物建议的过滤场景。
+
+English:
+
+- Updated the prompt to v15 so every food-specific suggestion must point back to a visible dish or ingredient already listed in `ingredients`.
+- Tightened suggestion rules to avoid copied examples or generic advice about absent desserts, sweet drinks, soup, sauce, staples, or fried foods.
+- Refined suggestion examples by removing sweet-drink and broth examples that could encourage false positives.
+- Strengthened local polishing fallback to filter suggestions without visible evidence for sweet drinks, broth, sauce, staples, or fried foods.
+- Added unit and manual testing coverage for absent-food suggestion filtering.
+
 ## 1.0.10 - 2026-05-13
 
 中文：

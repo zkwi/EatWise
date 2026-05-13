@@ -65,10 +65,10 @@ object MealLanguageText {
     }
 
     fun suggestionExamples(language: AppLanguage): String = when (language) {
-        AppLanguage.ZhHans -> "先吃蔬菜蛋白、主食少几口、酱料少放、汤汁少喝、甜饮别叠加、下餐清淡一点"
-        AppLanguage.ZhHant -> "先吃蔬菜蛋白、主食少幾口、醬料少放、湯汁少喝、甜飲別疊加、下餐清淡一點"
-        AppLanguage.En -> "Eat vegetables/protein first, reduce staple bites, use less sauce, drink less soup, skip sugary drinks, keep next meal lighter"
-        AppLanguage.Ja -> "野菜とたんぱく質を先に食べる、主食を少し減らす、ソースを少なめにする、汁を控える、甘い飲み物を足さない、次の食事を軽めにする"
+        AppLanguage.ZhHans -> "先吃蔬菜蛋白、主食少几口、重油菜少吃几口、清淡菜多吃几口、吃到七八分饱、下餐清淡一点"
+        AppLanguage.ZhHant -> "先吃蔬菜蛋白、主食少幾口、重油菜少吃幾口、清淡菜多吃幾口、吃到七八分飽、下餐清淡一點"
+        AppLanguage.En -> "Eat vegetables/protein first, reduce staple bites, take fewer bites of oily dishes, eat more lighter dishes, stop when comfortably full, keep next meal lighter"
+        AppLanguage.Ja -> "野菜とたんぱく質を先に食べる、主食を少し減らす、油多めの料理を少し控える、軽めの料理を少し多めにする、腹八分目で止める、次の食事を軽めにする"
     }
 
     fun tagExamples(language: AppLanguage): String = when (language) {

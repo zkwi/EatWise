@@ -99,7 +99,7 @@ POST {baseUrl}/chat/completions
 
 ### 工程治理
 
-- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 13`。
+- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 15`。
 - AI 约束、输出 schema、标签语义和隐私边界见 [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md)。
 - 结果 JSON 以当前 schema 为准，避免为废弃字段保留兼容分支。
 - 提交代码前运行 `.\gradlew.bat test assembleDebug`，UI 改动需补充真机或模拟器截图验收。
@@ -216,7 +216,7 @@ POST {baseUrl}/chat/completions
 
 ### Engineering Notes
 
-- AI prompts are maintained in `OpenAiCompatibleClient`; the current `promptVersion` is `13`.
+- AI prompts are maintained in `OpenAiCompatibleClient`; the current `promptVersion` is `15`.
 - AI governance, output schema, tag semantics, and privacy boundaries are documented in [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md).
 - Result JSON follows the current schema only; deprecated fields are not kept for compatibility.
 - Before committing code, run `.\gradlew.bat test assembleDebug`; UI changes should be checked with a device or emulator screenshot.

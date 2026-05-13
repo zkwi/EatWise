@@ -302,11 +302,17 @@ class OpenAiCompatibleClient(
         - ingredients must cover the main dishes and key visible ingredients. For mixed meals, use dish to show which dish an ingredient belongs to.
         - For each visible dish, include enough dish/name entries for the UI to infer its role and visible cooking cue, such as staple, protein, vegetable, steamed, fried, grilled, sauced, or braised. Do not invent invisible seasonings.
         - For compound dishes, list only major parts and visible risk points. Do not list invisible details, scattered seasonings, or low-value tiny items.
+        - Before writing suggestions, silently check the ingredients array. Every food-specific suggestion must point to a dish or ingredient already in that array.
+        - Prefer specific dish-based wording: "eat more/first [lighter visible dish]" or "eat less [heavier visible dish]". Avoid generic category advice when a specific dish name is available.
         - Do not estimate grams, weight, calories, macro nutrients, or phrases like "about 150g" or "about xx kcal".
         - eating_advice must be exactly one localized option from: ${MealLanguageText.eatingAdviceOptions(language)}.
         - Red oil, sauces, fatty meat, and fried food must not be labeled as a light choice. Treat them as oil, heavy flavor, or fried risk when relevant.
         - goal_match.level must be only good, partial, poor, or unknown.
-        - suggestions must return 1 to 3 short, concrete, doable actions. Examples in the target language: ${MealLanguageText.suggestionExamples(language)}.
+        - suggestions must return 1 to 3 short, concrete, doable actions tied to visible foods or ingredients already listed in ingredients. Examples in the target language: ${MealLanguageText.suggestionExamples(language)}.
+        - Do not copy the examples blindly. Choose actions from the actual visible dishes, such as eating more of a lighter vegetable/protein dish or eating less of a visibly oily, fried, sauced, fatty, or staple-heavy dish.
+        - Do not mention desserts, sweet drinks, soup, broth, sauce, rice, noodles, fried food, meat, or any other specific item unless it is visible in the image and already listed in ingredients.
+        - If a common adjustment does not apply to this photo, do not include it. For example, do not say to reduce desserts or sweet drinks when no dessert or drink is visible, and do not say to drink less soup when no soup or broth is visible.
+        - Do not write hypothetical advice such as "if there is sauce/soup/drink". If uncertain, use a neutral action such as eating to comfortable fullness or keeping the next meal lighter.
         - Do not write abstract reminders such as "control it", "keep balanced", or "control frequency" unless you also say the exact action.
         - If this meal fits the goal well, still give one maintenance tip.
         - Do not give extreme plans, fasting advice, single-food diets, strict weighing, complex recipes, medical diagnosis, medicine, or treatment advice.
@@ -374,7 +380,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 13
+        const val promptVersion = 15
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 
@@ -384,6 +390,7 @@ class OpenAiCompatibleClient(
                 用户会上传餐食图片，并提供自己的饮食目标。请用简体中文输出所有用户可见内容。
                 识别主要食物；多菜品时拆分主要菜品、可见食材和明显烹饪方式；不估算重量、卡路里或宏量营养素。
                 如果是一盘、一堆或一桌多菜品，顶层名称、摘要、建议和目标匹配必须按整餐综合判断，不要只按某一道菜下结论。
+                建议只能引用图片中可见且已写入 ingredients 的菜品；不要提到图片里没有的甜品、甜饮、汤汁、酱料或其他食物。
                 根据食物类型、烹饪方式和用户目标判断这餐是否适合，给出普通人当场能做的小动作。
                 不做医学诊断，不替代医生、营养师或药物治疗建议。必须只返回 JSON。
             """.trimIndent()
@@ -392,6 +399,7 @@ class OpenAiCompatibleClient(
                 使用者會上傳餐食圖片，並提供自己的飲食目標。請用繁體中文輸出所有使用者可見內容。
                 識別主要食物；多菜品時拆分主要菜品、可見食材和明顯烹飪方式；不估算重量、卡路里或宏量營養素。
                 如果是一盤、一堆或一桌多菜品，頂層名稱、摘要、建議和目標匹配必須按整餐綜合判斷，不要只按某一道菜下結論。
+                建議只能引用圖片中可見且已寫入 ingredients 的菜品；不要提到圖片裡沒有的甜品、甜飲、湯汁、醬料或其他食物。
                 根據食物類型、烹飪方式和使用者目標判斷這餐是否適合，給出普通人當場能做的小動作。
                 不做醫學診斷，不替代醫生、營養師或藥物治療建議。必須只返回 JSON。
             """.trimIndent()
@@ -400,6 +408,7 @@ class OpenAiCompatibleClient(
                 The user uploads a meal photo and a meal goal. Write every user-visible value in English.
                 Identify main foods; split visible dishes, ingredients, and obvious cooking styles when there are multiple dishes; do not estimate weight, calories, or macros.
                 If the photo shows one plate, a pile of food, or a table with multiple dishes, the top-level name, summary, advice, and goal fit must judge the whole meal, not only one dish.
+                Suggestions may only reference foods visible in the image and already listed in ingredients; do not mention absent desserts, sweet drinks, soup, broth, sauce, or other foods.
                 Judge whether the meal fits the goal based on food type and cooking style, then give actions a normal person can do immediately.
                 Do not diagnose, prescribe medicine, or replace professional medical or nutrition advice. Return JSON only.
             """.trimIndent()
@@ -408,6 +417,7 @@ class OpenAiCompatibleClient(
                 ユーザーは食事写真と食事目標を提供します。ユーザーに見える値はすべて日本語で書いてください。
                 主な食べ物を識別し、複数料理の場合は見える料理、食材、明らかな調理方法を分けてください。重量、カロリー、三大栄養素は推定しません。
                 1皿、盛り合わせ、または複数料理の食卓の場合、トップレベルの名前、要約、提案、目標との相性は食事全体で判断し、1品だけで結論を出さないでください。
+                提案では、画像で見えて ingredients に入れた食べ物だけを扱ってください。見えないデザート、甘い飲み物、汁、ソースなどは書かないでください。
                 食材や調理方法、目標に照らしてこの食事が合うかを判断し、すぐ実行できる小さな行動を提案してください。
                 医学的診断、薬の助言、治療提案はしません。必ず JSON のみを返してください。
             """.trimIndent()

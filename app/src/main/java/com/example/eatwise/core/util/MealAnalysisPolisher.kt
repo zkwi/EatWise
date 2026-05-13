@@ -10,12 +10,12 @@ object MealAnalysisPolisher {
         if (language != AppLanguage.ZhHans) return polishLocalized(result, language)
 
         val suggestions = result.suggestions
-            .map(::normalizeSuggestion)
+            .map { normalizeSuggestion(it, result) }
             .filter { it.isNotBlank() }
             .distinct()
             .take(3)
-            .ifEmpty { listOf(defaultLocalizedSuggestion(language)) }
             .ifEmpty { fallbackSuggestions(result) }
+            .ifEmpty { listOf(defaultLocalizedSuggestion(language)) }
 
         return result.copy(
             mealName = localizedMealName(result.mealName, language),
@@ -50,9 +50,16 @@ object MealAnalysisPolisher {
 
     private fun polishLocalized(result: MealAnalysisResult, language: AppLanguage): MealAnalysisResult {
         val suggestions = result.suggestions
-            .map {
-                localizedSuggestionByKeyword(it, language)
-                    .ifBlank { compactSentence(it.trim(), if (language == AppLanguage.En) 90 else 42) }
+            .map { suggestion ->
+                if (mentionsAbsentFoodReference(suggestion, result)) {
+                    ""
+                } else {
+                    val normalized = localizedSuggestionByKeyword(suggestion, language)
+                        .ifBlank { compactSentence(suggestion.trim(), if (language == AppLanguage.En) 90 else 42) }
+                    normalized
+                        .takeUnless { mentionsAbsentFoodReference(it, result) }
+                        .orEmpty()
+                }
             }
             .filter { it.isNotBlank() }
             .filterNot { it.isMeaninglessSuggestion() }
@@ -186,10 +193,13 @@ object MealAnalysisPolisher {
         return multiDish && hasHealthyAnchor && hasRiskAnchor
     }
 
-    private fun normalizeSuggestion(text: String): String {
+    private fun normalizeSuggestion(text: String, result: MealAnalysisResult): String {
         val raw = text.trim()
+        if (mentionsAbsentFoodReference(raw, result)) return ""
         val keywordSuggestion = suggestionByKeyword(raw)
-        if (keywordSuggestion.isNotBlank()) return keywordSuggestion
+        if (keywordSuggestion.isNotBlank()) {
+            return keywordSuggestion.takeUnless { mentionsAbsentFoodReference(it, result) }.orEmpty()
+        }
 
         val clean = raw
             .removePrefix("建议")
@@ -208,6 +218,8 @@ object MealAnalysisPolisher {
             .trim('，', '。', '、', ' ')
 
         return compactSentence(clean, 18)
+            .takeUnless { mentionsAbsentFoodReference(it, result) }
+            .orEmpty()
     }
 
     private fun suggestionByKeyword(text: String): String = when {
@@ -234,7 +246,9 @@ object MealAnalysisPolisher {
         val text = analysisText(result)
         return listOfNotNull(
             if (text.hasAny("油", "脂", "炸")) "油炸重油少几口" else null,
-            if (text.hasAny("盐", "钠", "咸", "汤")) "汤汁酱料少点" else null,
+            if (text.hasAny("汤", "汤底", "汤汁")) "汤汁少喝几口" else null,
+            if (text.hasAny("酱", "蘸料", "沙拉酱")) "酱料少放" else null,
+            if (text.hasAny("盐", "钠", "咸", "重口味")) "重口味少几口" else null,
             if (text.hasAny("蔬菜少", "蔬菜不足", "缺少蔬菜")) "加一份蔬菜" else null,
         ).take(3).ifEmpty { listOf("吃到七八分饱") }
     }
@@ -294,6 +308,33 @@ object MealAnalysisPolisher {
             append(result.tags.joinToString(""))
             append(result.ingredients.joinToString("") { "${it.dish}${it.name}" })
         }
+
+    private fun visibleFoodText(result: MealAnalysisResult): String =
+        buildString {
+            append(result.mealName)
+            append(result.summary)
+            append(result.goalMatch.reason)
+            append(result.ingredients.joinToString("") { "${it.dish}${it.name}" })
+        }
+
+    private fun mentionsAbsentFoodReference(suggestion: String, result: MealAnalysisResult): Boolean {
+        val text = suggestion.trim()
+        if (text.isBlank()) return false
+        val visible = visibleFoodText(result)
+        return when {
+            text.hasAny("甜品", "甜饮", "甜飲", "含糖饮料", "含糖飲料", "奶茶", "饮料", "飲料", "dessert", "sweet drink", "sugary drink", "sweets", "デザート", "甘い飲み物") ->
+                !visible.hasAny("甜品", "甜饮", "甜飲", "含糖饮料", "含糖飲料", "奶茶", "饮料", "飲料", "甜", "糖", "dessert", "sweet drink", "sugary drink", "sweets", "デザート", "甘い飲み物")
+            text.hasAny("汤", "湯", "汤底", "汤汁", "soup", "broth", "汁") ->
+                !visible.hasAny("汤", "湯", "汤底", "汤汁", "soup", "broth", "汁", "粥", "炖", "燉")
+            text.hasAny("酱", "醬", "蘸料", "沙拉酱", "sauce", "dressing", "ソース", "たれ") ->
+                !visible.hasAny("酱", "醬", "蘸料", "沙拉酱", "sauce", "dressing", "ソース", "たれ")
+            text.hasAny("主食", "米饭", "米飯", "面条", "麵", "面", "staple", "rice", "noodle", "carb", "炭水化物") ->
+                !visible.hasAny("主食", "米饭", "米飯", "面条", "麵", "面", "粗粮", "粗糧", "玉米", "红薯", "紅薯", "staple", "rice", "noodle", "carb", "corn", "sweet potato", "whole grain", "炭水化物")
+            text.hasAny("油炸", "炸物", "煎炸", "fried", "揚げ物") ->
+                !visible.hasAny("油炸", "炸物", "煎炸", "炸", "fried", "揚げ物")
+            else -> false
+        }
+    }
 
     private fun compactSentence(text: String, maxLength: Int): String {
         val clean = text.trim().trim('，', '。', '、', ' ')
