@@ -8,7 +8,9 @@ import com.example.eatwise.core.util.MealAnalysisPolisher
 import com.example.eatwise.domain.model.GoalMatch
 import com.example.eatwise.domain.model.Ingredient
 import com.example.eatwise.domain.model.MealAnalysisResult
+import okhttp3.OkHttpClient
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Locale
 
@@ -111,6 +113,42 @@ class JsonUtilsTest {
     }
 
     @Test
+    fun polishKeepsOverallAdviceBalancedForMixedSharedMeals() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "家庭聚餐",
+                summary = "一桌菜包含清蒸鱼、绿叶菜、豆腐和五花肉，有清淡部分也有油脂负担。",
+                eatingAdvice = "可以适量吃",
+                goalMatch = GoalMatch(level = "partial", reason = "整体有蔬菜和蛋白，但五花肉需要少吃。"),
+                ingredients = listOf(
+                    Ingredient(dish = "清蒸鱼", name = "鱼肉"),
+                    Ingredient(dish = "绿叶菜", name = "青菜"),
+                    Ingredient(dish = "红烧肉", name = "五花肉"),
+                ),
+                suggestions = listOf("先吃绿叶菜和清蒸鱼，红烧肉少吃几口。"),
+                tags = listOf("有蔬菜", "蛋白足", "油脂高"),
+            ),
+        )
+
+        assertEquals("可以适量吃", result.eatingAdvice)
+    }
+
+    @Test
+    fun polishStillLimitsSingleHeavyDish() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "红油肥肉",
+                summary = "红油和肥肉明显，整体油脂负担高。",
+                eatingAdvice = "可以适量吃",
+                goalMatch = GoalMatch(level = "partial", reason = "油脂偏高。"),
+                ingredients = listOf(Ingredient(dish = "红油肥肉", name = "肥肉")),
+            ),
+        )
+
+        assertEquals("需要严格控量", result.eatingAdvice)
+    }
+
+    @Test
     fun polishEnglishResultKeepsLocalizedTagsReadable() {
         val result = MealAnalysisPolisher.polish(
             MealAnalysisResult(
@@ -177,8 +215,21 @@ class JsonUtilsTest {
     }
 
     @Test
-    fun promptVersionTracksDishAdvicePromptUpdate() {
-        assertEquals(12, OpenAiCompatibleClient.promptVersion)
+    fun promptVersionTracksOverallMealPromptUpdate() {
+        assertEquals(13, OpenAiCompatibleClient.promptVersion)
+    }
+
+    @Test
+    fun mealPromptRequiresOverallJudgmentForMultiDishMeals() {
+        val prompt = OpenAiCompatibleClient::class.java
+            .getDeclaredMethod("userPrompt", String::class.java, AppLanguage::class.java)
+            .apply { isAccessible = true }
+            .invoke(OpenAiCompatibleClient(OkHttpClient()), "少油控脂", AppLanguage.ZhHans) as String
+
+        assertTrue(prompt.contains("must judge the whole plate"))
+        assertTrue(prompt.contains("Do not base the overall advice or 1-5 score on only one single dish"))
+        assertTrue(prompt.contains("which healthier dishes the user can eat more or eat first"))
+        assertTrue(prompt.contains("Keep ingredients grouped by dish"))
     }
 
     private val sampleJson = """

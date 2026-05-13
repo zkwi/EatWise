@@ -2,6 +2,24 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.10 - 2026-05-13
+
+中文：
+
+- 优化 prompt 到 v13，要求整盘、整堆或整桌菜的顶部评价、1~5 星参考和总体建议基于整餐综合判断。
+- 多菜品中同时存在清淡菜、蔬菜、蛋白和高油高糖部分时，建议会提示优先吃更健康的部分，并减少高负担菜品。
+- 保留“按菜看建议”的分组展示，不改变 JSON schema 或历史记录结构。
+- 精修本地结果清洗逻辑，避免整桌菜因为单个重油或肥肉线索被直接降为“需要严格控量”。
+- 同步 README、AI 治理、维护说明和手动测试清单。
+
+English:
+
+- Updated the prompt to v13 so the top-level judgment, 1-5 reference score, and overall advice for a plate, pile, or table of dishes are based on the whole meal.
+- When a multi-dish meal includes both lighter vegetables/protein and heavier oily or sugary items, advice now points users toward the healthier parts while reducing the heavier dishes.
+- Kept the dish-level tips grouping unchanged, with no JSON schema or history structure change.
+- Refined local result polishing so one oily or fatty dish does not automatically downgrade an otherwise mixed shared meal to strict portion control.
+- Updated README, AI governance, maintenance notes, and the manual testing checklist.
+
 ## 1.0.9 - 2026-05-13
 
 中文：

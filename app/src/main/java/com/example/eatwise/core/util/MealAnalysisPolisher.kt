@@ -23,7 +23,7 @@ object MealAnalysisPolisher {
             goalMatch = result.goalMatch.copy(
                 reason = compactSentence(result.goalMatch.reason, 52),
             ),
-            eatingAdvice = normalizeEatingAdvice(result.eatingAdvice, result.goalMatch.level, analysisText(result)),
+            eatingAdvice = normalizeEatingAdvice(result),
             suggestions = suggestions,
             tags = normalizedTags(result),
             disclaimer = MealLanguageText.disclaimer(language),
@@ -148,18 +148,42 @@ object MealAnalysisPolisher {
         return tags
     }
 
-    private fun normalizeEatingAdvice(rawAdvice: String, goalLevel: String, text: String): String {
-        val clean = rawAdvice.trim()
+    private fun normalizeEatingAdvice(result: MealAnalysisResult): String {
+        val clean = result.eatingAdvice.trim()
+        val goalLevel = result.goalMatch.level
+        val text = analysisText(result)
+        val hasRisk = text.hasAny("油炸", "重油", "红油", "肥肉", "五花", "甜品", "奶茶", "高糖")
+        val hasBalancedMultiDish = hasBalancedMultiDish(result, text)
         return when {
-            text.hasAny("油炸", "重油", "红油", "肥肉", "甜品", "奶茶", "高糖") -> "需要严格控量"
             clean.hasAny("尝", "一小口", "浅尝") -> "只能尝一小口"
             clean.hasAny("严格", "控量", "少吃", "少碰") -> "需要严格控量"
-            clean.hasAny("多吃", "多一点", "放心") -> "可以适量多吃"
+            clean.hasAny("多吃", "多一点", "放心") -> when {
+                hasBalancedMultiDish -> "可以适量吃"
+                hasRisk -> "需要严格控量"
+                else -> "可以适量多吃"
+            }
+            hasRisk -> if (hasBalancedMultiDish) "可以适量吃" else "需要严格控量"
             clean.hasAny("适量", "正常") -> "可以适量吃"
             goalLevel == "poor" -> "只能尝一小口"
-            goalLevel == "good" -> "可以适量多吃"
+            goalLevel == "good" -> if (hasRisk) "可以适量吃" else "可以适量多吃"
             else -> "可以适量吃"
         }
+    }
+
+    private fun hasBalancedMultiDish(result: MealAnalysisResult, text: String): Boolean {
+        val dishCount = result.ingredients
+            .map { it.dish.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .size
+        val multiDish = dishCount >= 2 || text.hasAny("多菜", "一桌", "整桌", "拼盘", "聚餐", "多人", "multiple dishes", "shared", "table", "platter", "複数", "食卓", "盛り合わせ")
+        val hasHealthyAnchor = text.hasAny(
+            "蔬菜", "青菜", "绿叶", "清蒸", "蒸", "水煮", "清淡", "少油", "鱼", "虾", "鸡胸", "豆腐", "蛋白", "粗粮", "玉米", "红薯",
+            "vegetable", "protein", "steamed", "boiled", "light", "fish", "shrimp", "tofu", "whole grain",
+            "野菜", "蒸し", "軽め", "魚", "豆腐", "たんぱく",
+        )
+        val hasRiskAnchor = text.hasAny("油炸", "重油", "红油", "肥肉", "五花", "甜品", "奶茶", "高糖")
+        return multiDish && hasHealthyAnchor && hasRiskAnchor
     }
 
     private fun normalizeSuggestion(text: String): String {
