@@ -2,6 +2,22 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.12 - 2026-05-14
+
+中文：
+
+- 修复“怎么调整”建议被本地清洗硬截断的问题，避免出现“增加”“少吃几”等半句话。
+- 放宽中文建议保留长度，并在必要时按标点截断，保证展示文案尽量完整可读。
+- 结果页建议行默认最多展示 3 行，减少长建议在卡片里被折叠的概率。
+- 补充单元测试覆盖多菜品建议完整展示场景。
+
+English:
+
+- Fixed local polishing truncating adjustment tips into incomplete fragments such as dangling verbs.
+- Increased preserved length for Chinese suggestions and trim at punctuation when shortening is still needed.
+- Result adjustment rows now show up to 3 lines by default to reduce unnecessary collapsing.
+- Added unit test coverage for complete multi-dish adjustment suggestions.
+
 ## 1.0.11 - 2026-05-14
 
 中文：

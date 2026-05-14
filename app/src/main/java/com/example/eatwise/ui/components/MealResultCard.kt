@@ -215,7 +215,7 @@ private fun SuggestionRow(text: String, goalLevel: String) {
             modifier = Modifier.weight(1f),
             fontSize = 14.sp,
             lineHeight = 18.sp,
-            collapsedMaxLines = 2,
+            collapsedMaxLines = 3,
         )
     }
 }

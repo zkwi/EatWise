@@ -196,6 +196,12 @@ object MealAnalysisPolisher {
     private fun normalizeSuggestion(text: String, result: MealAnalysisResult): String {
         val raw = text.trim()
         if (mentionsAbsentFoodReference(raw, result)) return ""
+        if (raw.hasAny("优先吃") && mentionsVisibleFood(raw, result)) {
+            return compactSuggestion(raw)
+                .takeUnless { mentionsAbsentFoodReference(it, result) }
+                .orEmpty()
+        }
+
         val keywordSuggestion = suggestionByKeyword(raw)
         if (keywordSuggestion.isNotBlank()) {
             return keywordSuggestion.takeUnless { mentionsAbsentFoodReference(it, result) }.orEmpty()
@@ -217,7 +223,7 @@ object MealAnalysisPolisher {
             .replace("额外", "")
             .trim('，', '。', '、', ' ')
 
-        return compactSentence(clean, 18)
+        return compactSuggestion(clean)
             .takeUnless { mentionsAbsentFoodReference(it, result) }
             .orEmpty()
     }
@@ -317,6 +323,14 @@ object MealAnalysisPolisher {
             append(result.ingredients.joinToString("") { "${it.dish}${it.name}" })
         }
 
+    private fun mentionsVisibleFood(text: String, result: MealAnalysisResult): Boolean =
+        result.ingredients.any { ingredient ->
+            listOf(ingredient.dish, ingredient.name).any { food ->
+                val clean = food.trim()
+                clean.length >= 2 && text.contains(clean)
+            }
+        }
+
     private fun mentionsAbsentFoodReference(suggestion: String, result: MealAnalysisResult): Boolean {
         val text = suggestion.trim()
         if (text.isBlank()) return false
@@ -339,6 +353,38 @@ object MealAnalysisPolisher {
     private fun compactSentence(text: String, maxLength: Int): String {
         val clean = text.trim().trim('，', '。', '、', ' ')
         return if (clean.length <= maxLength) clean else clean.take(maxLength)
+    }
+
+    private fun compactSuggestion(text: String): String {
+        val clean = text.trim().trim('，', '。', '、', ' ')
+        val maxLength = 34
+        val shortened = if (clean.length <= maxLength) {
+            clean
+        } else {
+            val head = clean.take(maxLength)
+            val breakAt = listOf('。', '；', ';', '，', ',', '、')
+                .map { head.lastIndexOf(it) }
+                .filter { it >= 16 }
+                .maxOrNull()
+            if (breakAt != null) head.take(breakAt) else head
+        }.trim('，', '。', '、', ' ')
+
+        return completeSuggestionEnding(shortened)
+    }
+
+    private fun completeSuggestionEnding(text: String): String {
+        val clean = text.trim('，', '。', '、', ' ')
+        return when {
+            clean.endsWith("少吃几") -> "${clean}口"
+            clean.endsWith("多吃几") -> "${clean}口"
+            clean.endsWith("少喝几") -> "${clean}口"
+            clean.endsWith("多夹几") -> "${clean}筷"
+            clean.endsWith("适量") -> "${clean}吃"
+            clean.endsWith("建議") -> clean.removeSuffix("，建議").removeSuffix("建議").trim('，', '。', '、', ' ')
+            clean.endsWith("建议") -> clean.removeSuffix("，建议").removeSuffix("建议").trim('，', '。', '、', ' ')
+            clean.endsWith("增加") -> clean.removeSuffix("，增加").removeSuffix("增加").trim('，', '。', '、', ' ')
+            else -> clean
+        }
     }
 
     private fun String.isMeaninglessTag(): Boolean {

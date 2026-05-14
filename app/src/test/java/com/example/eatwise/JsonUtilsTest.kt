@@ -154,6 +154,38 @@ class JsonUtilsTest {
     }
 
     @Test
+    fun polishKeepsSuggestionTextCompleteForResultCard() {
+        val result = MealAnalysisPolisher.polish(
+            MealAnalysisResult(
+                mealName = "家常多菜一餐",
+                summary = "包含清炒绿叶菜、蒸玉米、芋头、红烧肉、炖茄子和煎鱼。",
+                ingredients = listOf(
+                    Ingredient(dish = "清炒绿叶菜", name = "绿叶菜"),
+                    Ingredient(dish = "蒸粗粮", name = "玉米"),
+                    Ingredient(dish = "蒸粗粮", name = "芋头"),
+                    Ingredient(dish = "红烧肉", name = "红烧肉"),
+                    Ingredient(dish = "炖茄子", name = "茄子"),
+                    Ingredient(dish = "煎鱼", name = "鱼肉"),
+                ),
+                suggestions = listOf(
+                    "优先吃清炒绿叶菜和蒸玉米、芋头，增加膳食纤维",
+                    "红烧肉和炖茄子看起来油润，建议少吃几口",
+                    "鱼肉是优质蛋白，但经过煎制，适量食用",
+                ),
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                "优先吃清炒绿叶菜和蒸玉米、芋头，增加膳食纤维",
+                "红烧肉和炖茄子看起来油润，建议少吃几口",
+                "鱼肉是优质蛋白，但经过煎制，适量食用",
+            ),
+            result.suggestions,
+        )
+    }
+
+    @Test
     fun polishKeepsEnoughContextForDetailText() {
         val result = MealAnalysisPolisher.polish(
             MealAnalysisResult(
