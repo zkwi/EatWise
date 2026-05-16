@@ -8,6 +8,7 @@ import com.example.eatwise.core.network.OpenAiCompatibleClient
 import com.example.eatwise.core.util.AppResult
 import com.example.eatwise.core.util.ImageCompressor
 import com.example.eatwise.core.util.JsonUtils
+import com.example.eatwise.core.util.NutritionAnalysisPolisher
 import com.example.eatwise.data.repository.SettingsRepository
 import com.example.eatwise.domain.model.NutritionAnalysisResult
 import kotlinx.coroutines.CancellationException
@@ -55,7 +56,7 @@ class AnalyzeNutritionUseCase(
         onStageChanged(AnalysisStage.ParsingResult)
         val extractedJson = JsonUtils.extractJson(rawContent)
         val result = try {
-            JsonUtils.parseNutritionAnalysis(rawContent)
+            NutritionAnalysisPolisher.polish(JsonUtils.parseNutritionAnalysis(rawContent), settings.language)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

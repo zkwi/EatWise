@@ -194,6 +194,13 @@ object MealLanguageText {
         AppLanguage.Ja -> "リクエストに失敗しました。ネットワーク、Base URL、モデル設定を確認してください。"
     }
 
+    fun temporaryNetworkFailed(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "网络或模型服务临时中断，已自动重试仍失败。请回到前台或稍后再试。"
+        AppLanguage.ZhHant -> "網路或模型服務暫時中斷，已自動重試仍失敗。請回到前台或稍後再試。"
+        AppLanguage.En -> "The network or model service was interrupted. Automatic retries failed; keep the app in front or try again later."
+        AppLanguage.Ja -> "ネットワークまたはモデルサービスが一時的に中断されました。自動再試行後も失敗しました。アプリを前面に戻すか、後でもう一度お試しください。"
+    }
+
     fun parseFailed(language: AppLanguage): String = when (language) {
         AppLanguage.ZhHans -> "结果格式异常，请重新分析。"
         AppLanguage.ZhHant -> "結果格式異常，請重新分析。"

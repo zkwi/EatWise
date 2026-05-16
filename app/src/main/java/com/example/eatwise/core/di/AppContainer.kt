@@ -21,8 +21,9 @@ class AppContainer(context: Context) {
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(5, TimeUnit.MINUTES)
+        .writeTimeout(90, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
         .build()
 
     val settingsStore = SettingsStore(appContext)

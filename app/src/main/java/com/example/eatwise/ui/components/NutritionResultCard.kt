@@ -31,9 +31,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.eatwise.core.util.NutritionAnalysisPolisher
 import com.example.eatwise.domain.model.NutritionAnalysisResult
 import com.example.eatwise.domain.model.NutritionItem
 import com.example.eatwise.ui.i18n.AppStrings
+import com.example.eatwise.ui.i18n.LocalAppLanguage
 import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenDeep
 import com.example.eatwise.ui.theme.GreenSoft
@@ -46,17 +48,19 @@ import com.example.eatwise.ui.theme.YellowSoft
 @Composable
 fun NutritionResultCard(result: NutritionAnalysisResult, modifier: Modifier = Modifier) {
     val strings = LocalAppStrings.current
-    val calorieItem = nutritionCalorieItem(result.items)
-    val overviewItems = nutritionOverviewItems(result.items)
-    val detailItems = nutritionDetailItems(result.items)
+    val language = LocalAppLanguage.current
+    val polishedResult = NutritionAnalysisPolisher.polish(result, language)
+    val calorieItem = nutritionCalorieItem(polishedResult.items)
+    val overviewItems = nutritionOverviewItems(polishedResult.items)
+    val detailItems = nutritionDetailItems(polishedResult.items)
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        nutritionSections(result).forEach { section ->
+        nutritionSections(polishedResult).forEach { section ->
             when (section) {
-                NutritionSection.Hero -> NutritionHeroCard(result, strings, calorieItem)
+                NutritionSection.Hero -> NutritionHeroCard(polishedResult, strings, calorieItem)
                 NutritionSection.Actions -> NutritionSoftCard {
                     SectionTitle(strings.nutritionActions)
-                    result.suggestions.take(2).forEachIndexed { index, suggestion ->
+                    polishedResult.suggestions.take(2).forEachIndexed { index, suggestion ->
                         NutritionActionRow(index + 1, suggestion)
                     }
                 }
@@ -67,7 +71,7 @@ fun NutritionResultCard(result: NutritionAnalysisResult, modifier: Modifier = Mo
                 NutritionSection.Basis -> NutritionSoftCard {
                     SectionTitle(strings.nutritionBasis)
                     Text(
-                        result.basis,
+                        polishedResult.basis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
                         lineHeight = 19.sp,
@@ -81,7 +85,7 @@ fun NutritionResultCard(result: NutritionAnalysisResult, modifier: Modifier = Mo
         }
 
         Text(
-            result.disclaimer,
+            polishedResult.disclaimer,
             modifier = Modifier.padding(horizontal = 4.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 12.sp,
@@ -154,14 +158,6 @@ private fun NutritionHeroCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(
-                result.mealName,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 13.sp,
-                lineHeight = 18.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
             val calorieNote = calorieItem?.note.orEmpty()
             if (calorieNote.isNotBlank()) {
                 Text(
@@ -212,27 +208,31 @@ private fun NutritionOverviewTile(item: NutritionItem, strings: AppStrings, modi
     )
     Row(
         modifier = modifier
-            .heightIn(min = 56.dp)
+            .heightIn(min = 62.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(style.container.copy(alpha = 0.48f))
-            .padding(10.dp),
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            buildAnnotatedString {
-                append(header.label)
-                append("  ")
-                withStyle(SpanStyle(color = style.content, fontWeight = FontWeight.ExtraBold)) {
-                    append(header.estimate)
-                }
-            },
+        Box(
             modifier = Modifier.weight(1f),
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            lineHeight = 18.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Text(
+                buildAnnotatedString {
+                    append(header.label)
+                    append("  ")
+                    withStyle(SpanStyle(color = style.content, fontWeight = FontWeight.ExtraBold)) {
+                        append(header.estimate)
+                    }
+                },
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                lineHeight = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Spacer(Modifier.width(8.dp))
         LevelChip(item.level, strings, style)
     }
@@ -295,11 +295,12 @@ private fun NutritionActionRow(index: Int, text: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 50.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(GreenSoft)
-            .padding(10.dp),
+            .padding(horizontal = 11.dp, vertical = 9.dp),
         horizontalArrangement = Arrangement.spacedBy(9.dp),
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
@@ -321,8 +322,8 @@ private fun NutritionActionRow(index: Int, text: String) {
             modifier = Modifier.weight(1f),
             color = GreenDeep,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp,
-            lineHeight = 17.sp,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )

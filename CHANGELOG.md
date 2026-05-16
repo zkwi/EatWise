@@ -2,6 +2,24 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.15 - 2026-05-16
+
+中文：
+
+- 优化粗略营养估算卡片的本地清洗：长动作建议会压缩成短清单项，精确单值估算会降级为“无法判断”。
+- 粗略营养估算在生成后保存前会做轻量整理，历史详情展示也复用同一套卡片清洗逻辑。
+- 延长大模型流式读取超时，并对超时、临时网络中断和 429/5xx 服务错误自动重试，减少短暂退后台导致的失败。
+- 优化 prompt 到 v23，要求动作建议直接写可见食物和动作，把原因放到摘要、目标匹配、估算依据或行说明里。
+- 同步 README、AI 治理、维护说明和手动测试清单。
+
+English:
+
+- Improved local polishing for rough nutrition cards: long action tips are compacted into checklist-style actions, and precise single-value estimates are downgraded to “Unable to judge”.
+- Rough nutrition estimates are lightly polished before saving, and historical detail screens reuse the same card cleanup rules.
+- Extended the streaming read timeout and automatically retry timeouts, transient network interruptions, and 429/5xx service errors to reduce failures after brief backgrounding.
+- Updated prompts to v23 so action tips start with the visible food and action while reasons stay in summaries, goal fit, estimate basis, or item notes.
+- Updated the README, AI governance notes, maintenance docs, and manual testing checklist.
+
 ## 1.0.14 - 2026-05-16
 
 中文：

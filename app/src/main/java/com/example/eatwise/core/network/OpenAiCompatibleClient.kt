@@ -5,6 +5,7 @@ import com.example.eatwise.core.i18n.AppLanguage
 import com.example.eatwise.core.i18n.MealLanguageText
 import com.example.eatwise.core.util.JsonUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -25,6 +26,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody
 import java.io.File
+import java.io.IOException
 
 class OpenAiCompatibleClient(
     private val okHttpClient: OkHttpClient,
@@ -96,14 +98,34 @@ class OpenAiCompatibleClient(
                 .addHeader("X-OpenRouter-Title", "Meal AI Local")
         }
 
-        okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
-            if (!response.isSuccessful) {
-                val responseBody = response.body.string()
-                throw ApiException(response.code, mapStatusMessage(response.code, responseBody, language))
-            }
+        var attempt = 0
+        while (attempt <= AnalysisRequestMaxRetries) {
+            try {
+                okHttpClient.newCall(requestBuilder.build()).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        val responseBody = response.body.string()
+                        throw ApiException(response.code, mapStatusMessage(response.code, responseBody, language))
+                    }
 
-            readCompletionContent(response.body, language, onContentChanged)
+                    return@withContext readCompletionContent(response.body, language, onContentChanged)
+                }
+            } catch (error: ApiException) {
+                if (!shouldRetryAnalysisRequest(error.statusCode) || attempt >= AnalysisRequestMaxRetries) {
+                    throw if (shouldRetryAnalysisRequest(error.statusCode)) {
+                        ApiException(error.statusCode, MealLanguageText.temporaryNetworkFailed(language), error)
+                    } else {
+                        error
+                    }
+                }
+            } catch (error: IOException) {
+                if (attempt >= AnalysisRequestMaxRetries) {
+                    throw ApiException(null, MealLanguageText.temporaryNetworkFailed(language), error)
+                }
+            }
+            attempt += 1
+            delay(analysisRetryDelayMs(attempt))
         }
+        throw ApiException(null, MealLanguageText.temporaryNetworkFailed(language))
     }
 
     suspend fun testConnection(config: LlmConfig, language: AppLanguage = AppLanguage.default): Unit = withContext(Dispatchers.IO) {
@@ -362,6 +384,8 @@ class OpenAiCompatibleClient(
         - Prefer 1 to 2 suggestions. Use 3 only when the photo has clearly different visible burdens or clearly different useful dishes.
         - Each suggestion should contain one action only, with a clear object and a practical verb, such as eating less of a visible heavy dish, eating a visible lighter dish first, removing visible skin/fat/breading, using less visible sauce, or making the next meal lighter.
         - Keep each suggestion short enough for one mobile line when possible: Chinese/Japanese 12 to 24 visible characters, English fewer than 12 words.
+        - Do not put the reason inside suggestions. Put reasons in summary or goal_match.reason; suggestions should read like compact checklist actions.
+        - Do not start suggestions with "this meal", "because", "for your goal", "建议", "可以", or similar lead-ins. Start with the visible food and action.
         - Do not start suggestions with vague verbs such as "pay attention", "control", "keep", "maintain", or "consider" unless the same sentence also names the exact visible food and action.
         - Do not copy the examples blindly. Choose actions from the actual visible dishes, such as eating more of a lighter vegetable/protein dish or eating less of a visibly oily, fried, sauced, fatty, or staple-heavy dish.
         - Do not mention desserts, sweet drinks, soup, broth, sauce, rice, noodles, fried food, meat, or any other specific item unless it is visible in the image and already listed in ingredients.
@@ -435,6 +459,8 @@ class OpenAiCompatibleClient(
         - Do not combine two unrelated actions in one suggestion. Use one visible food and one practical verb per suggestion.
         - Keep each suggestion to one short line when possible: for Chinese or Japanese, aim for 18 to 26 visible characters; for English, aim for fewer than 14 words.
         - If a reason is needed, put it in item notes or basis. The suggestion itself should stay as compact action text.
+        - Do not put the reason in suggestions. Do not start suggestions with "this meal", "because", "for your goal", "建议", "可以", "请尽量", or similar lead-ins.
+        - Prefer checklist-style actions that still read well if shown alone, for example "去掉炸虾面衣", "避开盘底积油", or "下餐加一份蔬菜".
         - Avoid long clauses, abstract reminders, and duplicate wording from basis or item notes.
         - suggestions must return 1 to 2 short, concrete actions based on visible foods.
         - Do not diagnose disease, prescribe treatment, recommend medicine, fasting, strict weighing, or extreme diet plans.
@@ -503,7 +529,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 22
+        const val promptVersion = 23
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 
@@ -586,4 +612,16 @@ class OpenAiCompatibleClient(
 class ApiException(
     val statusCode: Int?,
     override val message: String,
-) : Exception(message)
+    cause: Throwable? = null,
+) : Exception(message, cause)
+
+internal const val AnalysisRequestMaxRetries = 2
+
+internal fun shouldRetryAnalysisRequest(statusCode: Int?): Boolean =
+    statusCode == 408 || statusCode == 429 || (statusCode != null && statusCode in 500..599)
+
+internal fun analysisRetryDelayMs(attempt: Int): Long =
+    when (attempt.coerceAtLeast(1)) {
+        1 -> 1_200L
+        else -> 3_000L
+    }

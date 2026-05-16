@@ -21,6 +21,7 @@
 - 两张结果卡片以可点击、可左右滑动的 Tab 展示，并分别保留自己的上下滚动位置，减少切换闪烁和长短内容切换空白
 - 支持多个菜品或复合食材的分析结果展示，总体评价基于整盘或整桌菜，按菜品给出 2~3 个标签和更具体的简短建议
 - 分析等待页展示阶段进度、分析请求、实时返回和滚动提示，并允许返回首页后台继续分析
+- 大模型流式请求使用较长读取超时和轻量自动重试，降低短暂退后台或临时网络抖动导致的失败概率
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
 - 历史记录使用紧凑移动端卡片，左滑可收藏或删除
 - 未填写 Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
@@ -103,7 +104,7 @@ POST {baseUrl}/chat/completions
 
 ### 工程治理
 
-- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 22`。
+- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 23`。
 - AI 约束、输出 schema、标签语义和隐私边界见 [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md)。
 - 结果 JSON 以当前 schema 为准，避免为废弃字段保留兼容分支。
 - 提交代码前运行 `.\gradlew.bat test assembleDebug`，UI 改动需补充真机或模拟器截图验收。
@@ -121,7 +122,7 @@ POST {baseUrl}/chat/completions
 - “请先在设置中填写模型名称”：设置页未填写模型。
 - “这个模型可能看不了图片”：请更换支持图片输入的模型。
 - “结果格式异常”：模型没有稳定返回 JSON，可更换模型或重试。
-- “请求失败”：检查网络、Base URL 或模型设置。
+- “请求失败”或“网络或模型服务临时中断”：检查网络、Base URL 或模型设置，回到前台后重试。
 
 ## English
 
@@ -142,6 +143,7 @@ EatWise is a personal experimental Android app for photo-based meal analysis. It
 - The two result cards are shown as tappable and horizontally swipeable tabs, each keeping its own vertical scroll position to reduce tab flicker and large blank areas when switching between different content heights
 - Supports multi-dish and mixed-meal analysis, with the overall judgment based on the whole plate or table, plus 2-3 tags and a more specific concise suggestion per dish
 - The waiting screen shows stage progress, request preview, streaming model output, and rotating tips; analysis can continue in the background after returning home
+- Streaming model requests use a longer read timeout and light automatic retries to reduce failures after brief backgrounding or transient network drops
 - Successful analyses are saved automatically to local history, with detail view, favorite, and delete actions
 - Compact mobile history cards support swipe actions for favorite and delete
 - Clear messages are shown for missing keys, image-incompatible models, network failures, and JSON parsing failures
@@ -224,7 +226,7 @@ Each photo sends two requests in parallel by default: one for the meal advice ca
 
 ### Engineering Notes
 
-- AI prompts are maintained in `OpenAiCompatibleClient`; the current `promptVersion` is `22`.
+- AI prompts are maintained in `OpenAiCompatibleClient`; the current `promptVersion` is `23`.
 - AI governance, output schema, tag semantics, and privacy boundaries are documented in [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md).
 - Result JSON follows the current schema only; deprecated fields are not kept for compatibility.
 - Before committing code, run `.\gradlew.bat test assembleDebug`; UI changes should be checked with a device or emulator screenshot.
@@ -242,7 +244,7 @@ Each photo sends two requests in parallel by default: one for the meal advice ca
 - "Please enter a model name in Settings first.": the model name is missing.
 - "This model may not read images.": use a model that supports image input.
 - "The result format was invalid.": the model did not return stable JSON; try another model or retry.
-- "Request failed.": check the network, Base URL, or model settings.
+- "Request failed." or "The network or model service was interrupted.": check the network, Base URL, or model settings, then return to the foreground and retry.
 
 ## License
 
