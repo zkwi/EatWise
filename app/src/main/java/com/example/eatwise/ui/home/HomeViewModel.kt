@@ -85,4 +85,10 @@ class HomeViewModel(
 }
 
 internal fun AnalysisTaskState.shouldShowOnHome(): Boolean =
-    isQueued || isAnalyzing || isSaving || errorMessage != null || saveMessage?.let(MealLanguageText::isSaveFailure) == true
+    isQueued ||
+        isAnalyzing ||
+        isNutritionAnalyzing ||
+        isSaving ||
+        errorMessage != null ||
+        nutritionErrorMessage != null ||
+        saveMessage?.let(MealLanguageText::isSaveFailure) == true

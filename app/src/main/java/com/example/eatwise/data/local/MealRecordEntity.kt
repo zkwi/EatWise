@@ -17,6 +17,8 @@ data class MealRecordEntity(
     val suggestionsJson: String,
     val ingredientsJson: String,
     val aiResultJson: String,
+    val nutritionJson: String?,
+    val nutritionAiResultJson: String?,
     val userGoalSnapshot: String,
     val note: String?,
     val isFavorite: Boolean,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
@@ -29,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,10 +41,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.eatwise.core.util.DateTimeUtils
 import com.example.eatwise.domain.model.GoalMatch
 import com.example.eatwise.domain.model.MealAnalysisResult
+import com.example.eatwise.domain.model.MealRecord
 import com.example.eatwise.ui.components.AppTopBar
 import com.example.eatwise.ui.components.ErrorCard
 import com.example.eatwise.ui.components.MealImageCard
 import com.example.eatwise.ui.components.MealResultCard
+import com.example.eatwise.ui.components.NutritionResultCard
+import com.example.eatwise.ui.components.ResultTab
+import com.example.eatwise.ui.components.ResultTabSwitcher
+import com.example.eatwise.ui.components.SwipeableResultPane
 import com.example.eatwise.ui.i18n.LocalAppStrings
 import com.example.eatwise.ui.theme.GreenPrimary
 import com.example.eatwise.ui.theme.LineSoft
@@ -66,75 +74,62 @@ fun MealDetailScreen(
         if (state.recordMissing) {
             ErrorCard(strings.recordNotFound, Modifier.padding(20.dp))
         } else if (record != null) {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                item {
-                    MealImageCard(
-                        imagePath = record.imagePath,
-                        contentDescription = record.mealName,
+            var selectedTab by rememberSaveable(record.id) { mutableStateOf(ResultTab.Advice) }
+            fun selectResultTab(tab: ResultTab) {
+                if (tab != selectedTab) {
+                    selectedTab = tab
+                }
+            }
+            val mealResult = MealAnalysisResult(
+                mealName = record.mealName,
+                summary = record.summary,
+                eatingAdvice = record.eatingAdvice,
+                goalMatch = GoalMatch(
+                    level = record.goalMatchLevel ?: "unknown",
+                    reason = record.goalMatchReason.orEmpty(),
+                ),
+                ingredients = record.ingredients,
+                suggestions = record.suggestions,
+                tags = record.tags,
+            )
+            if (record.nutrition != null) {
+                ResultTabSwitcher(
+                    selectedTab = selectedTab,
+                    onSelectedTab = ::selectResultTab,
+                    adviceLabel = strings.adviceCardTitle,
+                    nutritionLabel = strings.nutritionCardTitle,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp),
+                )
+                SwipeableResultPane(
+                    selectedTab = selectedTab,
+                    adviceAvailable = true,
+                    nutritionAvailable = true,
+                    onSelectedTab = ::selectResultTab,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                ) { tab ->
+                    MealDetailContentPage(
+                        record = record,
+                        mealResult = mealResult,
+                        tab = tab,
+                        onFavorite = viewModel::toggleFavorite,
+                        onDeleteClick = { showDeleteDialog = true },
                     )
                 }
-                item {
-                    MealResultCard(
-                        MealAnalysisResult(
-                            mealName = record.mealName,
-                            summary = record.summary,
-                            eatingAdvice = record.eatingAdvice,
-                            goalMatch = GoalMatch(
-                                level = record.goalMatchLevel ?: "unknown",
-                                reason = record.goalMatchReason.orEmpty(),
-                            ),
-                            ingredients = record.ingredients,
-                            suggestions = record.suggestions,
-                            tags = record.tags,
-                        ),
-                    )
-                }
-                item {
-                    Card(
-                        Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                    ) {
-                        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(strings.goalDuringAnalysis, fontWeight = FontWeight.Bold)
-                            Text(
-                                record.userGoalSnapshot.ifBlank { strings.noGoalAtAnalysis },
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Text("${strings.recordTime}${DateTimeUtils.formatFull(record.createdAt)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-                item {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                        Button(
-                            onClick = viewModel::toggleFavorite,
-                            modifier = Modifier.weight(1f).height(44.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                        ) {
-                            Icon(if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = null)
-                            Text(if (record.isFavorite) strings.unfavorite else strings.favoriteMeal)
-                        }
-                        Button(
-                            onClick = { showDeleteDialog = true },
-                            modifier = Modifier.weight(1f).height(44.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        ) {
-                            Icon(Icons.Rounded.Delete, contentDescription = null)
-                            Text(strings.deleteRecord)
-                        }
-                    }
-                }
-                item { Spacer(Modifier.height(28.dp)) }
+            } else {
+                MealDetailContentPage(
+                    record = record,
+                    mealResult = mealResult,
+                    tab = ResultTab.Advice,
+                    onFavorite = viewModel::toggleFavorite,
+                    onDeleteClick = { showDeleteDialog = true },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
+                )
             }
         }
     }
@@ -161,5 +156,78 @@ fun MealDetailScreen(
                 }
             },
         )
+    }
+}
+
+@Composable
+private fun MealDetailContentPage(
+    record: MealRecord,
+    mealResult: MealAnalysisResult,
+    tab: ResultTab,
+    onFavorite: () -> Unit,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier.fillMaxSize(),
+) {
+    val strings = LocalAppStrings.current
+    val listState = rememberLazyListState()
+    LazyColumn(
+        state = listState,
+        modifier = modifier,
+        contentPadding = PaddingValues(bottom = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        item {
+            MealImageCard(
+                imagePath = record.imagePath,
+                contentDescription = record.mealName,
+            )
+        }
+        item {
+            when (tab) {
+                ResultTab.Advice -> MealResultCard(mealResult)
+                ResultTab.Nutrition -> record.nutrition?.let { NutritionResultCard(it) } ?: MealResultCard(mealResult)
+            }
+        }
+        item {
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            ) {
+                Column(Modifier.padding(13.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Text(strings.goalDuringAnalysis, fontWeight = FontWeight.Bold)
+                    Text(
+                        record.userGoalSnapshot.ifBlank { strings.noGoalAtAnalysis },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text("${strings.recordTime}${DateTimeUtils.formatFull(record.createdAt)}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onFavorite,
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
+                ) {
+                    Icon(if (record.isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = null)
+                    Text(if (record.isFavorite) strings.unfavorite else strings.favoriteMeal)
+                }
+                Button(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) {
+                    Icon(Icons.Rounded.Delete, contentDescription = null)
+                    Text(strings.deleteRecord)
+                }
+            }
+        }
+        item { Spacer(Modifier.height(28.dp)) }
     }
 }

@@ -18,4 +18,12 @@ class AnalysisViewModel(
     fun analyze() {
         analysisTaskManager.start(uiState.value.imagePath, restart = true)
     }
+
+    fun retryMealAdvice() {
+        analysisTaskManager.restartMeal(uiState.value.imagePath)
+    }
+
+    fun retryNutrition() {
+        analysisTaskManager.restartNutrition(uiState.value.imagePath)
+    }
 }

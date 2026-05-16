@@ -13,7 +13,7 @@ AI 输出约束、prompt 维护和协作边界见 [docs/AI_GOVERNANCE.md](docs/A
 - API Key 仅保存在本机 DataStore。
 - 图片保存到 App 私有目录。
 - Android 系统备份默认关闭，避免把本地 Key、图片和分析记录同步到云端或新设备。
-- 除用户配置的大模型 API 外，App 不主动上传数据到其他服务。
+- 除用户配置的大模型 API 外，App 不主动上传数据到其他服务。每张图片默认会向该模型 API 并发发送饮食建议和粗略营养估算两次请求。
 - 日志、Issue、PR 和文档中不得包含真实 Key、Authorization header、完整 base64 图片、完整请求体或完整响应体。
 - 公开讨论中不得粘贴含个人信息的本机路径、用户饮食目标、截图或未脱敏模型输出。
 - release keystore、签名密码和 `local.properties` 只允许保存在本机或私密备份中，不得提交、上传到 Issue/PR 或附加到 GitHub Release。

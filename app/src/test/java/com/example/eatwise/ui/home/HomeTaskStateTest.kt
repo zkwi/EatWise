@@ -10,7 +10,9 @@ class HomeTaskStateTest {
     fun queuedAndFailedTasksStayVisibleOnHome() {
         assertTrue(AnalysisTaskState(imagePath = "queued.jpg", isQueued = true).shouldShowOnHome())
         assertTrue(AnalysisTaskState(imagePath = "running.jpg", isAnalyzing = true).shouldShowOnHome())
+        assertTrue(AnalysisTaskState(imagePath = "nutrition-running.jpg", isNutritionAnalyzing = true).shouldShowOnHome())
         assertTrue(AnalysisTaskState(imagePath = "failed.jpg", errorMessage = "failed").shouldShowOnHome())
+        assertTrue(AnalysisTaskState(imagePath = "nutrition-failed.jpg", nutritionErrorMessage = "failed").shouldShowOnHome())
         assertTrue(AnalysisTaskState(imagePath = "save-failed.jpg", saveMessage = "Save failed. Please try again.").shouldShowOnHome())
     }
 

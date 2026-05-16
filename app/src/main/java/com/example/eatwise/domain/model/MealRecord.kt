@@ -13,6 +13,8 @@ data class MealRecord(
     val suggestions: List<String>,
     val ingredients: List<Ingredient>,
     val aiResultJson: String,
+    val nutrition: NutritionAnalysisResult?,
+    val nutritionAiResultJson: String?,
     val userGoalSnapshot: String,
     val note: String?,
     val isFavorite: Boolean,

@@ -26,3 +26,22 @@ data class Ingredient(
     val dish: String = "",
     val name: String = "",
 )
+
+@Serializable
+data class NutritionAnalysisResult(
+    @SerialName("meal_name") val mealName: String = "营养估算",
+    @SerialName("calorie_range") val calorieRange: String = "",
+    @SerialName("calorie_equivalent") val calorieEquivalent: String = "",
+    val basis: String = "",
+    val items: List<NutritionItem> = emptyList(),
+    val suggestions: List<String> = emptyList(),
+    val disclaimer: String = "热量和克数是基于常见份量的粗略区间，不替代称重记录。",
+)
+
+@Serializable
+data class NutritionItem(
+    val label: String = "",
+    val level: String = "unknown",
+    val estimate: String = "",
+    val note: String = "",
+)

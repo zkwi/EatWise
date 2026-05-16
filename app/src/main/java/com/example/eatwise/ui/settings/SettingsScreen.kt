@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,7 +96,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 84.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
                 Row(
@@ -136,7 +138,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         SectionTitle(Icons.Rounded.Info, strings.language)
                         Text(
                             strings.languageSubtitle,
@@ -165,7 +167,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         SectionTitle(Icons.Rounded.Key, strings.modelConnection)
                         OutlinedTextField(
                             value = state.baseUrl,
@@ -225,7 +227,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
-                    Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         SectionTitle(Icons.Rounded.SettingsSuggest, strings.mealGoal)
                         Text(
                             strings.mealGoalSubtitle,
@@ -265,7 +267,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 }
             }
 
-            item { Spacer(Modifier.height(76.dp)) }
+            item { Spacer(Modifier.height(4.dp)) }
         }
 
         SnackbarHost(
@@ -293,7 +295,7 @@ private fun SettingsActionButtons(
         Button(
             onClick = onSave,
             enabled = !isSaving && !isTesting,
-            modifier = Modifier.weight(1f).height(42.dp),
+            modifier = Modifier.weight(1f).height(44.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
         ) {
@@ -308,7 +310,7 @@ private fun SettingsActionButtons(
         OutlinedButton(
             onClick = onTestConnection,
             enabled = !isSaving && !isTesting,
-            modifier = Modifier.weight(1f).height(42.dp),
+            modifier = Modifier.weight(1f).height(44.dp),
             shape = RoundedCornerShape(12.dp),
             border = BorderStroke(1.5.dp, GreenPrimary),
         ) {
@@ -385,7 +387,7 @@ private fun AiConfigHero(isConfigured: Boolean) {
         Row(
             modifier = Modifier
                 .background(Brush.linearGradient(listOf(Color(0xFFF9FDF7), Color(0xFFEEF9E7))))
-                .padding(10.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {

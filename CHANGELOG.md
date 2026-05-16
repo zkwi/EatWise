@@ -2,6 +2,24 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.13 - 2026-05-16
+
+中文：
+
+- 修复结果详情里左右 Tab 共用外层纵向滚动位置导致的空白区域问题。
+- 饮食建议和粗略营养估算现在分别持有自己的纵向滚动状态，营养估算滚到底后切回饮食建议不会继承长页面偏移。
+- 让结果 Pager 页面填满可用区域，减少横向滑动时的测量抖动和可见闪烁。
+- 使用汉堡套餐、香辣虾和多人聚餐三条示例记录在真机复查左右切换、上下滚动和长短内容切换。
+- 同步 README 和手动测试清单，补充 Tab 独立滚动验收要求。
+
+English:
+
+- Fixed blank space in result details caused by the meal advice and rough nutrition tabs sharing the outer vertical scroll position.
+- Meal advice and rough nutrition pages now keep separate vertical scroll state, so returning from a long nutrition page does not inherit its offset.
+- The result pager now fills the available content area, reducing measurement jitter and visible flicker during horizontal swipes.
+- Rechecked left/right tab switching, vertical scrolling, and mixed content heights on a real device with burger, spicy shrimp, and shared feast sample records.
+- Updated the README and manual testing checklist with tab-specific scroll validation.
+
 ## 1.0.12 - 2026-05-14
 
 中文：

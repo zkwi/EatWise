@@ -1,6 +1,7 @@
 package com.example.eatwise.core.util
 
 import com.example.eatwise.domain.model.MealAnalysisResult
+import com.example.eatwise.domain.model.NutritionAnalysisResult
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -18,6 +19,15 @@ object JsonUtils {
             json.decodeFromString(MealAnalysisResult.serializer(), content)
         } catch (error: SerializationException) {
             throw IllegalArgumentException("结果格式异常，请重新分析。", error)
+        }
+    }
+
+    fun parseNutritionAnalysis(raw: String): NutritionAnalysisResult {
+        val content = extractJson(raw)
+        return try {
+            json.decodeFromString(NutritionAnalysisResult.serializer(), content)
+        } catch (error: SerializationException) {
+            throw IllegalArgumentException("营养估算格式异常，请重新分析。", error)
         }
     }
 
@@ -39,4 +49,7 @@ object JsonUtils {
 
     inline fun <reified T> decodeList(raw: String): List<T> =
         runCatching { json.decodeFromString<List<T>>(raw) }.getOrDefault(emptyList())
+
+    inline fun <reified T> decodeOrNull(raw: String): T? =
+        runCatching { json.decodeFromString<T>(raw) }.getOrNull()
 }

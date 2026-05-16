@@ -95,6 +95,16 @@ object MealLanguageText {
         }
     }
 
+    fun nutritionPromptPreview(userGoal: String, language: AppLanguage): String {
+        val goal = userGoal.trim().replace(Regex("\\s+"), " ").ifBlank { defaultUserGoal(language) }.take(46)
+        return when (language) {
+            AppLanguage.ZhHans -> "这张餐食 + 目标「$goal」：按常见份量估算热量和营养结构，只给粗略区间。"
+            AppLanguage.ZhHant -> "這張餐食 + 目標「$goal」：按常見份量估算熱量和營養結構，只給粗略區間。"
+            AppLanguage.En -> "Meal + goal \"$goal\": estimate calories and nutrition structure as rough ranges only."
+            AppLanguage.Ja -> "この食事 + 目標「$goal」：一般的な量からカロリーと栄養構成を大まかな範囲で推定する。"
+        }
+    }
+
     fun analysisStageTitle(index: Int, language: AppLanguage): String = when (index) {
         0 -> when (language) {
             AppLanguage.ZhHans -> "准备分析"

@@ -41,7 +41,7 @@ class ImageStorage(
 
     fun compressedFileFor(original: File): File {
         compressedDir.mkdirs()
-        return File(compressedDir, original.nameWithoutExtension + "_compressed.jpg")
+        return File(compressedDir, "${original.nameWithoutExtension}_${UUID.randomUUID()}_compressed.jpg")
     }
 
     fun deleteImageFiles(vararg paths: String?) {

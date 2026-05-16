@@ -11,6 +11,7 @@ import com.example.eatwise.data.repository.MealRepository
 import com.example.eatwise.data.repository.SettingsRepository
 import com.example.eatwise.domain.usecase.AnalyzeMealUseCase
 import com.example.eatwise.domain.usecase.AnalysisTaskManager
+import com.example.eatwise.domain.usecase.AnalyzeNutritionUseCase
 import com.example.eatwise.domain.usecase.SaveMealRecordUseCase
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -38,6 +39,7 @@ class AppContainer(context: Context) {
     val imageCompressor = ImageCompressor(appContext)
     val openAiClient = OpenAiCompatibleClient(okHttpClient)
     val analyzeMealUseCase = AnalyzeMealUseCase(settingsRepository, openAiClient, imageCompressor)
+    val analyzeNutritionUseCase = AnalyzeNutritionUseCase(settingsRepository, openAiClient, imageCompressor)
     val saveMealRecordUseCase = SaveMealRecordUseCase(mealRepository)
-    val analysisTaskManager = AnalysisTaskManager(analyzeMealUseCase, saveMealRecordUseCase)
+    val analysisTaskManager = AnalysisTaskManager(analyzeMealUseCase, analyzeNutritionUseCase, saveMealRecordUseCase)
 }

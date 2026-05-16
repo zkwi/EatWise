@@ -13,4 +13,12 @@ class SaveMealRecordUseCase(
             aiResultJson = output.aiResultJson,
             userGoalSnapshot = output.userGoalSnapshot,
         )
+
+    suspend fun saveNutrition(recordId: String, output: NutritionAnalysisOutput) {
+        mealRepository.updateNutrition(
+            id = recordId,
+            result = output.result,
+            aiResultJson = output.aiResultJson,
+        )
+    }
 }

@@ -6,6 +6,7 @@ import com.example.eatwise.data.local.MealRecordEntity
 import com.example.eatwise.domain.model.Ingredient
 import com.example.eatwise.domain.model.MealAnalysisResult
 import com.example.eatwise.domain.model.MealRecord
+import com.example.eatwise.domain.model.NutritionAnalysisResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.UUID
@@ -43,6 +44,8 @@ class MealRepository(
                 suggestionsJson = JsonUtils.encode(result.suggestions),
                 ingredientsJson = JsonUtils.encode(result.ingredients),
                 aiResultJson = aiResultJson,
+                nutritionJson = null,
+                nutritionAiResultJson = null,
                 userGoalSnapshot = userGoalSnapshot,
                 note = null,
                 isFavorite = false,
@@ -52,6 +55,16 @@ class MealRepository(
         )
         return id
     }
+
+    suspend fun updateNutrition(
+        id: String,
+        result: NutritionAnalysisResult,
+        aiResultJson: String,
+    ) = dao.updateNutrition(
+        id = id,
+        nutritionJson = JsonUtils.encode(result),
+        nutritionAiResultJson = aiResultJson,
+    )
 
     suspend fun setFavorite(id: String, favorite: Boolean) = dao.setFavorite(id, favorite)
 
@@ -70,6 +83,8 @@ class MealRepository(
         suggestions = JsonUtils.decodeList(suggestionsJson),
         ingredients = JsonUtils.decodeList<Ingredient>(ingredientsJson),
         aiResultJson = aiResultJson,
+        nutrition = nutritionJson?.let { JsonUtils.decodeOrNull<NutritionAnalysisResult>(it) },
+        nutritionAiResultJson = nutritionAiResultJson,
         userGoalSnapshot = userGoalSnapshot,
         note = note,
         isFavorite = isFavorite,

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -104,7 +105,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
                 Row(
@@ -268,7 +270,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
         Box(
             modifier = Modifier
                 .background(Brush.linearGradient(listOf(Color(0xFFF9FDF7), Color(0xFFEEF9E7))))
-                .padding(12.dp),
+                .padding(14.dp),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -295,7 +297,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = onOpenCamera,
-                        modifier = Modifier.weight(1f).height(38.dp),
+                        modifier = Modifier.weight(1f).height(44.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
@@ -313,7 +315,7 @@ private fun StartMealCard(onOpenCamera: () -> Unit, onPickImage: () -> Unit) {
                     }
                     OutlinedButton(
                         onClick = onPickImage,
-                        modifier = Modifier.weight(1f).height(38.dp),
+                        modifier = Modifier.weight(1f).height(44.dp),
                         shape = RoundedCornerShape(14.dp),
                         border = BorderStroke(1.5.dp, GreenPrimary),
                         colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
@@ -341,7 +343,7 @@ private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit,
     val strings = LocalAppStrings.current
     val language = LocalAppLanguage.current
     val saveFailed = task.saveMessage?.let(MealLanguageText::isSaveFailure) == true
-    val hasError = task.errorMessage != null || saveFailed
+    val hasError = task.errorMessage != null || task.nutritionErrorMessage != null || saveFailed
     val title = when {
         task.isQueued -> strings.backgroundQueuedTitle
         task.isSaving -> strings.backgroundSavingTitle
@@ -352,7 +354,9 @@ private fun BackgroundAnalysisCard(task: AnalysisTaskState, onClick: () -> Unit,
         task.isQueued -> strings.backgroundQueuedDetail
         task.isSaving -> task.saveMessage ?: MealLanguageText.savingRecord(language)
         task.errorMessage != null -> task.errorMessage
+        task.nutritionErrorMessage != null -> task.nutritionErrorMessage
         saveFailed -> task.saveMessage.orEmpty()
+        task.isNutritionAnalyzing && !task.isAnalyzing -> "${MealLanguageText.analysisStageTitle(task.nutritionAnalysisStage.ordinal, language)}：${MealLanguageText.analysisStageDetail(task.nutritionAnalysisStage.ordinal, language)}"
         else -> "${MealLanguageText.analysisStageTitle(task.analysisStage.ordinal, language)}：${MealLanguageText.analysisStageDetail(task.analysisStage.ordinal, language)}"
     }
 

@@ -70,7 +70,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
     val overallScore = overallScore(result.eatingAdvice, result.goalMatch.level)
     val primaryTags = result.tags.take(4)
 
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -82,7 +82,7 @@ fun MealResultCard(result: MealAnalysisResult, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.76f), adviceStyle.container)))
-                    .padding(10.dp),
+                    .padding(12.dp),
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
@@ -227,7 +227,7 @@ private fun DishAdviceRow(dish: DishAdvice) {
         Modifier
             .fillMaxWidth()
             .padding(vertical = 1.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -792,6 +792,6 @@ private fun SoftCard(content: @Composable ColumnScope.() -> Unit) {
         border = BorderStroke(1.dp, LineSoft.copy(alpha = 0.62f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
-        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
 }

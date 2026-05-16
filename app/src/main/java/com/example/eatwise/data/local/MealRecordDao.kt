@@ -25,4 +25,12 @@ interface MealRecordDao {
 
     @Query("UPDATE meal_records SET isFavorite = :isFavorite, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setFavorite(id: String, isFavorite: Boolean, updatedAt: Long = System.currentTimeMillis())
+
+    @Query("UPDATE meal_records SET nutritionJson = :nutritionJson, nutritionAiResultJson = :nutritionAiResultJson, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateNutrition(
+        id: String,
+        nutritionJson: String,
+        nutritionAiResultJson: String,
+        updatedAt: Long = System.currentTimeMillis(),
+    )
 }
