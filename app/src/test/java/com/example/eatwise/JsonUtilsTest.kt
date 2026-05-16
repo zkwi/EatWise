@@ -314,7 +314,7 @@ class JsonUtilsTest {
 
     @Test
     fun promptVersionTracksVisibleSuggestionPromptUpdate() {
-        assertEquals(23, OpenAiCompatibleClient.promptVersion)
+        assertEquals(25, OpenAiCompatibleClient.promptVersion)
     }
 
     @Test
@@ -365,6 +365,151 @@ class JsonUtilsTest {
     }
 
     @Test
+    fun polishNutritionEstimateSplitsVegetableAmountFromFiberGrams() {
+        val result = NutritionAnalysisPolisher.polish(
+            NutritionAnalysisResult(
+                items = listOf(
+                    NutritionItem(
+                        label = "蔬菜/纤维",
+                        level = "moderate",
+                        estimate = "约 8-12 g",
+                        note = "可见大量蔬菜和海带，数值应理解为纤维",
+                    ),
+                ),
+            ),
+            AppLanguage.ZhHans,
+        )
+
+        assertEquals("膳食纤维", result.items.first().label)
+        assertEquals("约 8-12 g", result.items.first().estimate)
+    }
+
+    @Test
+    fun polishNutritionEstimateRejectsGramVegetableAmount() {
+        val result = NutritionAnalysisPolisher.polish(
+            NutritionAnalysisResult(
+                items = listOf(
+                    NutritionItem(
+                        label = "蔬菜量",
+                        level = "moderate",
+                        estimate = "约 8-12 g",
+                        note = "图片只能判断有明显蔬菜，不能称重",
+                    ),
+                ),
+            ),
+            AppLanguage.ZhHans,
+        )
+
+        assertEquals("蔬菜量", result.items.first().label)
+        assertEquals("无法判断", result.items.first().estimate)
+    }
+
+    @Test
+    fun polishNutritionEstimateSeparatesSodiumFromSaltUnits() {
+        val result = NutritionAnalysisPolisher.polish(
+            NutritionAnalysisResult(
+                items = listOf(
+                    NutritionItem(
+                        label = "钠/盐分",
+                        level = "high",
+                        estimate = "约 1,200-1,800 mg",
+                        note = "汤汁和酱料让钠偏高",
+                    ),
+                    NutritionItem(
+                        label = "钠/盐分",
+                        level = "moderate",
+                        estimate = "约 2-3 g",
+                        note = "口味偏咸，接近盐分估算",
+                    ),
+                ),
+            ),
+            AppLanguage.ZhHans,
+        )
+
+        assertEquals("钠", result.items[0].label)
+        assertEquals("约 1,200-1,800 mg", result.items[0].estimate)
+        assertEquals("盐分", result.items[1].label)
+        assertEquals("约 2-3 g", result.items[1].estimate)
+    }
+
+    @Test
+    fun polishNutritionEstimateSeparatesCarbsFromStapleAmount() {
+        val result = NutritionAnalysisPolisher.polish(
+            NutritionAnalysisResult(
+                items = listOf(
+                    NutritionItem(
+                        label = "主食/碳水",
+                        level = "high",
+                        estimate = "约 55-80 g",
+                        note = "米饭和面提供碳水",
+                    ),
+                    NutritionItem(
+                        label = "主食量",
+                        level = "moderate",
+                        estimate = "约 180-220 g",
+                        note = "只能看到一碗米饭，不能称重",
+                    ),
+                ),
+            ),
+            AppLanguage.ZhHans,
+        )
+
+        assertEquals("碳水", result.items[0].label)
+        assertEquals("约 55-80 g", result.items[0].estimate)
+        assertEquals("主食量", result.items[1].label)
+        assertEquals("无法判断", result.items[1].estimate)
+    }
+
+    @Test
+    fun polishNutritionEstimateSeparatesFatFromOilAmount() {
+        val result = NutritionAnalysisPolisher.polish(
+            NutritionAnalysisResult(
+                items = listOf(
+                    NutritionItem(
+                        label = "脂肪/油脂",
+                        level = "high",
+                        estimate = "约 35-50 g",
+                        note = "油炸和肥肉贡献脂肪",
+                    ),
+                    NutritionItem(
+                        label = "油脂量",
+                        level = "moderate",
+                        estimate = "约 10-15 g",
+                        note = "盘底油无法称量",
+                    ),
+                ),
+            ),
+            AppLanguage.ZhHans,
+        )
+
+        assertEquals("脂肪", result.items[0].label)
+        assertEquals("约 35-50 g", result.items[0].estimate)
+        assertEquals("油脂量", result.items[1].label)
+        assertEquals("无法判断", result.items[1].estimate)
+    }
+
+    @Test
+    fun polishNutritionEstimateRejectsDecimalRanges() {
+        val result = NutritionAnalysisPolisher.polish(
+            NutritionAnalysisResult(
+                calorieRange = "约 650.5-900.2 kcal",
+                items = listOf(
+                    NutritionItem(
+                        label = "蛋白质",
+                        level = "moderate",
+                        estimate = "约 12.5-18.0 g",
+                        note = "小数区间看起来过于精确",
+                    ),
+                ),
+            ),
+            AppLanguage.ZhHans,
+        )
+
+        assertEquals("无法判断", result.calorieRange)
+        assertEquals("无法判断", result.items.first().estimate)
+    }
+
+    @Test
     fun parseNutritionAnalysisWithRangeEstimates() {
         val raw = """
             {
@@ -387,7 +532,7 @@ class JsonUtilsTest {
                 }
               ],
               "suggestions": ["先吃鸡蛋，再减少几口面。"],
-              "disclaimer": "热量和克数是基于常见份量的粗略区间，不替代称重记录。"
+              "disclaimer": "热量和营养素克数是基于常见份量的粗略区间，不替代称重记录。"
             }
         """.trimIndent()
 
@@ -462,6 +607,15 @@ class JsonUtilsTest {
             .invoke(OpenAiCompatibleClient(OkHttpClient()), "少油控脂", AppLanguage.ZhHans) as String
 
         assertTrue(prompt.contains("Prefer stable item labels"))
+        assertTrue(prompt.contains("vegetable amount"))
+        assertTrue(prompt.contains("dietary fiber"))
+        assertTrue(prompt.contains("Do not use combined labels"))
+        assertTrue(prompt.contains("Do not use a gram estimate for vegetable amount"))
+        assertTrue(prompt.contains("label the row as carbohydrates"))
+        assertTrue(prompt.contains("label the row as fat"))
+        assertTrue(prompt.contains("label the row as sodium"))
+        assertTrue(prompt.contains("label the row as salt"))
+        assertFalse(prompt.contains("vegetables/fiber"))
         assertTrue(prompt.contains("Use a range with a dash"))
         assertTrue(prompt.contains("Do not output values like 3354 kcal"))
         assertTrue(prompt.contains("Suggestions should target the highest visible nutrition burden"))

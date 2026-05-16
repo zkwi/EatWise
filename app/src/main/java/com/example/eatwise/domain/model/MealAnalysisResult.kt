@@ -35,7 +35,7 @@ data class NutritionAnalysisResult(
     val basis: String = "",
     val items: List<NutritionItem> = emptyList(),
     val suggestions: List<String> = emptyList(),
-    val disclaimer: String = "热量和克数是基于常见份量的粗略区间，不替代称重记录。",
+    val disclaimer: String = "热量和营养素克数是基于常见份量的粗略区间，不替代称重记录。",
 )
 
 @Serializable

@@ -442,8 +442,15 @@ class OpenAiCompatibleClient(
         - Keep calorie_equivalent short and approximate. Do not imply precision, do not use decimal values, and do not list more than two comparison foods.
         - basis should be one compact sentence. Mention the main visible serving cue and the main uncertainty, but do not repeat every item row.
         - Macro estimates may use broad gram ranges such as "约 20-35 g"; if uncertain, use a qualitative phrase instead of numbers.
-        - items should return 3 to 5 rows, prioritizing calories, protein, carbohydrates/staples, fat/oil, and vegetables/fiber when visible.
-        - Prefer stable item labels so the UI stays predictable: calories, protein, carbohydrates/staples, fat/oil, vegetables/fiber, sodium/salt. Localize the labels, but do not invent many niche nutrient rows.
+        - If you estimate carbohydrate grams, label the row as carbohydrates. If you describe staple amount, use bowls, servings, or a qualitative phrase instead of grams.
+        - If you estimate fat grams, label the row as fat. If you describe visible oil amount or oiliness, use a qualitative phrase instead of grams.
+        - Do not use a gram estimate for vegetable amount. For visible vegetables, use qualitative portions such as "明显较多", "约 1-2 碗熟蔬菜", or "about 1-2 cooked vegetable servings".
+        - If you estimate fiber grams, label the row as dietary fiber, not vegetable amount, and make clear it is fiber.
+        - If you estimate sodium in mg, label the row as sodium. If you estimate salt equivalent in g, label the row as salt. Do not mix sodium mg and salt g under one ambiguous label.
+        - For a table or multi-dish meal, judge vegetable amount from all visible vegetable dishes, seaweed, leafy greens, and vegetable soup pieces, not from one single bite.
+        - items should return 3 to 5 rows, prioritizing calories, protein, carbohydrates or staple amount, fat or oil amount, vegetable amount or dietary fiber, and sodium or salt when visible.
+        - Prefer stable item labels so the UI stays predictable: calories, protein, carbohydrates, staple amount, fat, oil amount, vegetable amount, dietary fiber, sodium, salt. Localize the labels, but do not invent many niche nutrient rows.
+        - Do not use combined labels that merge different meanings, such as vegetable/fiber, carbohydrates/staples, fat/oil, or sodium/salt. Choose the label that matches the estimate unit.
         - level must be only low, moderate, high, or unknown.
         - Each item note should explain the visible cue or uncertainty behind the estimate, not repeat the estimate.
         - Keep item notes compact: Chinese/Japanese 10 to 22 visible characters, English fewer than 12 words.
@@ -453,7 +460,7 @@ class OpenAiCompatibleClient(
         - If the user's goal is less sugar or stable blood sugar, prioritize sweet drinks, desserts, sugary sauces, refined staples, or oversized staple portions when visible.
         - If the user's goal is less salt, prioritize salty sauces, processed food, soup/broth, preserved food, or heavy seasoning when visible.
         - If the user's goal is high protein, prioritize whether visible protein is enough and whether heavy oil or excess staples are crowding it out.
-        - If the user's goal is balanced eating, prioritize missing vegetables/fiber, oversized staples, or dominant oil/fat.
+        - If the user's goal is balanced eating, prioritize missing vegetable amount or dietary fiber, oversized staples, or dominant oil/fat.
         - Write suggestions as mobile action items: short, concrete, and easy to scan on a card.
         - Lead with the action and the visible food, such as "去掉炸虾面衣" or "米饭少吃几口"; do not start with background explanation.
         - Do not combine two unrelated actions in one suggestion. Use one visible food and one practical verb per suggestion.
@@ -469,10 +476,10 @@ class OpenAiCompatibleClient(
     """.trimIndent()
 
     private fun nutritionDisclaimer(language: AppLanguage): String = when (language) {
-        AppLanguage.ZhHans -> "热量和克数是基于常见份量的粗略区间，不替代称重记录。"
-        AppLanguage.ZhHant -> "熱量和克數是基於常見份量的粗略區間，不替代稱重記錄。"
-        AppLanguage.En -> "Calories and grams are rough ranges from common portions, not a weighed record."
-        AppLanguage.Ja -> "カロリーとグラム数は一般的な量からの大まかな範囲で、計量記録の代わりではありません。"
+        AppLanguage.ZhHans -> "热量和营养素克数是基于常见份量的粗略区间，不替代称重记录。"
+        AppLanguage.ZhHant -> "熱量和營養素克數是基於常見份量的粗略區間，不替代稱重記錄。"
+        AppLanguage.En -> "Calories and nutrient grams are rough ranges from common portions, not a weighed record."
+        AppLanguage.Ja -> "カロリーと栄養素のグラム数は一般的な量からの大まかな範囲で、計量記録の代わりではありません。"
     }
 
     private fun mapStatusMessage(statusCode: Int, responseBody: String, language: AppLanguage): String {
@@ -529,7 +536,7 @@ class OpenAiCompatibleClient(
         }.getOrNull().orEmpty().take(240)
 
     companion object {
-        const val promptVersion = 23
+        const val promptVersion = 25
         private const val multimodalTestImageUrl =
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAMUlEQVR42mPwWR9AU8QwasGoBaMWDLgF/4kAoxaMWjBqwagFtLZgtLgetWDUgiFhAQDtfCB7H/LRxAAAAABJRU5ErkJggg=="
 

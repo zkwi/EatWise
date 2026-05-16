@@ -2,6 +2,22 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.16 - 2026-05-16
+
+中文：
+
+- 继续精修粗略营养估算：拆分蔬菜量和膳食纤维、钠和盐分、碳水和主食量、脂肪和油脂量，避免行名和单位混用。
+- 本地清洗会兜底处理旧结果：蔬菜量、主食量和油脂量不再展示克数，带小数的估算区间会降级为“无法判断”。
+- 优化 prompt 到 v25，明确 mg 对应钠、g 盐当量对应盐分，碳水/脂肪克数不等于可见主食/用油重量。
+- 同步 README、AI 治理、维护说明和手动测试清单，并发布 1.0.16 APK。
+
+English:
+
+- Refined rough nutrition estimates by separating vegetable amount from dietary fiber, sodium from salt, carbohydrates from staple amount, and fat from visible oil amount.
+- Local polishing now cleans up old results: vegetable amount, staple amount, and oil amount no longer show gram values, and decimal ranges are downgraded to “Unable to judge”.
+- Updated prompts to v25 so mg maps to sodium, salt-equivalent grams map to salt, and carb/fat grams are not treated as visible staple or oil weight.
+- Updated the README, AI governance notes, maintenance docs, and manual testing checklist, and published the 1.0.16 APK.
+
 ## 1.0.15 - 2026-05-16
 
 中文：

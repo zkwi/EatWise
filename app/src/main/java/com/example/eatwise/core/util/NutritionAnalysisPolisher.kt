@@ -11,11 +11,15 @@ object NutritionAnalysisPolisher {
         val calorieRange = normalizeEstimate(result.calorieRange, unknown)
         val items = result.items
             .map { item ->
+                val label = compactSentence(item.label.ifBlank { localizedNutritionLabel(language) }, maxLabelLength(language))
+                val estimate = normalizeEstimate(item.estimate, unknown)
+                val note = compactSentence(cleanNote(item.note), maxNoteLength(language))
+                val normalizedLabel = normalizeNutritionLabel(label, estimate, note, language)
                 item.copy(
-                    label = compactSentence(item.label.ifBlank { localizedNutritionLabel(language) }, maxLabelLength(language)),
+                    label = normalizedLabel,
                     level = normalizeLevel(item.level),
-                    estimate = normalizeEstimate(item.estimate, unknown),
-                    note = compactSentence(cleanNote(item.note), maxNoteLength(language)),
+                    estimate = normalizeSemanticEstimate(normalizedLabel, estimate, unknown),
+                    note = note,
                 )
             }
             .filter { it.label.isNotBlank() || it.estimate.isNotBlank() || it.note.isNotBlank() }
@@ -135,8 +139,88 @@ object NutritionAnalysisPolisher {
             .replace(Regex("""\s+(kcal|g|mg|克|千卡|大卡)""", RegexOption.IGNORE_CASE), " $1")
             .trim()
         if (clean.isBlank()) return unknown
+        if (looksLikeDecimalEstimate(clean)) return unknown
         if (looksLikeExactNumber(clean)) return unknown
         return clean
+    }
+
+    private fun normalizeNutritionLabel(
+        label: String,
+        estimate: String,
+        note: String,
+        language: AppLanguage,
+    ): String {
+        if (isCombinedVegetableFiberLabel(label)) {
+            return if (looksLikeGramEstimate(estimate) || note.hasAny("纤维", "纖維", "fiber", "食物繊維")) {
+                localizedDietaryFiberLabel(language)
+            } else {
+                localizedVegetableAmountLabel(language)
+            }
+        }
+        if (isSodiumOrSaltLabel(label)) return normalizeSodiumSaltLabel(label, estimate, note, language)
+        if (isCarbOrStapleLabel(label)) return normalizeCarbStapleLabel(label, estimate, note, language)
+        if (isFatOrOilLabel(label)) return normalizeFatOilLabel(label, estimate, note, language)
+        return label
+    }
+
+    private fun normalizeSemanticEstimate(label: String, estimate: String, unknown: String): String =
+        if (looksLikeGramEstimate(estimate) && shouldAvoidGramEstimate(label)) {
+            unknown
+        } else {
+            estimate
+        }
+
+    private fun shouldAvoidGramEstimate(label: String): Boolean =
+        (isVegetableAmountLabel(label) && !isFiberLabel(label)) ||
+            (isStapleLabel(label) && !isCarbLabel(label)) ||
+            (isOilLabel(label) && !isFatLabel(label))
+
+    private fun normalizeSodiumSaltLabel(
+        label: String,
+        estimate: String,
+        note: String,
+        language: AppLanguage,
+    ): String {
+        val sodiumCue = looksLikeMilligramEstimate(estimate) || note.hasAny("钠", "鈉", "sodium", "ナトリウム")
+        val saltCue = looksLikeGramEstimate(estimate) || note.hasAny("盐", "鹽", "salt", "塩分", "咸")
+        return when {
+            sodiumCue && !saltCue -> localizedSodiumLabel(language)
+            saltCue && !sodiumCue -> localizedSaltLabel(language)
+            looksLikeMilligramEstimate(estimate) -> localizedSodiumLabel(language)
+            looksLikeGramEstimate(estimate) -> localizedSaltLabel(language)
+            isSodiumLabel(label) && !isSaltLabel(label) -> localizedSodiumLabel(language)
+            else -> localizedSaltLabel(language)
+        }
+    }
+
+    private fun normalizeCarbStapleLabel(
+        label: String,
+        estimate: String,
+        note: String,
+        language: AppLanguage,
+    ): String {
+        val carbCue = isCarbLabel(label) || note.hasAny("碳水", "carb", "carbohydrate", "炭水化物")
+        val stapleCue = isStapleLabel(label)
+        return when {
+            carbCue && (!stapleCue || looksLikeGramEstimate(estimate)) -> localizedCarbohydrateLabel(language)
+            looksLikeGramEstimate(estimate) && !stapleCue -> localizedCarbohydrateLabel(language)
+            else -> localizedStapleAmountLabel(language)
+        }
+    }
+
+    private fun normalizeFatOilLabel(
+        label: String,
+        estimate: String,
+        note: String,
+        language: AppLanguage,
+    ): String {
+        val fatCue = isFatLabel(label) || note.hasAny("脂肪", "fat", "lipid", "脂質")
+        val oilCue = isOilLabel(label)
+        return when {
+            fatCue && (!oilCue || looksLikeGramEstimate(estimate)) -> localizedFatLabel(language)
+            looksLikeGramEstimate(estimate) && !oilCue -> localizedFatLabel(language)
+            else -> localizedOilAmountLabel(language)
+        }
     }
 
     private fun looksLikeExactNumber(value: String): Boolean {
@@ -145,6 +229,76 @@ object NutritionAnalysisPolisher {
         if (hasRange) return false
         return Regex("""(?i)\d+(?:\.\d+)?\s*(kcal|g|mg|克|千卡|大卡)""").containsMatchIn(clean)
     }
+
+    private fun looksLikeDecimalEstimate(value: String): Boolean =
+        Regex("""\d+\.\d+""").containsMatchIn(value)
+
+    private fun looksLikeGramEstimate(value: String): Boolean =
+        Regex("""(?i)(?:^|[^\p{L}])\d+(?:\.\d+)?(?:\s*[-~到至]\s*\d+(?:\.\d+)?)?\s*(?:g\b|克)""")
+            .containsMatchIn(value)
+
+    private fun looksLikeMilligramEstimate(value: String): Boolean =
+        Regex("""(?i)(?:^|[^\p{L}])\d[\d,]*(?:\.\d+)?(?:\s*[-~到至]\s*\d[\d,]*(?:\.\d+)?)?\s*(?:mg\b|毫克)""")
+            .containsMatchIn(value)
+
+    private fun isCombinedVegetableFiberLabel(label: String): Boolean {
+        val compact = label.replace(Regex("""\s+"""), "").replace('／', '/')
+        return compact.hasAny(
+            "蔬菜/纤维",
+            "蔬菜/纖維",
+            "蔬菜纤维",
+            "蔬菜纖維",
+            "蔬菜和纤维",
+            "蔬菜和纖維",
+            "蔬菜与纤维",
+            "蔬菜與纖維",
+            "vegetable/fiber",
+            "vegetables/fiber",
+            "vegetable+fiber",
+            "vegetables+fiber",
+            "vegetable&fiber",
+            "vegetables&fiber",
+            "vegetableandfiber",
+            "vegetablesandfiber",
+            "vegetablefiber",
+            "vegetablesfiber",
+            "野菜/食物繊維",
+            "野菜と食物繊維",
+        )
+    }
+
+    private fun isVegetableAmountLabel(label: String): Boolean =
+        label.hasAny("蔬菜", "青菜", "蔬菜量", "蔬菜份", "vegetable", "vegetables", "野菜")
+
+    private fun isFiberLabel(label: String): Boolean =
+        label.hasAny("纤维", "纖維", "fiber", "食物繊維")
+
+    private fun isSodiumOrSaltLabel(label: String): Boolean =
+        isSodiumLabel(label) || isSaltLabel(label)
+
+    private fun isSodiumLabel(label: String): Boolean =
+        label.hasAny("钠", "鈉", "sodium", "ナトリウム")
+
+    private fun isSaltLabel(label: String): Boolean =
+        label.hasAny("盐", "鹽", "salt", "塩分")
+
+    private fun isCarbOrStapleLabel(label: String): Boolean =
+        isCarbLabel(label) || isStapleLabel(label)
+
+    private fun isCarbLabel(label: String): Boolean =
+        label.hasAny("碳水", "carb", "carbohydrate", "炭水化物")
+
+    private fun isStapleLabel(label: String): Boolean =
+        label.hasAny("主食", "staple", "staples")
+
+    private fun isFatOrOilLabel(label: String): Boolean =
+        isFatLabel(label) || isOilLabel(label)
+
+    private fun isFatLabel(label: String): Boolean =
+        label.hasAny("脂肪", "fat", "lipid", "脂質")
+
+    private fun isOilLabel(label: String): Boolean =
+        label.hasAny("油脂", "油量", "油", "oil", "oily")
 
     private fun normalizeLevel(level: String): String = when (level.trim().lowercase(Locale.ROOT)) {
         "low", "moderate", "high", "unknown" -> level.trim().lowercase(Locale.ROOT)
@@ -198,6 +352,62 @@ object NutritionAnalysisPolisher {
         AppLanguage.Ja -> "栄養構成"
     }
 
+    private fun localizedVegetableAmountLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "蔬菜量"
+        AppLanguage.ZhHant -> "蔬菜量"
+        AppLanguage.En -> "Vegetable amount"
+        AppLanguage.Ja -> "野菜量"
+    }
+
+    private fun localizedDietaryFiberLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "膳食纤维"
+        AppLanguage.ZhHant -> "膳食纖維"
+        AppLanguage.En -> "Dietary fiber"
+        AppLanguage.Ja -> "食物繊維"
+    }
+
+    private fun localizedSodiumLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "钠"
+        AppLanguage.ZhHant -> "鈉"
+        AppLanguage.En -> "Sodium"
+        AppLanguage.Ja -> "ナトリウム"
+    }
+
+    private fun localizedSaltLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "盐分"
+        AppLanguage.ZhHant -> "鹽分"
+        AppLanguage.En -> "Salt"
+        AppLanguage.Ja -> "塩分"
+    }
+
+    private fun localizedCarbohydrateLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "碳水"
+        AppLanguage.ZhHant -> "碳水"
+        AppLanguage.En -> "Carbohydrates"
+        AppLanguage.Ja -> "炭水化物"
+    }
+
+    private fun localizedStapleAmountLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "主食量"
+        AppLanguage.ZhHant -> "主食量"
+        AppLanguage.En -> "Staple amount"
+        AppLanguage.Ja -> "主食量"
+    }
+
+    private fun localizedFatLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "脂肪"
+        AppLanguage.ZhHant -> "脂肪"
+        AppLanguage.En -> "Fat"
+        AppLanguage.Ja -> "脂質"
+    }
+
+    private fun localizedOilAmountLabel(language: AppLanguage): String = when (language) {
+        AppLanguage.ZhHans -> "油脂量"
+        AppLanguage.ZhHant -> "油脂量"
+        AppLanguage.En -> "Oil amount"
+        AppLanguage.Ja -> "油量"
+    }
+
     private fun localizedUnknown(language: AppLanguage): String = when (language) {
         AppLanguage.ZhHans -> "无法判断"
         AppLanguage.ZhHant -> "無法判斷"
@@ -206,10 +416,10 @@ object NutritionAnalysisPolisher {
     }
 
     private fun localizedDisclaimer(language: AppLanguage): String = when (language) {
-        AppLanguage.ZhHans -> "热量和克数是基于常见份量的粗略区间，不替代称重记录。"
-        AppLanguage.ZhHant -> "熱量和克數是基於常見份量的粗略區間，不替代稱重記錄。"
-        AppLanguage.En -> "Calories and grams are rough ranges from common portions, not a weighed record."
-        AppLanguage.Ja -> "カロリーとグラム数は一般的な量からの大まかな範囲で、計量記録の代わりではありません。"
+        AppLanguage.ZhHans -> "热量和营养素克数是基于常见份量的粗略区间，不替代称重记录。"
+        AppLanguage.ZhHant -> "熱量和營養素克數是基於常見份量的粗略區間，不替代稱重記錄。"
+        AppLanguage.En -> "Calories and nutrient grams are rough ranges from common portions, not a weighed record."
+        AppLanguage.Ja -> "カロリーと栄養素のグラム数は一般的な量からの大まかな範囲で、計量記録の代わりではありません。"
     }
 
     private fun localizedSuggestion(language: AppLanguage, zhHans: String, zhHant: String, en: String, ja: String): String =
