@@ -49,6 +49,19 @@ class NutritionResultCardTest {
     }
 
     @Test
+    fun detailItemsStayCompactForMobileCard() {
+        val items = listOf(
+            NutritionItem(label = "热量", estimate = "约 1000-1500 kcal", note = "整餐热量偏高。"),
+            NutritionItem(label = "脂肪", estimate = "约 45-70 g", note = "油炸和酱汁较多。"),
+            NutritionItem(label = "碳水化合物", estimate = "约 90-130 g", note = "主食份量较大。"),
+            NutritionItem(label = "蛋白质", estimate = "约 30-45 g", note = "肉蛋提供蛋白。"),
+            NutritionItem(label = "钠/盐分", estimate = "偏高", note = "调味较重。"),
+        )
+
+        assertEquals(listOf("脂肪", "碳水化合物", "蛋白质"), nutritionDetailItems(items).map { it.label })
+    }
+
+    @Test
     fun detailHeaderKeepsLabelAndEstimateTogether() {
         val item = NutritionItem(label = "脂肪", estimate = "约 40-65 g", note = "油脂偏高。")
 

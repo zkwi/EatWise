@@ -18,7 +18,7 @@
 - 压缩图片后发送给用户配置的模型
 - 展示餐食名称、怎么吃、1~5 星参考、是否适合目标、怎么调整、按菜看建议和短标签
 - 同一张图片会并发生成饮食建议卡片和粗略营养估算卡片；热量和克数只显示宽区间、直观食物类比和估算依据，不作为称重记录
-- 两张结果卡片以可左右滑动的 Tab 展示，并分别保留自己的上下滚动位置，避免长短内容切换时出现大块空白
+- 两张结果卡片以可点击、可左右滑动的 Tab 展示，并分别保留自己的上下滚动位置，减少切换闪烁和长短内容切换空白
 - 支持多个菜品或复合食材的分析结果展示，总体评价基于整盘或整桌菜，按菜品给出 2~3 个标签和更具体的简短建议
 - 分析等待页展示阶段进度、分析请求、实时返回和滚动提示，并允许返回首页后台继续分析
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
@@ -103,7 +103,7 @@ POST {baseUrl}/chat/completions
 
 ### 工程治理
 
-- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 21`。
+- AI prompt 集中在 `OpenAiCompatibleClient`，当前 `promptVersion = 22`。
 - AI 约束、输出 schema、标签语义和隐私边界见 [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md)。
 - 结果 JSON 以当前 schema 为准，避免为废弃字段保留兼容分支。
 - 提交代码前运行 `.\gradlew.bat test assembleDebug`，UI 改动需补充真机或模拟器截图验收。
@@ -139,7 +139,7 @@ EatWise is a personal experimental Android app for photo-based meal analysis. It
 - Compresses images before sending them to the user-configured model
 - Shows meal name, eating advice, 1-5 star reference, goal fit, adjustment tips, dish-level advice, and short tags
 - Generates a meal advice card and a rough nutrition estimate card in parallel for the same photo; calorie and gram values are broad ranges with familiar food comparisons and estimate basis, not weighed records
-- The two result cards are shown as horizontally swipeable tabs, each keeping its own vertical scroll position to avoid large blank areas when switching between different content heights
+- The two result cards are shown as tappable and horizontally swipeable tabs, each keeping its own vertical scroll position to reduce tab flicker and large blank areas when switching between different content heights
 - Supports multi-dish and mixed-meal analysis, with the overall judgment based on the whole plate or table, plus 2-3 tags and a more specific concise suggestion per dish
 - The waiting screen shows stage progress, request preview, streaming model output, and rotating tips; analysis can continue in the background after returning home
 - Successful analyses are saved automatically to local history, with detail view, favorite, and delete actions
@@ -224,7 +224,7 @@ Each photo sends two requests in parallel by default: one for the meal advice ca
 
 ### Engineering Notes
 
-- AI prompts are maintained in `OpenAiCompatibleClient`; the current `promptVersion` is `21`.
+- AI prompts are maintained in `OpenAiCompatibleClient`; the current `promptVersion` is `22`.
 - AI governance, output schema, tag semantics, and privacy boundaries are documented in [docs/AI_GOVERNANCE.md](docs/AI_GOVERNANCE.md).
 - Result JSON follows the current schema only; deprecated fields are not kept for compatibility.
 - Before committing code, run `.\gradlew.bat test assembleDebug`; UI changes should be checked with a device or emulator screenshot.

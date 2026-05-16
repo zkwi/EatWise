@@ -1,16 +1,20 @@
 package com.example.eatwise.ui.components
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,12 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -88,6 +93,15 @@ fun resultTabPageIndex(
     return pages.indexOf(resolved).takeIf { it >= 0 } ?: 0
 }
 
+fun resultTabIndicatorIndex(
+    selected: ResultTab,
+    adviceEnabled: Boolean,
+    nutritionEnabled: Boolean,
+): Int = when (resolvedResultTab(selected, adviceEnabled, nutritionEnabled)) {
+    ResultTab.Advice -> 0
+    ResultTab.Nutrition -> 1
+}
+
 fun resultTabForPage(
     page: Int,
     adviceAvailable: Boolean,
@@ -107,28 +121,46 @@ fun ResultTabSwitcher(
     adviceEnabled: Boolean = true,
     nutritionEnabled: Boolean = true,
 ) {
-    Row(
+    val selectedIndex = resultTabIndicatorIndex(selectedTab, adviceEnabled, nutritionEnabled)
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
+            .height(52.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .border(1.dp, LineSoft.copy(alpha = 0.72f), RoundedCornerShape(16.dp))
             .padding(4.dp),
     ) {
-        ResultTabButton(
-            text = adviceLabel,
-            selected = selectedTab == ResultTab.Advice,
-            enabled = adviceEnabled,
-            modifier = Modifier.weight(1f),
-            onClick = { onSelectedTab(ResultTab.Advice) },
+        val indicatorWidth = maxWidth / 2
+        val indicatorOffset by animateDpAsState(
+            targetValue = indicatorWidth * selectedIndex,
+            animationSpec = tween(durationMillis = 180),
+            label = "resultTabIndicator",
         )
-        ResultTabButton(
-            text = nutritionLabel,
-            selected = selectedTab == ResultTab.Nutrition,
-            enabled = nutritionEnabled,
-            modifier = Modifier.weight(1f),
-            onClick = { onSelectedTab(ResultTab.Nutrition) },
+        Box(
+            modifier = Modifier
+                .offset(x = indicatorOffset)
+                .width(indicatorWidth)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(12.dp))
+                .background(GreenSoft),
         )
+        Row(Modifier.fillMaxSize()) {
+            ResultTabButton(
+                text = adviceLabel,
+                selected = selectedTab == ResultTab.Advice,
+                enabled = adviceEnabled,
+                modifier = Modifier.weight(1f),
+                onClick = { onSelectedTab(ResultTab.Advice) },
+            )
+            ResultTabButton(
+                text = nutritionLabel,
+                selected = selectedTab == ResultTab.Nutrition,
+                enabled = nutritionEnabled,
+                modifier = Modifier.weight(1f),
+                onClick = { onSelectedTab(ResultTab.Nutrition) },
+            )
+        }
     }
 }
 
@@ -153,15 +185,24 @@ fun SwipeableResultPane(
     )
     val currentSelectedTab by rememberUpdatedState(selectedTab)
     val currentOnSelectedTab by rememberUpdatedState(onSelectedTab)
+    var programmaticTargetPage by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(selectedPage, pages.size) {
         if (pagerState.currentPage != selectedPage) {
-            pagerState.animateScrollToPage(selectedPage)
+            programmaticTargetPage = selectedPage
+            try {
+                pagerState.animateScrollToPage(selectedPage)
+            } finally {
+                programmaticTargetPage = null
+            }
         }
     }
 
     LaunchedEffect(pagerState, pages) {
-        snapshotFlow { pagerState.settledPage }.collect { page ->
+        snapshotFlow { Triple(pagerState.settledPage, pagerState.targetPage, pagerState.isScrollInProgress) }.collect { (page, targetPage, isScrollInProgress) ->
+            if (isScrollInProgress || page != targetPage) return@collect
+            val pendingTarget = programmaticTargetPage
+            if (pendingTarget != null && page != pendingTarget) return@collect
             val settledTab = pages.getOrNull(page) ?: return@collect
             if (settledTab != currentSelectedTab) currentOnSelectedTab(settledTab)
         }
@@ -190,21 +231,13 @@ private fun ResultTabButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    val selectedContainer = if (selected) GreenSoft else Color.Transparent
-    val containerColor by animateColorAsState(selectedContainer, label = "resultTabContainer")
     val selectedText = if (selected) GreenDeep else MaterialTheme.colorScheme.onSurfaceVariant
-    val textColor by animateColorAsState(
-        if (enabled) selectedText else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.56f),
-        label = "resultTabText",
-    )
-    val contentAlpha by animateFloatAsState(if (enabled) 1f else 0.56f, label = "resultTabAlpha")
+    val textColor = if (enabled) selectedText else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.56f)
 
     Box(
         modifier = modifier
-            .heightIn(min = 44.dp)
+            .fillMaxHeight()
             .clip(RoundedCornerShape(12.dp))
-            .background(containerColor)
-            .alpha(contentAlpha)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,

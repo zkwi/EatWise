@@ -56,7 +56,7 @@ fun NutritionResultCard(result: NutritionAnalysisResult, modifier: Modifier = Mo
                 NutritionSection.Hero -> NutritionHeroCard(result, strings, calorieItem)
                 NutritionSection.Actions -> NutritionSoftCard {
                     SectionTitle(strings.nutritionActions)
-                    result.suggestions.take(3).forEachIndexed { index, suggestion ->
+                    result.suggestions.take(2).forEachIndexed { index, suggestion ->
                         NutritionActionRow(index + 1, suggestion)
                     }
                 }
@@ -323,7 +323,7 @@ private fun NutritionActionRow(index: Int, text: String) {
             fontWeight = FontWeight.SemiBold,
             fontSize = 12.sp,
             lineHeight = 17.sp,
-            maxLines = 3,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -376,7 +376,7 @@ fun nutritionCalorieItem(items: List<NutritionItem>): NutritionItem? = items.fir
 
 fun nutritionCalorieEquivalent(result: NutritionAnalysisResult): String = result.calorieEquivalent.trim()
 
-fun nutritionDetailItems(items: List<NutritionItem>, limit: Int = 4): List<NutritionItem> =
+fun nutritionDetailItems(items: List<NutritionItem>, limit: Int = 3): List<NutritionItem> =
     items.filter { it.note.isNotBlank() && !isCalorieItem(it.label) }.take(limit)
 
 fun nutritionSections(result: NutritionAnalysisResult): List<NutritionSection> = buildList {

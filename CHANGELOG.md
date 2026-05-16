@@ -2,6 +2,22 @@
 
 本项目采用轻量变更记录，面向个人维护和后续 AI 接手。版本号在正式发布 APK 时再统一整理。
 
+## 1.0.14 - 2026-05-16
+
+中文：
+
+- 修复点击“饮食建议 / 粗略营养估算”顶部 Tab 时指示器闪烁和状态回跳的问题，Tab 背景现在以单一滑块平滑移动。
+- 粗略营养估算卡片减少信息拥挤：动作建议最多展示 2 条，营养说明最多展示 3 条，并保持标签和估算值同行展示。
+- 优化 prompt 到 v22，进一步约束移动端短句、目标匹配建议、宽区间热量估算、食物类比和“不输出置信度”。
+- 同步 README、AI 治理、维护说明和手动测试清单，补充 Tab 无闪烁、卡片短文案和发布验收要求。
+
+English:
+
+- Fixed flicker and state bounce when tapping the meal advice / rough nutrition estimate tabs; the tab background now moves as one smooth indicator.
+- Reduced rough nutrition card density: at most 2 action tips, at most 3 nutrition notes, with labels and estimates kept on the same line.
+- Updated prompts to v22 with tighter mobile copy budgets, goal-matched actions, broad calorie ranges, everyday food comparisons, and no confidence output.
+- Updated the README, AI governance notes, maintenance docs, and manual testing checklist with tab no-flicker, compact-card, and release validation requirements.
+
 ## 1.0.13 - 2026-05-16
 
 中文：
