@@ -12,7 +12,9 @@
 - 支持简体中文、繁体中文、英语和日语，界面、新分析结果、AI prompt、建议和标签会随语言切换
 - 首次启动按系统默认语言选择初始语言，用户也可以在设置页手动切换
 - 设置页内置常见饮食目标预设，如均衡饮食、减脂、少糖、少油、少盐和增肌，并支持自定义目标自动保存
+- 设置页集中展示模型连接状态、语言切换、API 配置和饮食目标预设
 - 导入相册餐食图片或使用 CameraX 拍照，相册支持一次选择多张图片
+- 首页提供拍照分析、导入照片和最近分析入口，底部导航可在首页、记录和设置之间切换
 - 多张图片会按顺序排队分析，新任务不会中断当前任务；失败任务可从首页或详情页重试
 - 首次使用且暂无历史记录时提供示例图片，可直接点击体验分析链路
 - 压缩图片后发送给用户配置的模型
@@ -23,20 +25,20 @@
 - 分析等待页展示阶段进度、分析请求、实时返回和滚动提示，并允许返回首页后台继续分析
 - 大模型流式请求使用较长读取超时和轻量自动重试，降低短暂退后台或临时网络抖动导致的失败概率
 - 分析成功后自动保存本地历史记录，支持查看详情、收藏和删除
-- 历史记录使用紧凑移动端卡片，左滑可收藏或删除
+- 饮食记录页支持全部 / 收藏优先切换，紧凑卡片展示缩略图、时间和决策标签，左滑可收藏或删除
 - 未填写 Key、模型不支持图片、网络失败、JSON 解析失败等场景有明确提示
 
 ### 界面预览
 
-以下中文截图使用内置测试图片和合成分析记录生成，不包含真实用户照片、API Key 或个人饮食目标。
+以下中文截图展示最新版首页、记录详情、饮食记录和设置页，使用内置测试图片和合成分析记录生成，不包含真实用户照片、API Key 或个人饮食目标。
 
-| 首页 | 详情页 |
+| 首页 | 记录详情 |
 |---|---|
-| <img src="docs/screenshots/zh/home.png" alt="首页" width="210" /> | <img src="docs/screenshots/zh/detail.png" alt="详情页" width="210" /> |
+| <img src="docs/screenshots/zh/home.png" alt="首页" width="210" /> | <img src="docs/screenshots/zh/detail.png" alt="记录详情" width="210" /> |
 
-| 记录页 | 设置页 |
+| 饮食记录 | 设置 |
 |---|---|
-| <img src="docs/screenshots/zh/history.png" alt="记录页" width="210" /> | <img src="docs/screenshots/zh/settings.png" alt="设置页" width="210" /> |
+| <img src="docs/screenshots/zh/history.png" alt="饮食记录" width="210" /> | <img src="docs/screenshots/zh/settings.png" alt="设置" width="210" /> |
 
 ### 技术栈
 
@@ -134,7 +136,9 @@ EatWise is a personal experimental Android app for photo-based meal analysis. It
 - Supports Simplified Chinese, Traditional Chinese, English, and Japanese for the interface, new analysis results, AI prompts, suggestions, and tags
 - Uses the system language on first launch, while still allowing manual language selection in Settings
 - Built-in meal goal presets such as balanced eating, fat loss, less sugar, less oil, less salt, and high protein; custom goals save automatically
+- Settings brings together model connection status, language selection, API configuration, and meal goal presets
 - Import meal photos from the gallery or take photos with CameraX; gallery import supports selecting multiple photos at once
+- Home provides quick actions for taking or importing meal photos, shows recent analyses, and uses bottom navigation for Home, History, and Settings
 - Multiple photos are analyzed in order, new tasks do not interrupt the current task, and failed tasks can be retried from Home or the analysis screen
 - Shows sample photos on first use when there is no history, so the analysis flow can be previewed quickly
 - Compresses images before sending them to the user-configured model
@@ -145,20 +149,20 @@ EatWise is a personal experimental Android app for photo-based meal analysis. It
 - The waiting screen shows stage progress, request preview, streaming model output, and rotating tips; analysis can continue in the background after returning home
 - Streaming model requests use a longer read timeout and light automatic retries to reduce failures after brief backgrounding or transient network drops
 - Successful analyses are saved automatically to local history, with detail view, favorite, and delete actions
-- Compact mobile history cards support swipe actions for favorite and delete
+- Meal History supports All / Favorites first filters, with compact cards showing thumbnails, time, and decision tags; cards also support swipe actions for favorite and delete
 - Clear messages are shown for missing keys, image-incompatible models, network failures, and JSON parsing failures
 
 ### Screenshots
 
-These English screenshots use built-in test images and synthetic analysis records. They do not contain real user photos, API keys, or personal meal goals.
+These English screenshots show the latest Home, Record Details, Meal History, and Settings screens. They use built-in test images and synthetic analysis records, and do not contain real user photos, API keys, or personal meal goals.
 
-| Home | Detail |
+| Home | Record Details |
 |---|---|
-| <img src="docs/screenshots/en/home.png" alt="Home" width="210" /> | <img src="docs/screenshots/en/detail.png" alt="Detail" width="210" /> |
+| <img src="docs/screenshots/en/home.png" alt="Home" width="210" /> | <img src="docs/screenshots/en/detail.png" alt="Record Details" width="210" /> |
 
-| History | Settings |
+| Meal History | Settings |
 |---|---|
-| <img src="docs/screenshots/en/history.png" alt="History" width="210" /> | <img src="docs/screenshots/en/settings.png" alt="Settings" width="210" /> |
+| <img src="docs/screenshots/en/history.png" alt="Meal History" width="210" /> | <img src="docs/screenshots/en/settings.png" alt="Settings" width="210" /> |
 
 ### Tech Stack
 
